@@ -369,10 +369,10 @@ importPostalCodes().catch(console.error);
 ```
 
 **Acceptance Criteria:**
-- [ ] Canadian postal codes imported from zipcodesoft.com
-- [ ] PostGIS POINT geometry created for each postal code
-- [ ] Spatial index created for proximity searches
-- [ ] Script can be re-run for updates
+- [x] Canadian postal codes imported from zipcodesoft.com
+- [x] PostGIS POINT geometry created for each postal code
+- [x] Spatial index created for proximity searches
+- [x] Script can be re-run for updates
 
 ---
 

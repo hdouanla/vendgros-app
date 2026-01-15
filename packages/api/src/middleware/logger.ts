@@ -15,7 +15,7 @@ interface LogContext {
  */
 export function loggerMiddleware() {
   return async (opts: {
-    ctx: { session?: { user?: { id: string } } };
+    ctx: any;
     path: string;
     type: string;
     next: () => Promise<unknown>;

@@ -16,7 +16,7 @@ interface RateLimitConfig {
  * @returns Middleware function that enforces rate limits
  */
 export function createRateLimiter(config: RateLimitConfig) {
-  return async (opts: { ctx: { session?: { user?: { id: string } } }; next: () => Promise<unknown> }) => {
+  return async (opts: { ctx: any; next: () => Promise<unknown> }) => {
     const userId = opts.ctx.session?.user?.id;
 
     // Skip rate limiting for unauthenticated requests (handled separately)
@@ -101,7 +101,7 @@ export const generousRateLimit = createRateLimiter({
  */
 export function createIpRateLimiter(config: RateLimitConfig) {
   return async (opts: {
-    ctx: { req?: { headers?: { "x-forwarded-for"?: string }; ip?: string } };
+    ctx: any;
     next: () => Promise<unknown>;
   }) => {
     // Get IP from headers (behind proxy) or direct connection

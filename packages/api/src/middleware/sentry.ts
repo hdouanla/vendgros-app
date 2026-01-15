@@ -59,11 +59,11 @@ export function initSentry() {
     ],
 
     integrations: [
-      // Enable HTTP instrumentation
-      new Sentry.Integrations.Http({ tracing: true }),
+      // HTTP instrumentation enabled by default in modern Sentry
+      Sentry.httpIntegration({ tracing: true }),
 
-      // Enable database query tracing (for supported ORMs)
-      new Sentry.Integrations.Postgres(),
+      // Postgres integration
+      Sentry.postgresIntegration(),
     ],
   });
 }
@@ -74,20 +74,11 @@ export function initSentry() {
  */
 export function sentryMiddleware() {
   return async (opts: {
-    ctx: { session?: { user?: { id: string; email?: string } }; req?: any };
+    ctx: any;
     path: string;
     type: string;
     next: () => Promise<unknown>;
   }) => {
-    const transaction = Sentry.startTransaction({
-      op: `trpc.${opts.type}`,
-      name: opts.path,
-      data: {
-        path: opts.path,
-        type: opts.type,
-      },
-    });
-
     // Set user context if available
     if (opts.ctx.session?.user) {
       Sentry.setUser({
@@ -104,14 +95,10 @@ export function sentryMiddleware() {
 
     try {
       const result = await opts.next();
-      transaction.setStatus("ok");
       return result;
     } catch (error) {
-      // Set error status
+      // Only capture unexpected errors in Sentry
       if (error instanceof TRPCError) {
-        transaction.setStatus(error.code);
-
-        // Only capture unexpected errors in Sentry
         // Don't spam Sentry with expected errors (UNAUTHORIZED, NOT_FOUND, etc.)
         const expectedCodes = [
           "UNAUTHORIZED",
@@ -133,7 +120,6 @@ export function sentryMiddleware() {
         }
       } else {
         // Capture all non-tRPC errors
-        transaction.setStatus("internal_error");
         Sentry.captureException(error, {
           contexts: {
             trpc: {
@@ -146,7 +132,6 @@ export function sentryMiddleware() {
 
       throw error;
     } finally {
-      transaction.finish();
       Sentry.setUser(null); // Clear user context
     }
   };

@@ -30,6 +30,10 @@ export const webhookEventEnum = pgEnum("webhook_event", [
   "message.received",
 ]);
 
+export const currencyEnum = pgEnum("currency", ["CAD", "USD", "EUR", "GBP", "MXN"]);
+
+export const countryEnum = pgEnum("country", ["CA", "US", "GB", "MX", "EU"]);
+
 // ============================================================================
 // API INTEGRATION TABLES
 // ============================================================================
@@ -167,6 +171,12 @@ export const tenant = pgTable(
     primaryColor: t.varchar({ length: 7 }).default("#10b981"), // Hex color
     secondaryColor: t.varchar({ length: 7 }).default("#3b82f6"),
 
+    // International Configuration
+    country: countryEnum("country").notNull().default("CA"),
+    currency: currencyEnum("currency").notNull().default("CAD"),
+    locale: t.varchar({ length: 10 }).notNull().default("en"), // en, fr, es, etc.
+    timezone: t.varchar({ length: 50 }).notNull().default("America/Toronto"),
+
     // Configuration
     isActive: t.boolean().notNull().default(true),
     features: t.text().array().default(sql`ARRAY[]::text[]`), // Enabled features
@@ -186,6 +196,7 @@ export const tenant = pgTable(
   (table) => ({
     slugIdx: index("tenant_slug_idx").on(table.slug),
     domainIdx: index("tenant_domain_idx").on(table.domain),
+    countryIdx: index("tenant_country_idx").on(table.country),
   }),
 );
 

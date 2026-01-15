@@ -67,6 +67,14 @@ Vendgros is a geospatial marketplace platform that solves two problems:
 - **Identity Verification** - Optional ID verification for premium sellers
 - **Automated Eligibility** - Badge qualification based on performance
 
+### 🌍 International Expansion
+- **Multi-Currency Support** - 5 currencies (CAD, USD, EUR, GBP, MXN)
+- **Real-Time Exchange Rates** - Automatic currency conversion
+- **Country Regulations** - Deposit rates, taxes, compliance for 5 regions
+- **International Domains** - vendgros.ca, vendgros.com, regional subdomains
+- **Regional Configuration** - Tenant-based country/currency settings
+- **Localized Pricing** - Display prices in user's preferred currency
+
 ### 📊 Analytics & Insights
 - **Revenue Tracking** - Real-time revenue and profit analysis
 - **Performance Metrics** - Completion rates, conversion tracking
@@ -155,12 +163,13 @@ Comprehensive guides available in the `/doc` directory:
 | [Development Summary](./doc/DEVELOPMENT_SUMMARY.md) | Detailed MVP development log | 700+ |
 | [Post-MVP Summary](./doc/POST_MVP_SUMMARY.md) | Phase 1 & 2 features documentation | 580 |
 | [Phase 3 Summary](./doc/PHASE3_SUMMARY.md) | Phase 3 features documentation | 650+ |
+| [Phase 2.3 International](./doc/PHASE2_3_INTERNATIONAL_EXPANSION.md) | International expansion features | 850+ |
 | [API Reference](./doc/API_REFERENCE.md) | Complete tRPC API docs | 1,175 |
 | [User Guide](./doc/USER_GUIDE.md) | End-user instructions | 627 |
 | [Deployment Guide](./doc/DEPLOYMENT_GUIDE.md) | Web deployment (DO + Cloudflare) | 780 |
 | [Mobile Deployment](./doc/MOBILE_DEPLOYMENT.md) | iOS/Android deployment | 665 |
 
-**Total Documentation: 5,638+ lines** 📖
+**Total Documentation: 6,488+ lines** 📖
 
 ---
 
@@ -320,24 +329,27 @@ See [Mobile Deployment Guide](./doc/MOBILE_DEPLOYMENT.md) for details.
 
 ### Development
 
-- **53+ commits** with detailed messages
-- **110+ files** created/modified
-- **36,000+ lines** of TypeScript
+- **54+ commits** with detailed messages
+- **113+ files** created/modified
+- **36,650+ lines** of TypeScript
 - **100% type-safe** (zero `any` types)
-- **MVP + Phase 1, 2 & 3** completed
+- **MVP + Phase 1, 2, 2.3 & 3** completed
 
 ### Codebase
 
-- **18 tRPC routers** with 103+ endpoints
-- **14 database tables** with relations (9 new columns + 4 new tables in Phase 3)
+- **19 tRPC routers** with 118+ endpoints
+- **14 database tables** with relations (15 new columns + 4 new tables)
 - **880,010 postal codes** pre-loaded
+- **5 currencies** with real-time exchange rates (CAD, USD, EUR, GBP, MXN)
+- **5 regions** with country-specific regulations (CA, US, GB, MX, EU)
 - **205+ translations** in 3 languages
 - **50+ E2E tests** with Playwright
 - **8 AI-powered features** (moderation, pricing, analytics, fraud detection, behavior analysis, no-show prediction, review authenticity, scheduled listings)
 - **3 verification badge tiers** (verified, trusted, premium)
 - **Trust & Safety AI** (fraud detection, behavior analysis, no-show prediction, review authenticity)
 - **API Integrations** (REST API, webhooks with HMAC, rate limiting)
-- **White-Label Platform** (multi-tenant, custom branding, subdomain/domain routing)
+- **White-Label Platform** (multi-tenant, custom branding, subdomain/domain routing, international support)
+- **International Expansion** (multi-currency, exchange rates, country regulations, regional compliance)
 
 ### Performance
 

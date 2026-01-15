@@ -194,6 +194,7 @@ export const listing = pgTable(
     photos: t.text().array().notNull().default(sql`ARRAY[]::text[]`),
 
     pricePerPiece: t.doublePrecision().notNull(),
+    currency: t.varchar({ length: 3 }).notNull().default("CAD"), // CAD, USD, EUR, GBP, MXN
     quantityTotal: t.integer().notNull(),
     quantityAvailable: t.integer().notNull(),
     maxPerBuyer: t.integer(), // Optional purchase limit
@@ -261,6 +262,7 @@ export const reservation = pgTable(
     quantityReserved: t.integer().notNull(),
     totalPrice: t.doublePrecision().notNull(),
     depositAmount: t.doublePrecision().notNull(), // 5% of total
+    currency: t.varchar({ length: 3 }).notNull().default("CAD"), // Inherited from listing
 
     qrCodeHash: t.text().notNull().unique(),
     verificationCode: t.varchar({ length: 6 }).notNull().unique(), // 6-digit alphanumeric

@@ -3,6 +3,7 @@ import { analyticsRouter } from "./router/analytics";
 import { apiIntegrationsRouter } from "./router/api-integrations";
 import { authRouter } from "./router/auth";
 import { bulkImportRouter } from "./router/bulk-import";
+import { internationalRouter } from "./router/international";
 import { listingRouter } from "./router/listing";
 import { messagingRouter } from "./router/messaging";
 import { moderationRouter } from "./router/moderation";
@@ -37,6 +38,7 @@ export const appRouter = createTRPCRouter({
   bulkImport: bulkImportRouter,
   apiIntegrations: apiIntegrationsRouter,
   whiteLabel: whiteLabelRouter,
+  international: internationalRouter,
 });
 
 // export type definition of API

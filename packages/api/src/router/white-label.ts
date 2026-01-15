@@ -29,6 +29,10 @@ export const whiteLabelRouter = createTRPCRouter({
         logoUrl: z.string().url().optional(),
         primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
         secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+        country: z.enum(["CA", "US", "GB", "MX", "EU"]).default("CA"),
+        currency: z.enum(["CAD", "USD", "EUR", "GBP", "MXN"]).default("CAD"),
+        locale: z.string().default("en"),
+        timezone: z.string().default("America/Toronto"),
         plan: z.enum(["free", "basic", "pro", "enterprise"]).default("free"),
         features: z.array(z.string()).optional(),
       }),
@@ -45,6 +49,10 @@ export const whiteLabelRouter = createTRPCRouter({
           logoUrl: input.logoUrl,
           primaryColor: input.primaryColor,
           secondaryColor: input.secondaryColor,
+          country: input.country,
+          currency: input.currency,
+          locale: input.locale,
+          timezone: input.timezone,
           plan: input.plan,
           features: input.features ?? [],
         })
@@ -165,6 +173,10 @@ export const whiteLabelRouter = createTRPCRouter({
         logoUrl: z.string().url().optional(),
         primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
         secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+        country: z.enum(["CA", "US", "GB", "MX", "EU"]).optional(),
+        currency: z.enum(["CAD", "USD", "EUR", "GBP", "MXN"]).optional(),
+        locale: z.string().optional(),
+        timezone: z.string().optional(),
         isActive: z.boolean().optional(),
         plan: z.enum(["free", "basic", "pro", "enterprise"]).optional(),
         monthlyFee: z.number().min(0).optional(),
@@ -182,6 +194,10 @@ export const whiteLabelRouter = createTRPCRouter({
       if (input.primaryColor !== undefined) updates.primaryColor = input.primaryColor;
       if (input.secondaryColor !== undefined)
         updates.secondaryColor = input.secondaryColor;
+      if (input.country !== undefined) updates.country = input.country;
+      if (input.currency !== undefined) updates.currency = input.currency;
+      if (input.locale !== undefined) updates.locale = input.locale;
+      if (input.timezone !== undefined) updates.timezone = input.timezone;
       if (input.isActive !== undefined) updates.isActive = input.isActive;
       if (input.plan !== undefined) updates.plan = input.plan;
       if (input.monthlyFee !== undefined) updates.monthlyFee = input.monthlyFee;

@@ -1,4 +1,5 @@
 import { adminRouter } from "./router/admin";
+import { analyticsRouter } from "./router/analytics";
 import { authRouter } from "./router/auth";
 import { listingRouter } from "./router/listing";
 import { messagingRouter } from "./router/messaging";
@@ -21,6 +22,7 @@ export const appRouter = createTRPCRouter({
   upload: uploadRouter,
   moderation: moderationRouter,
   messaging: messagingRouter,
+  analytics: analyticsRouter,
 });
 
 // export type definition of API

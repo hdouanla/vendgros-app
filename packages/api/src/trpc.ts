@@ -12,6 +12,9 @@ import { z, ZodError } from "zod/v4";
 
 import type { Auth } from "@acme/auth";
 import { db } from "@acme/db/client";
+import { loggerMiddleware, performanceMonitor } from "./middleware/logger";
+import { sentryMiddleware } from "./middleware/sentry";
+import { standardRateLimit, publicRateLimit } from "./middleware/rate-limit";
 
 /**
  * 1. CONTEXT
@@ -74,10 +77,14 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 export const createTRPCRouter = t.router;
 
 /**
- * Middleware for timing procedure execution and adding an articifial delay in development.
- *
- * You can remove this if you don't like it, but it can help catch unwanted waterfalls by simulating
- * network latency that would occur in production but not in local development.
+ * Enhanced middleware stack with logging, error tracking, and performance monitoring
+ */
+const loggingMiddleware = t.middleware(loggerMiddleware());
+const performanceMiddleware = t.middleware(performanceMonitor(1000)); // Warn on queries > 1s
+const sentryMiddleware_ = t.middleware(sentryMiddleware());
+
+/**
+ * Middleware for timing procedure execution and adding an artificial delay in development.
  */
 const timingMiddleware = t.middleware(async ({ next, path }) => {
   const start = Date.now();
@@ -103,7 +110,12 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
  * tRPC API. It does not guarantee that a user querying is authorized, but you
  * can still access user session data if they are logged in
  */
-export const publicProcedure = t.procedure.use(timingMiddleware);
+export const publicProcedure = t.procedure
+  .use(loggingMiddleware)
+  .use(sentryMiddleware_)
+  .use(performanceMiddleware)
+  .use(t.middleware(publicRateLimit))
+  .use(timingMiddleware);
 
 /**
  * Protected (authenticated) procedure
@@ -114,6 +126,10 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = t.procedure
+  .use(loggingMiddleware)
+  .use(sentryMiddleware_)
+  .use(performanceMiddleware)
+  .use(t.middleware(standardRateLimit))
   .use(timingMiddleware)
   .use(({ ctx, next }) => {
     if (!ctx.session?.user) {

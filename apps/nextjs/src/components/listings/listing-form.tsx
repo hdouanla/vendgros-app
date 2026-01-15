@@ -44,6 +44,7 @@ export function ListingForm({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isGeocoding, setIsGeocoding] = useState(false);
 
   const createListing = api.listing.create.useMutation({
     onSuccess: (data) => {
@@ -62,6 +63,12 @@ export function ListingForm({
     onError: (error) => {
       console.error("Failed to update listing:", error);
       setErrors({ submit: error.message });
+    },
+  });
+
+  const submitForReview = api.listing.submitForReview.useMutation({
+    onError: (error) => {
+      console.error("Failed to submit for review:", error);
     },
   });
 
@@ -107,6 +114,30 @@ export function ListingForm({
       return;
     }
 
+    // Geocode address to get coordinates
+    setIsGeocoding(true);
+    let latitude = 43.6532; // Default to Toronto
+    let longitude = -79.3832;
+
+    try {
+      const geocodeResult = await fetch(
+        `/api/trpc/listing.geocodeAddress?input=${encodeURIComponent(JSON.stringify({ address: formData.pickupAddress, countryCode: "CA" }))}`,
+      );
+
+      if (geocodeResult.ok) {
+        const geocodeData = await geocodeResult.json();
+        if (geocodeData?.result?.data) {
+          latitude = geocodeData.result.data.latitude;
+          longitude = geocodeData.result.data.longitude;
+        }
+      }
+    } catch (error) {
+      console.error("Geocoding failed:", error);
+      // Use default coordinates
+    } finally {
+      setIsGeocoding(false);
+    }
+
     const listingData = {
       title: formData.title,
       description: formData.description,
@@ -119,22 +150,27 @@ export function ListingForm({
       pickupAddress: formData.pickupAddress,
       pickupInstructions: formData.pickupInstructions || undefined,
       photos: formData.photos,
-      latitude: 0, // TODO: Geocode address
-      longitude: 0, // TODO: Geocode address
+      latitude,
+      longitude,
     };
 
     if (mode === "create") {
-      await createListing.mutateAsync(listingData);
+      const newListing = await createListing.mutateAsync(listingData);
+
+      // Submit for review if requested
+      if (saveAs === "review" && newListing) {
+        await submitForReview.mutateAsync({ listingId: newListing.id });
+      }
     } else if (listingId) {
       await updateListing.mutateAsync({
         listingId,
         data: listingData,
       });
-    }
 
-    // Submit for review if requested
-    if (saveAs === "review") {
-      // TODO: Call submitForReview mutation
+      // Submit for review if requested
+      if (saveAs === "review") {
+        await submitForReview.mutateAsync({ listingId });
+      }
     }
   };
 
@@ -336,23 +372,41 @@ export function ListingForm({
         <button
           type="button"
           onClick={(e) => handleSubmit(e, "draft")}
-          disabled={createListing.isPending || updateListing.isPending}
+          disabled={
+            createListing.isPending ||
+            updateListing.isPending ||
+            submitForReview.isPending ||
+            isGeocoding
+          }
           className="rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 disabled:opacity-50"
         >
-          {createListing.isPending || updateListing.isPending
-            ? t("common.loading")
-            : t("common.save")}
+          {isGeocoding
+            ? "Geocoding..."
+            : createListing.isPending ||
+                updateListing.isPending ||
+                submitForReview.isPending
+              ? t("common.loading")
+              : t("common.save")}
         </button>
 
         <button
           type="button"
           onClick={(e) => handleSubmit(e, "review")}
-          disabled={createListing.isPending || updateListing.isPending}
+          disabled={
+            createListing.isPending ||
+            updateListing.isPending ||
+            submitForReview.isPending ||
+            isGeocoding
+          }
           className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
         >
-          {createListing.isPending || updateListing.isPending
-            ? t("common.loading")
-            : t("listing.submitForReview")}
+          {isGeocoding
+            ? "Geocoding..."
+            : createListing.isPending ||
+                updateListing.isPending ||
+                submitForReview.isPending
+              ? t("common.loading")
+              : t("listing.submitForReview")}
         </button>
       </div>
     </form>

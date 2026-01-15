@@ -8,6 +8,7 @@ import {
 } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import { geocodeAddress } from "../services/geocoding";
 
 export const listingRouter = createTRPCRouter({
   // Create a new listing (sellers only)
@@ -324,5 +325,18 @@ export const listingRouter = createTRPCRouter({
         .limit(input.limit);
 
       return results;
+    }),
+
+  // Geocode address to coordinates
+  geocodeAddress: publicProcedure
+    .input(
+      z.object({
+        address: z.string().min(5),
+        countryCode: z.string().length(2).optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const result = await geocodeAddress(input.address, input.countryCode);
+      return result;
     }),
 });

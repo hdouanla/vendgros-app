@@ -389,9 +389,40 @@ This project follows:
 - Automatic first-photo-as-cover selection
 - Translations for EN/FR/ES
 
+#### 6. Map Visualization System
+**Created**: `apps/nextjs/src/components/map/listing-map.tsx`
+- Mapbox GL JS integration for interactive maps
+- Custom green markers with pin emoji indicators
+- Dynamic popup content with listing details
+- Click-to-navigate functionality to listing pages
+- Automatic bounds fitting for multiple markers
+- Default center fallback to Toronto coordinates
+
+**Interactive Controls**:
+- Navigation controls (zoom in/out, compass)
+- Geolocation control with user tracking
+- Scale indicator (metric units)
+- Hover effects on markers (scale animation)
+
+**Search Page Integration**:
+- Grid/Map view toggle with SVG icons
+- Dynamic zoom based on search radius
+  - 5-10 km: zoom level 12
+  - 11-25 km: zoom level 11
+  - 26-100 km: zoom level 10
+- Center calculation from user location or postal code
+- Responsive layout (600px height for map view)
+
+**Configuration**:
+- Requires `NEXT_PUBLIC_MAPBOX_TOKEN` environment variable
+- Added to `.env.example` with setup instructions
+- Uses Mapbox Streets v12 style
+- Graceful error handling for missing token
+
 ### 🎨 Design System
 - **Tailwind CSS**: Responsive utility-first styling
 - **shadcn/ui**: Base component library (buttons, inputs, modals)
+- **Mapbox GL JS**: Interactive maps with custom markers
 - **QR Code Integration**: Canvas-based generation with logo support
 - **Image Upload**: Direct-to-CDN via pre-signed URLs
 - **i18n**: Full translation support across all pages
@@ -409,9 +440,9 @@ This project follows:
 ## 📊 Updated Statistics
 
 ### Development Metrics
-- **24 commits** with detailed messages
-- **47+ files** created
-- **11,000+ lines** of code
+- **26 commits** with detailed messages
+- **48+ files** created
+- **11,500+ lines** of code
 - **7 tRPC routers** with 42+ endpoints (added upload router)
 - **4 complete UI pages** with components
 - **Image upload system** with S3 integration
@@ -428,13 +459,13 @@ This project follows:
 - Internationalization
 - QR code system
 
-✅ **Week 2 (75% Complete)**
+✅ **Week 2 (90% Complete)**
 - Listing creation UI ✅
 - Listing search UI ✅
 - Admin moderation UI ✅
 - Reservation detail UI ✅
 - Image upload integration ✅
-- Map visualization ⏳
+- Map visualization ✅
 - Listing detail page ⏳
 
 ⏳ **Week 3 (Pending)**
@@ -453,6 +484,8 @@ This project follows:
 ## 🚀 Latest Commits
 
 ```
+16359fe feat: implement Mapbox map visualization for listings
+951c222 docs: update development summary with image upload feature
 d08fe35 feat: implement image upload to DigitalOcean Spaces
 569503f feat: add admin moderation and reservation detail pages
 1e8d0c0 feat: add listing creation and search UI pages
@@ -547,7 +580,7 @@ bd51f92 feat: add admin moderation system with user management
 - [x] Admin moderation UI
 - [x] Reservation detail UI
 - [x] Image upload integration
-- [ ] Map visualization
+- [x] Map visualization
 - [ ] Payment flow UI
 - [ ] Rating submission UI
 - [ ] Testing suite
@@ -556,7 +589,7 @@ bd51f92 feat: add admin moderation system with user management
 
 ---
 
-**Status**: Week 1 Complete ✅ | Week 2 In Progress (75%) 🚧
-**Ready for**: Frontend development continuation, map integration, testing
-**Built with**: T3 Stack + PostGIS + Stripe + QR Codes + DigitalOcean Spaces 🚀
+**Status**: Week 1 Complete ✅ | Week 2 In Progress (90%) 🚧
+**Ready for**: Listing detail page, Week 3 payment/rating UI, testing
+**Built with**: T3 Stack + PostGIS + Stripe + Mapbox + DigitalOcean Spaces + QR Codes 🚀
 

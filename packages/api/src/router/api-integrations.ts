@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { z } from "zod/v4";
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, desc, lte } from "drizzle-orm";
 
 import {
   apiKey,
@@ -340,20 +340,95 @@ export const apiIntegrationsRouter = createTRPCRouter({
         throw new Error("Not authorized");
       }
 
-      // TODO: Implement actual webhook delivery retry logic
-      // For now, just mark it for retry
-      await ctx.db
-        .update(webhookDelivery)
-        .set({
-          status: "pending",
-          nextRetryAt: new Date(),
-        })
-        .where(eq(webhookDelivery.id, input.deliveryId));
+      // Implement webhook delivery retry with exponential backoff
+      const retryCount = delivery.retryCount + 1;
+      const maxRetries = 5;
 
-      return {
-        success: true,
-        message: "Delivery scheduled for retry",
-      };
+      if (retryCount > maxRetries) {
+        await ctx.db
+          .update(webhookDelivery)
+          .set({
+            status: "failed",
+            error: "Max retries exceeded",
+          })
+          .where(eq(webhookDelivery.id, input.deliveryId));
+
+        return {
+          success: false,
+          message: "Max retries exceeded",
+        };
+      }
+
+      // Calculate next retry time with exponential backoff
+      // Retry schedule: 1min, 5min, 15min, 1hour, 3hours
+      const retryDelays = [60, 300, 900, 3600, 10800]; // in seconds
+      const delay = retryDelays[retryCount - 1] ?? 10800; // Default to 3 hours
+      const nextRetryAt = new Date(Date.now() + delay * 1000);
+
+      // Attempt delivery
+      try {
+        const webhookData = delivery.webhook;
+        const response = await fetch(webhookData.url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Vendgros-Signature": delivery.signature,
+            "X-Vendgros-Event": delivery.event,
+          },
+          body: delivery.payload,
+          signal: AbortSignal.timeout(30000),
+        });
+
+        if (response.ok) {
+          // Success - mark as delivered
+          await ctx.db
+            .update(webhookDelivery)
+            .set({
+              status: "delivered",
+              responseStatus: response.status,
+              deliveredAt: new Date(),
+            })
+            .where(eq(webhookDelivery.id, input.deliveryId));
+
+          return {
+            success: true,
+            message: "Delivery successful",
+          };
+        } else {
+          // Failed - schedule next retry
+          await ctx.db
+            .update(webhookDelivery)
+            .set({
+              status: "pending",
+              retryCount,
+              nextRetryAt,
+              responseStatus: response.status,
+              error: `HTTP ${response.status}: ${await response.text()}`,
+            })
+            .where(eq(webhookDelivery.id, input.deliveryId));
+
+          return {
+            success: false,
+            message: `Delivery failed, retry scheduled for ${nextRetryAt.toISOString()}`,
+          };
+        }
+      } catch (error) {
+        // Error - schedule next retry
+        await ctx.db
+          .update(webhookDelivery)
+          .set({
+            status: "pending",
+            retryCount,
+            nextRetryAt,
+            error: error instanceof Error ? error.message : "Unknown error",
+          })
+          .where(eq(webhookDelivery.id, input.deliveryId));
+
+        return {
+          success: false,
+          message: `Delivery failed, retry scheduled for ${nextRetryAt.toISOString()}`,
+        };
+      }
     }),
 
   /**
@@ -400,5 +475,117 @@ export const apiIntegrationsRouter = createTRPCRouter({
         },
       ],
     };
+  }),
+
+  /**
+   * Process pending webhook retries (should be called by a cron job)
+   * Admin only for security
+   */
+  processPendingRetries: protectedProcedure.mutation(async ({ ctx }) => {
+    // Check admin access
+    const currentUser = await ctx.db.query.user.findFirst({
+      where: (users, { eq }) => eq(users.id, ctx.session.user.id),
+    });
+
+    if (currentUser?.userType !== "ADMIN") {
+      throw new Error("Admin access required");
+    }
+
+    // Find all pending deliveries where nextRetryAt is in the past
+    const now = new Date();
+    const pendingDeliveries = await ctx.db.query.webhookDelivery.findMany({
+      where: (deliveries, { and, eq, lte }) =>
+        and(eq(deliveries.status, "pending"), lte(deliveries.nextRetryAt, now)),
+      limit: 50, // Process max 50 at a time
+      with: {
+        webhook: true,
+      },
+    });
+
+    const results = {
+      processed: 0,
+      delivered: 0,
+      failed: 0,
+      retryScheduled: 0,
+    };
+
+    for (const delivery of pendingDeliveries) {
+      results.processed++;
+
+      const retryCount = delivery.retryCount + 1;
+      const maxRetries = 5;
+
+      if (retryCount > maxRetries) {
+        await ctx.db
+          .update(webhookDelivery)
+          .set({
+            status: "failed",
+            error: "Max retries exceeded",
+          })
+          .where(eq(webhookDelivery.id, delivery.id));
+
+        results.failed++;
+        continue;
+      }
+
+      // Calculate next retry time
+      const retryDelays = [60, 300, 900, 3600, 10800];
+      const delay = retryDelays[retryCount - 1] ?? 10800;
+      const nextRetryAt = new Date(Date.now() + delay * 1000);
+
+      // Attempt delivery
+      try {
+        const response = await fetch(delivery.webhook.url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Vendgros-Signature": delivery.signature,
+            "X-Vendgros-Event": delivery.event,
+          },
+          body: delivery.payload,
+          signal: AbortSignal.timeout(30000),
+        });
+
+        if (response.ok) {
+          await ctx.db
+            .update(webhookDelivery)
+            .set({
+              status: "delivered",
+              responseStatus: response.status,
+              deliveredAt: now,
+            })
+            .where(eq(webhookDelivery.id, delivery.id));
+
+          results.delivered++;
+        } else {
+          await ctx.db
+            .update(webhookDelivery)
+            .set({
+              status: "pending",
+              retryCount,
+              nextRetryAt,
+              responseStatus: response.status,
+              error: `HTTP ${response.status}`,
+            })
+            .where(eq(webhookDelivery.id, delivery.id));
+
+          results.retryScheduled++;
+        }
+      } catch (error) {
+        await ctx.db
+          .update(webhookDelivery)
+          .set({
+            status: "pending",
+            retryCount,
+            nextRetryAt,
+            error: error instanceof Error ? error.message : "Unknown error",
+          })
+          .where(eq(webhookDelivery.id, delivery.id));
+
+        results.retryScheduled++;
+      }
+    }
+
+    return results;
   }),
 });

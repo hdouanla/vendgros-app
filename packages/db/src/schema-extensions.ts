@@ -205,6 +205,130 @@ export const tenantRelations = relations(tenant, ({ many }) => ({
 }));
 
 // ============================================================================
+// USER REPORTING SYSTEM
+// ============================================================================
+
+export const reportTypeEnum = pgEnum("report_type", [
+  "USER_FRAUD",
+  "USER_HARASSMENT",
+  "USER_SPAM",
+  "LISTING_FRAUD",
+  "LISTING_INAPPROPRIATE",
+  "LISTING_PROHIBITED",
+  "MESSAGE_HARASSMENT",
+  "MESSAGE_SPAM",
+  "TRANSACTION_ISSUE",
+  "OTHER",
+]);
+
+export const reportStatusEnum = pgEnum("report_status", [
+  "PENDING",
+  "UNDER_REVIEW",
+  "RESOLVED",
+  "DISMISSED",
+]);
+
+export const userReport = pgTable(
+  "user_report",
+  (t) => ({
+    id: t.text().primaryKey().$defaultFn(() => crypto.randomUUID()),
+    reporterId: t
+      .text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    reportedUserId: t
+      .text()
+      .references(() => user.id, { onDelete: "cascade" }),
+
+    reportType: reportTypeEnum("report_type").notNull(),
+    listingId: t.text(),
+    messageId: t.text(),
+    reservationId: t.text(),
+
+    description: t.text().notNull(),
+    evidence: t.text().array().default(sql`ARRAY[]::text[]`),
+
+    status: reportStatusEnum("status").notNull().default("PENDING"),
+    priority: t.varchar({ length: 20 }).notNull().default("medium"),
+    assignedTo: t.text().references(() => user.id),
+    moderatorNotes: t.text(),
+    resolution: t.text(),
+
+    createdAt: t.timestamp().notNull().defaultNow(),
+    updatedAt: t
+      .timestamp({ mode: "date", withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => sql`now()`),
+    resolvedAt: t.timestamp(),
+  }),
+  (table) => ({
+    reporterIdx: index("user_report_reporter_idx").on(table.reporterId),
+    reportedUserIdx: index("user_report_reported_user_idx").on(table.reportedUserId),
+    statusIdx: index("user_report_status_idx").on(table.status),
+    typeIdx: index("user_report_type_idx").on(table.reportType),
+    priorityIdx: index("user_report_priority_idx").on(table.priority),
+    createdAtIdx: index("user_report_created_at_idx").on(table.createdAt),
+  }),
+);
+
+export const userReportRelations = relations(userReport, ({ one }) => ({
+  reporter: one(user, {
+    fields: [userReport.reporterId],
+    references: [user.id],
+    relationName: "reporter",
+  }),
+  reportedUser: one(user, {
+    fields: [userReport.reportedUserId],
+    references: [user.id],
+    relationName: "reportedUser",
+  }),
+  assignedModerator: one(user, {
+    fields: [userReport.assignedTo],
+    references: [user.id],
+    relationName: "assignedModerator",
+  }),
+}));
+
+// ============================================================================
+// LISTING EDIT HISTORY
+// ============================================================================
+
+export const listingEdit = pgTable(
+  "listing_edit",
+  (t) => ({
+    id: t.text().primaryKey().$defaultFn(() => crypto.randomUUID()),
+    listingId: t.text().notNull(),
+    editorId: t
+      .text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+
+    changes: t.text().notNull(),
+    previousValues: t.text().notNull(),
+    newValues: t.text().notNull(),
+
+    reason: t.varchar({ length: 500 }),
+    ipAddress: t.varchar({ length: 45 }),
+    userAgent: t.text(),
+
+    createdAt: t.timestamp().notNull().defaultNow(),
+  }),
+  (table) => ({
+    listingIdx: index("listing_edit_listing_idx").on(table.listingId),
+    editorIdx: index("listing_edit_editor_idx").on(table.editorId),
+    createdAtIdx: index("listing_edit_created_at_idx").on(table.createdAt),
+  }),
+);
+
+export const listingEditRelations = relations(listingEdit, ({ one }) => ({
+  editor: one(user, {
+    fields: [listingEdit.editorId],
+    references: [user.id],
+  }),
+}));
+
+// ============================================================================
 // ZOD SCHEMAS
 // ============================================================================
 
@@ -219,3 +343,9 @@ export const selectWebhookDeliverySchema = createSelectSchema(webhookDelivery);
 
 export const insertTenantSchema = createInsertSchema(tenant);
 export const selectTenantSchema = createSelectSchema(tenant);
+
+export const insertUserReportSchema = createInsertSchema(userReport);
+export const selectUserReportSchema = createSelectSchema(userReport);
+
+export const insertListingEditSchema = createInsertSchema(listingEdit);
+export const selectListingEditSchema = createSelectSchema(listingEdit);

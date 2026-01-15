@@ -10,6 +10,7 @@ import { postRouter } from "./router/post";
 import { ratingRouter } from "./router/rating";
 import { reservationRouter } from "./router/reservation";
 import { uploadRouter } from "./router/upload";
+import { verificationRouter } from "./router/verification";
 import { createTRPCRouter } from "./trpc";
 
 export const appRouter = createTRPCRouter({
@@ -25,6 +26,7 @@ export const appRouter = createTRPCRouter({
   messaging: messagingRouter,
   analytics: analyticsRouter,
   pricing: pricingRouter,
+  verification: verificationRouter,
 });
 
 // export type definition of API

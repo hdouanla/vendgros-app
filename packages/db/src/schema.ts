@@ -49,6 +49,13 @@ export const reservationStatusEnum = pgEnum("reservation_status", [
   "CANCELLED",
 ]);
 
+export const verificationBadgeEnum = pgEnum("verification_badge", [
+  "NONE",
+  "VERIFIED",
+  "TRUSTED",
+  "PREMIUM",
+]);
+
 // ============================================================================
 // USERS TABLE
 // ============================================================================
@@ -71,6 +78,13 @@ export const user = pgTable(
     ratingAverage: t.doublePrecision().default(0),
     ratingCount: t.integer().notNull().default(0),
     moderationNotes: t.text(),
+
+    // Verification badges
+    verificationBadge: verificationBadgeEnum().notNull().default("NONE"),
+    verifiedAt: t.timestamp(),
+    identityVerified: t.boolean().notNull().default(false),
+    identityVerificationMethod: t.varchar({ length: 50 }), // e.g., "government_id", "business_license"
+    identityVerificationNotes: t.text(),
 
     createdAt: t.timestamp().notNull().defaultNow(),
     updatedAt: t

@@ -18,6 +18,8 @@
     "@acme/db": "workspace:*",
     "@acme/ui": "workspace:*",
     "@acme/validators": "workspace:*",
+    "@stripe/react-stripe-js": "^5.4.1",
+    "@stripe/stripe-js": "^8.6.1",
     "@t3-oss/env-nextjs": "^0.13.8",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",

@@ -24,7 +24,8 @@ export default function ListingDetailPage({
 
   const createReservation = api.reservation.create.useMutation({
     onSuccess: (data) => {
-      router.push(`/reservations/${data.id}`);
+      // Redirect to payment page to pay deposit
+      router.push(`/payment/${data.id}`);
     },
   });
 

@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import { QRCode } from "@acme/ui/qr-code";
 
@@ -12,6 +13,7 @@ export default function ReservationDetailPage({
 }) {
   const { id } = use(params);
   const t = useTranslations();
+  const router = useRouter();
 
   const { data: reservation, isLoading } = api.reservation.getById.useQuery({
     id,
@@ -128,8 +130,7 @@ export default function ReservationDetailPage({
               <button
                 className="mt-6 w-full rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white hover:bg-green-700"
                 onClick={() => {
-                  // TODO: Integrate Stripe payment
-                  alert("Payment integration coming soon");
+                  router.push(`/payment/${id}`);
                 }}
               >
                 {t("reservation.payDeposit")}

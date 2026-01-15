@@ -1,0 +1,160 @@
+name: vendgros-marketplace
+region: tor
+domains:
+  - domain: vendgros.com
+    type: PRIMARY
+
+databases:
+  - name: vendgros-postgres
+    engine: PG
+    version: "16"
+    size: basic-xs
+    num_nodes: 1
+    production: true
+
+services:
+  - name: web
+    github:
+      repo: your-org/vendgros-app
+      branch: main
+      deploy_on_push: true
+    build_command: pnpm install && pnpm build --filter=@acme/nextjs
+    run_command: cd apps/nextjs && pnpm start
+    source_dir: /
+    dockerfile_path: Dockerfile.nextjs
+    http_port: 3000
+    instance_count: 2
+    instance_size_slug: basic-xs
+    health_check:
+      http_path: /api/health
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+      - key: NEXTAUTH_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: NEXTAUTH_URL
+        scope: RUN_TIME
+        value: https://vendgros.com
+      - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: STRIPE_SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: STRIPE_WEBHOOK_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: RESEND_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: TWILIO_ACCOUNT_SID
+        scope: RUN_TIME
+        type: SECRET
+      - key: TWILIO_AUTH_TOKEN
+        scope: RUN_TIME
+        type: SECRET
+      - key: TWILIO_PHONE_NUMBER
+        scope: RUN_TIME
+        type: SECRET
+      - key: DO_SPACES_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: DO_SPACES_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: DO_SPACES_ENDPOINT
+        scope: RUN_TIME
+        value: https://tor1.digitaloceanspaces.com
+      - key: DO_SPACES_BUCKET
+        scope: RUN_TIME
+        value: vendgros
+      - key: DO_SPACES_REGION
+        scope: RUN_TIME
+        value: tor1
+      - key: DO_SPACES_URL
+        scope: RUN_TIME
+        value: https://vendgros.tor1.digitaloceanspaces.com
+      - key: NEXT_PUBLIC_MAPBOX_TOKEN
+        scope: RUN_TIME
+        type: SECRET
+      - key: NEXT_PUBLIC_API_URL
+        scope: RUN_TIME
+        value: https://vendgros.com
+
+  - name: api
+    github:
+      repo: your-org/vendgros-app
+      branch: main
+      deploy_on_push: true
+    build_command: pnpm install && pnpm build --filter=@acme/api
+    run_command: node apps/api/dist/index.js
+    source_dir: /
+    http_port: 3001
+    instance_count: 2
+    instance_size_slug: basic-xs
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 20
+      period_seconds: 10
+      timeout_seconds: 5
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+      - key: PORT
+        value: "3001"
+
+workers:
+  - name: notification-worker
+    github:
+      repo: your-org/vendgros-app
+      branch: main
+    build_command: pnpm install && pnpm build --filter=@acme/api
+    run_command: node apps/api/dist/workers/notifications.js
+    source_dir: /
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET
+      - key: RESEND_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: TWILIO_ACCOUNT_SID
+        scope: RUN_TIME
+        type: SECRET
+      - key: TWILIO_AUTH_TOKEN
+        scope: RUN_TIME
+        type: SECRET
+
+static_sites:
+  - name: cdn-assets
+    github:
+      repo: your-org/vendgros-app
+      branch: main
+    build_command: pnpm build --filter=@acme/nextjs
+    output_dir: apps/nextjs/.next/static
+    catchall_document: index.html
+    cors:
+      allow_origins:
+        - exact: https://vendgros.com
+      allow_methods:
+        - GET
+        - OPTIONS
+      allow_headers:
+        - Content-Type
+        - Authorization

@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 
 import { listing, rating, reservation } from "@acme/db/schema";
 
+import { notifyReservationCreated, notifyPickupComplete } from "../lib/notifications";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 // Helper to generate 6-digit alphanumeric code
@@ -69,6 +70,16 @@ export const reservationRouter = createTRPCRouter({
           stripePaymentIntentId: null, // Will be set after Stripe integration
         })
         .returning();
+
+      // Send notification to buyer
+      await notifyReservationCreated({
+        buyerEmail: ctx.session.user.email!,
+        buyerPhone: ctx.session.user.phone,
+        listingTitle: targetListing.title,
+        depositAmount,
+        verificationCode,
+        expiresAt,
+      }).catch((err) => console.error("Failed to send notification:", err));
 
       return {
         reservationId: newReservation.id,
@@ -299,9 +310,12 @@ export const reservationRouter = createTRPCRouter({
         .where(eq(reservation.id, input.reservationId))
         .returning();
 
-      // Rating prompts will be triggered by the frontend
-      // Users have 7 days to rate each other after completion
-      // Ratings are blind (hidden until both parties submit)
+      // Send rating prompts to both parties
+      await notifyPickupComplete({
+        buyerEmail: existingReservation.buyer.email!,
+        sellerEmail: existingReservation.listing.seller.email!,
+        listingTitle: existingReservation.listing.title,
+      }).catch((err) => console.error("Failed to send notification:", err));
 
       return updated;
     }),

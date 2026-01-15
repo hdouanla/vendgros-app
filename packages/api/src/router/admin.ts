@@ -3,6 +3,11 @@ import { and, desc, eq, or } from "drizzle-orm";
 
 import { listing, user } from "@acme/db/schema";
 
+import {
+  notifyAccountSuspended,
+  notifyListingApproved,
+  notifyListingRejected,
+} from "../lib/notifications";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 // Middleware to check if user is admin
@@ -68,6 +73,15 @@ export const adminRouter = createTRPCRouter({
 
       const existingListing = await ctx.db.query.listing.findFirst({
         where: (listings, { eq }) => eq(listings.id, input.listingId),
+        with: {
+          seller: {
+            columns: {
+              id: true,
+              email: true,
+              phone: true,
+            },
+          },
+        },
       });
 
       if (!existingListing) {
@@ -87,7 +101,12 @@ export const adminRouter = createTRPCRouter({
         .where(eq(listing.id, input.listingId))
         .returning();
 
-      // TODO: Send notification to seller
+      // Send approval notification to seller
+      await notifyListingApproved({
+        sellerEmail: existingListing.seller.email!,
+        sellerPhone: existingListing.seller.phone,
+        listingTitle: existingListing.title,
+      }).catch((err) => console.error("Failed to send notification:", err));
 
       return updated;
     }),

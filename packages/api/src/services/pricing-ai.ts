@@ -303,7 +303,13 @@ export function getCategoryBenchmarks(category: string): {
   };
 
   const categoryKey = category.toLowerCase().replace(/\s+/g, "_");
-  return benchmarks[categoryKey] ?? benchmarks.other;
+  return (
+    benchmarks[categoryKey] ?? benchmarks.other ?? {
+      averagePrice: 3.0,
+      priceRange: { min: 0.5, max: 10.0 },
+      popularPricePoints: [1.0, 2.0, 3.0, 4.0, 5.0],
+    }
+  );
 }
 
 /**

@@ -178,7 +178,7 @@ export const adminRouter = createTRPCRouter({
 
       // Get user's ratings received
       const ratingsReceived = await ctx.db.query.rating.findMany({
-        where: (ratings, { eq }) => eq(ratings.rateeId, input.userId),
+        where: (ratings, { eq }) => eq(ratings.ratedId, input.userId),
         orderBy: (ratings, { desc }) => [desc(ratings.createdAt)],
         limit: 10,
       });

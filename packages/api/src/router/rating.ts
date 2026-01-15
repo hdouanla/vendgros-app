@@ -11,7 +11,7 @@ export const ratingRouter = createTRPCRouter({
     .input(
       z.object({
         reservationId: z.string(),
-        stars: z.number().int().min(1).max(5),
+        score: z.number().int().min(1).max(5),
         comment: z.string().max(500).optional(),
       }),
     )
@@ -72,7 +72,7 @@ export const ratingRouter = createTRPCRouter({
           reservationId: input.reservationId,
           raterId: ctx.session.user.id,
           rateeId,
-          stars: input.stars,
+          score: input.score,
           comment: input.comment ?? null,
         })
         .returning();
@@ -148,7 +148,7 @@ export const ratingRouter = createTRPCRouter({
           canRate: !ownRating && existingReservation.status === "COMPLETED",
           ownRating: ownRating
             ? {
-                stars: ownRating.stars,
+                score: ownRating.score,
                 comment: ownRating.comment,
                 createdAt: ownRating.createdAt,
               }
@@ -166,14 +166,14 @@ export const ratingRouter = createTRPCRouter({
         canRate: false,
         ownRating: ownRating
           ? {
-              stars: ownRating.stars,
+              score: ownRating.score,
               comment: ownRating.comment,
               createdAt: ownRating.createdAt,
             }
           : null,
         otherRating: otherRating
           ? {
-              stars: otherRating.stars,
+              score: otherRating.score,
               comment: otherRating.comment,
               createdAt: otherRating.createdAt,
               rater: otherRating.rater,
@@ -242,7 +242,7 @@ export const ratingRouter = createTRPCRouter({
       return {
         ratings: paginatedRatings.map((r) => ({
           id: r.id,
-          stars: r.stars,
+          score: r.score,
           comment: r.comment,
           createdAt: r.createdAt,
           raterType: r.rater.userType,
@@ -332,7 +332,7 @@ async function updateUserRating(db: any, userId: string) {
   const ratingCount = visibleRatings.length;
   const ratingAverage =
     ratingCount > 0
-      ? visibleRatings.reduce((sum, r) => sum + r.stars, 0) / ratingCount
+      ? visibleRatings.reduce((sum, r) => sum + r.score, 0) / ratingCount
       : 0;
 
   await db

@@ -1,4 +1,7 @@
 import crypto from "crypto";
+import { eq } from "drizzle-orm";
+
+import { webhook, webhookDelivery } from "@acme/db/schema-extensions";
 
 interface WebhookPayload {
   event: string;
@@ -95,7 +98,7 @@ export async function triggerWebhook(params: {
     });
 
     // Record delivery attempt
-    await params.db.insert("webhookDelivery").values({
+    await params.db.insert(webhookDelivery).values({
       webhookId: webhook.id,
       event: params.event,
       payload: JSON.stringify(payload),
@@ -110,19 +113,19 @@ export async function triggerWebhook(params: {
     // Update webhook failure count
     if (!result.success) {
       await params.db
-        .update("webhook")
+        .update(webhook)
         .set({
           failureCount: webhook.failureCount + 1,
           lastFailureAt: new Date(),
         })
-        .where(eq("webhook.id", webhook.id));
+        .where(eq(webhook.id, webhook.id));
     } else {
       await params.db
-        .update("webhook")
+        .update(webhook)
         .set({
           lastTriggeredAt: new Date(),
         })
-        .where(eq("webhook.id", webhook.id));
+        .where(eq(webhook.id, webhook.id));
     }
   }
 }

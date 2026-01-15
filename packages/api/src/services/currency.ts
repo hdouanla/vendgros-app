@@ -40,7 +40,9 @@ export async function updateExchangeRates(): Promise<void> {
     const response = await fetch(
       `https://api.exchangerate-api.com/v4/latest/CAD`
     );
-    const data = await response.json();
+    const data = (await response.json()) as {
+      rates?: Record<string, number>;
+    };
 
     if (data.rates) {
       exchangeRates = {

@@ -94,6 +94,9 @@ export const user = pgTable(
     behaviorFlags: t.text().array().default(sql`ARRAY[]::text[]`),
     lastBehaviorCheckAt: t.timestamp(),
 
+    // White-Label Multi-Tenant
+    tenantId: t.text(), // Optional tenant association for white-label
+
     createdAt: t.timestamp().notNull().defaultNow(),
     updatedAt: t
       .timestamp({ mode: "date", withTimezone: true })

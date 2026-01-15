@@ -2,7 +2,7 @@ import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { oAuthProxy, otp } from "better-auth/plugins";
+import { emailOTP, oAuthProxy } from "better-auth/plugins";
 
 import { db } from "@acme/db/client";
 
@@ -39,42 +39,26 @@ export function initAuth<TExtraPlugins extends BetterAuthPlugin[] = []>(options:
         productionURL: options.productionUrl,
       }),
       expo(),
-      // OTP plugin for email and phone verification
-      otp({
-        sendOTP: async (data) => {
-          // Custom OTP sending logic
-          if (data.type === "email") {
-            // Send via Resend
-            if (!options.resendApiKey) {
-              throw new Error("Resend API key not configured");
-            }
-
-            await sendEmailOTP({
-              email: data.email,
-              code: data.code,
-              resendApiKey: options.resendApiKey,
-            });
-          } else if (data.type === "sms") {
-            // Send via Twilio
-            if (
-              !options.twilioAccountSid ||
-              !options.twilioAuthToken ||
-              !options.twilioFromNumber
-            ) {
-              throw new Error("Twilio credentials not configured");
-            }
-
-            await sendSmsOTP({
-              phoneNumber: data.phoneNumber,
-              code: data.code,
-              twilioAccountSid: options.twilioAccountSid,
-              twilioAuthToken: options.twilioAuthToken,
-              twilioFromNumber: options.twilioFromNumber,
-            });
+      // OTP plugin for email verification
+      emailOTP({
+        sendVerificationOTP: async (data: {
+          email: string;
+          otp: string;
+          type: "sign-in" | "email-verification" | "forget-password";
+        }) => {
+          // Send OTP via Resend
+          if (!options.resendApiKey) {
+            throw new Error("Resend API key not configured");
           }
+
+          await sendEmailOTP({
+            email: data.email,
+            code: data.otp,
+            resendApiKey: options.resendApiKey,
+          });
         },
-        sendOTPFrequency: 60, // 60 seconds between OTP requests
         expiresIn: 600, // 10 minutes expiry
+        sendVerificationOnSignUp: true,
       }),
       ...(options.extraPlugins ?? []),
     ],

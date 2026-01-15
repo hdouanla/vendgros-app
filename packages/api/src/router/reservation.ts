@@ -366,7 +366,7 @@ export const reservationRouter = createTRPCRouter({
         await tx.insert(rating).values({
           reservationId: input.reservationId,
           raterId: ctx.session.user.id, // seller
-          rateeId: existingReservation.buyerId,
+          ratedId: existingReservation.buyerId,
           stars: 1,
           comment: "No-show - buyer did not pick up items within 48 hours",
         });

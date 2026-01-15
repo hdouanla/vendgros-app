@@ -222,33 +222,33 @@ export async function moderateListing(params: {
   let confidenceScore = 1.0;
 
   // Text checks
-  if (textAnalysis.inappropriateContent) {
+  if (textAnalysis?.inappropriateContent) {
     flaggedReasons.push("Inappropriate content detected in description");
     confidenceScore -= 0.4;
   }
 
-  if (textAnalysis.spamScore > 0.7) {
+  if (textAnalysis && textAnalysis.spamScore > 0.7) {
     flaggedReasons.push("High spam likelihood");
     confidenceScore -= 0.3;
   }
 
-  if (textAnalysis.sentiment === "negative") {
+  if (textAnalysis?.sentiment === "negative") {
     flaggedReasons.push("Negative sentiment detected");
     confidenceScore -= 0.1;
   }
 
   // Image checks
-  if (imageAnalysis.inappropriate) {
+  if (imageAnalysis?.inappropriate) {
     flaggedReasons.push("Inappropriate content in images");
     confidenceScore -= 0.5;
   }
 
-  if (imageAnalysis.mismatchedCategory) {
+  if (imageAnalysis?.mismatchedCategory) {
     flaggedReasons.push("Images don't match category or description");
     confidenceScore -= 0.2;
   }
 
-  if (imageAnalysis.lowQuality) {
+  if (imageAnalysis?.lowQuality) {
     flaggedReasons.push("Low quality or missing images");
     confidenceScore -= 0.1;
   }
@@ -267,7 +267,7 @@ export async function moderateListing(params: {
 
   // Auto-approve if confidence >= 0.8 and no critical flags
   const hasCriticalFlags =
-    textAnalysis.inappropriateContent || imageAnalysis.inappropriate;
+    textAnalysis?.inappropriateContent || imageAnalysis?.inappropriate;
   const approved = confidenceScore >= 0.8 && !hasCriticalFlags;
 
   return {

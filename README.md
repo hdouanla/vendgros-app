@@ -39,10 +39,38 @@ Vendgros is a geospatial marketplace platform that solves two problems:
 - **Blind Rating System**: Honest feedback without retaliation
 - **QR Verification**: Tech-enabled trust for safe pickups
 - **Multi-Language**: English, French, Spanish support
+- **AI-Powered Features**: Automated moderation, smart pricing, intelligent recommendations
+- **Verification Badges**: Multi-tier trust system for sellers
+- **Real-Time Messaging**: Direct buyer-seller communication
+- **Advanced Analytics**: Comprehensive performance insights
 
 ---
 
 ## ✨ Features
+
+### 🤖 AI & Automation
+- **AI Moderation** - Automated listing screening with 85%+ accuracy
+- **Smart Pricing** - AI-powered price recommendations
+- **Fraud Detection** - Pattern recognition for suspicious activity
+- **Content Analysis** - Image and text analysis with OpenAI GPT-4
+- **Dynamic Pricing** - Time and inventory-based price optimization
+- **Performance Insights** - Automated sell-through analysis
+
+### 💬 Communication & Trust
+- **In-App Messaging** - Real-time buyer-seller chat
+- **Image Sharing** - Attach photos in messages
+- **Read Receipts** - Message tracking for both parties
+- **Verification Badges** - Three-tier seller trust system (Verified, Trusted, Premium)
+- **Identity Verification** - Optional ID verification for premium sellers
+- **Automated Eligibility** - Badge qualification based on performance
+
+### 📊 Analytics & Insights
+- **Revenue Tracking** - Real-time revenue and profit analysis
+- **Performance Metrics** - Completion rates, conversion tracking
+- **Buyer Insights** - Repeat customer analysis, top buyers
+- **Time-Based Analytics** - Peak hours, day-of-week patterns
+- **Category Performance** - Breakdown by product category
+- **Pricing Optimization** - Price performance recommendations
 
 ### For Buyers
 - 🔍 **Location-Based Search** - Find items by postal code or GPS
@@ -57,14 +85,22 @@ Vendgros is a geospatial marketplace platform that solves two problems:
 - 📊 **Inventory Management** - Real-time availability tracking
 - ✅ **QR Verification** - Verify buyers with camera scan
 - 💰 **No-Show Protection** - Keep 5% deposit if buyer doesn't show
-- 📈 **Analytics Dashboard** - Track sales and ratings
-- 🛡️ **Admin Moderation** - Listings reviewed before publishing
+- 📈 **Analytics Dashboard** - Track sales, revenue, and performance metrics
+- 🛡️ **AI Moderation** - Automated listing approval with human oversight
+- 💬 **Direct Messaging** - Chat with buyers about listings
+- 💵 **Smart Pricing** - AI-powered price recommendations
+- ⭐ **Verification Badges** - Earn trust badges through performance
+- 📊 **Advanced Insights** - Buyer analytics, category performance, peak hours
 
 ### Admin Tools
 - ✓ **Listing Approval** - Review and approve/reject submissions
 - 👥 **User Management** - Suspend or ban problematic users
 - 📊 **Statistics Dashboard** - Platform-wide metrics
 - 🔍 **Content Moderation** - Monitor activity and reports
+- 🤖 **AI Moderation Queue** - Review AI-flagged content with confidence scores
+- ⚡ **Bulk Auto-Approval** - Approve high-confidence listings automatically
+- 🎖️ **Badge Management** - Manually verify sellers and assign badges
+- 📈 **AI Statistics** - Track moderation efficiency and performance
 
 ---
 
@@ -78,10 +114,11 @@ Vendgros is a geospatial marketplace platform that solves two problems:
 - **shadcn/ui** - Component library
 
 ### Backend
-- **tRPC v11** - Type-safe API (42+ endpoints)
+- **tRPC v11** - Type-safe API (71+ endpoints across 13 routers)
 - **PostgreSQL 16** - Database with PostGIS
 - **Drizzle ORM** - Type-safe queries
 - **better-auth** - OTP authentication
+- **OpenAI GPT-4** - AI-powered moderation and pricing
 
 ### Infrastructure
 - **Turborepo** - Monorepo management
@@ -95,6 +132,7 @@ Vendgros is a geospatial marketplace platform that solves two problems:
 - **Resend** - Email delivery
 - **Mapbox** - Maps and geocoding
 - **Expo Push** - Mobile notifications
+- **OpenAI** - AI moderation and pricing intelligence (GPT-4 & Vision API)
 
 ---
 
@@ -105,13 +143,14 @@ Comprehensive guides available in the `/doc` directory:
 | Document | Description | Lines |
 |----------|-------------|-------|
 | [Executive Summary](./doc/EXECUTIVE_SUMMARY.md) | High-level project overview | 461 |
-| [Development Summary](./doc/DEVELOPMENT_SUMMARY.md) | Detailed development log | 700+ |
+| [Development Summary](./doc/DEVELOPMENT_SUMMARY.md) | Detailed MVP development log | 700+ |
+| [Post-MVP Summary](./doc/POST_MVP_SUMMARY.md) | Phase 1 & 2 features documentation | 580 |
 | [API Reference](./doc/API_REFERENCE.md) | Complete tRPC API docs | 1,175 |
 | [User Guide](./doc/USER_GUIDE.md) | End-user instructions | 627 |
 | [Deployment Guide](./doc/DEPLOYMENT_GUIDE.md) | Web deployment (DO + Cloudflare) | 780 |
 | [Mobile Deployment](./doc/MOBILE_DEPLOYMENT.md) | iOS/Android deployment | 665 |
 
-**Total Documentation: 4,408 lines** 📖
+**Total Documentation: 4,988 lines** 📖
 
 ---
 
@@ -271,19 +310,21 @@ See [Mobile Deployment Guide](./doc/MOBILE_DEPLOYMENT.md) for details.
 
 ### Development
 
-- **42 commits** with detailed messages
-- **68+ files** created/modified
-- **18,000+ lines** of TypeScript
+- **50+ commits** with detailed messages
+- **97+ files** created/modified
+- **28,000+ lines** of TypeScript
 - **100% type-safe** (zero `any` types)
-- **4 weeks** of development completed
+- **MVP + Phase 1 & 2** completed
 
 ### Codebase
 
-- **8 tRPC routers** with 42+ endpoints
-- **8 database tables** with relations
+- **13 tRPC routers** with 71+ endpoints
+- **10 database tables** with relations
 - **880,010 postal codes** pre-loaded
 - **205+ translations** in 3 languages
 - **50+ E2E tests** with Playwright
+- **5 AI-powered features** (moderation, pricing, analytics)
+- **3 verification badge tiers** (verified, trusted, premium)
 
 ### Performance
 

@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import { ListingCard } from "~/components/listings/listing-card";
+import { ListingMap } from "~/components/map/listing-map";
 
 const CATEGORIES = [
   "ALL",
@@ -19,6 +21,7 @@ const CATEGORIES = [
 
 export default function SearchListingsPage() {
   const t = useTranslations();
+  const router = useRouter();
 
   const [searchParams, setSearchParams] = useState({
     postalCode: "",
@@ -31,6 +34,7 @@ export default function SearchListingsPage() {
 
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
 
   // Get user location
   const getUserLocation = () => {
@@ -264,14 +268,100 @@ export default function SearchListingsPage() {
           </div>
         ) : listings && listings.length > 0 ? (
           <>
-            <div className="mb-4 text-sm text-gray-600">
-              {listings.length} {t("listing.listings")} found
+            {/* View Toggle and Results Count */}
+            <div className="mb-4 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                {listings.length} {t("listing.listings")} found
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`rounded-md px-4 py-2 text-sm font-medium ${
+                    viewMode === "grid"
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  <svg
+                    className="inline-block mr-1 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                    />
+                  </svg>
+                  Grid
+                </button>
+                <button
+                  onClick={() => setViewMode("map")}
+                  className={`rounded-md px-4 py-2 text-sm font-medium ${
+                    viewMode === "map"
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  <svg
+                    className="inline-block mr-1 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                    />
+                  </svg>
+                  Map
+                </button>
+              </div>
             </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {listings.map((item: any) => (
-                <ListingCard key={item.listing.id} listing={item.listing} />
-              ))}
-            </div>
+
+            {/* Grid View */}
+            {viewMode === "grid" && (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {listings.map((item: any) => (
+                  <ListingCard key={item.listing.id} listing={item.listing} />
+                ))}
+              </div>
+            )}
+
+            {/* Map View */}
+            {viewMode === "map" && (
+              <ListingMap
+                listings={listings.map((item: any) => ({
+                  id: item.listing.id,
+                  latitude: item.listing.latitude,
+                  longitude: item.listing.longitude,
+                  title: item.listing.title,
+                  pricePerPiece: item.listing.pricePerPiece,
+                  quantityAvailable: item.listing.quantityAvailable,
+                  category: item.listing.category,
+                  distance: item.distance,
+                }))}
+                center={
+                  latitude && longitude ? [longitude, latitude] : undefined
+                }
+                zoom={
+                  searchParams.radiusKm <= 10
+                    ? 12
+                    : searchParams.radiusKm <= 25
+                      ? 11
+                      : 10
+                }
+                onMarkerClick={(listingId) => {
+                  router.push(`/listings/${listingId}`);
+                }}
+                height="600px"
+                className="w-full"
+              />
+            )}
           </>
         ) : (
           <div className="rounded-lg bg-gray-50 p-8 text-center">

@@ -18,7 +18,7 @@
     "search": "Buscar",
     "filter": "Filtrar",
     "sort": "Ordenar",
-    "select": "Seleccionar..."
+    "select": "Seleccionar...","viewDetails": "Ver detalles"
   },
   "auth": {
     "signIn": "Iniciar sesión",

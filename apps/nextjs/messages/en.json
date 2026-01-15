@@ -18,7 +18,7 @@
     "search": "Search",
     "filter": "Filter",
     "sort": "Sort",
-    "select": "Select..."
+    "select": "Select...","viewDetails": "View Details"
   },
   "auth": {
     "signIn": "Sign In",

@@ -11,8 +11,8 @@
  *   reindex         - Rebuild all indexes
  *   analyze         - Update query planner statistics
  *   cleanup-expired - Remove expired reservations
- *   cleanup-old-notifications - Remove old read notifications
- *   check-health    - Run database health checks
+ *   cleanup-old     - Remove old completed reservations
+ *   health          - Run database health checks
  */
 
 import postgres from "postgres";
@@ -112,22 +112,27 @@ async function cleanupExpiredReservations() {
 
     console.log(`   Found ${expiredReservations.length} expired reservations`);
 
-    // Update status to EXPIRED and restore inventory
+    // Update status to CANCELLED and restore inventory
     for (const reservation of expiredReservations) {
       await db.transaction(async (tx) => {
         // Update reservation status
         await tx
           .update(schema.reservation)
-          .set({ status: "EXPIRED" })
+          .set({ status: "CANCELLED" })
           .where(eq(schema.reservation.id, reservation.id));
 
-        // Restore inventory
-        await tx
-          .update(schema.listing)
-          .set({
-            quantityAvailable: schema.listing.quantityAvailable + reservation.quantityReserved,
-          })
-          .where(eq(schema.listing.id, reservation.listingId));
+        // Restore inventory (use sql operator for increment)
+        const listing = await tx.query.listing.findFirst({
+          where: eq(schema.listing.id, reservation.listingId),
+        });
+        if (listing) {
+          await tx
+            .update(schema.listing)
+            .set({
+              quantityAvailable: listing.quantityAvailable + reservation.quantityReserved,
+            })
+            .where(eq(schema.listing.id, reservation.listingId));
+        }
       });
     }
 
@@ -137,27 +142,27 @@ async function cleanupExpiredReservations() {
   }
 }
 
-async function cleanupOldNotifications() {
-  console.log("🧹 Cleaning up old notifications...");
+async function cleanupOldReservations() {
+  console.log("🧹 Cleaning up old completed/cancelled reservations...");
 
   try {
-    // Delete read notifications older than 30 days
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // Delete completed/cancelled reservations older than 90 days
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
     const deleted = await db
-      .delete(schema.notification)
+      .delete(schema.reservation)
       .where(
         and(
-          eq(schema.notification.isRead, true),
-          lt(schema.notification.createdAt, thirtyDaysAgo),
+          eq(schema.reservation.status, "COMPLETED"),
+          lt(schema.reservation.updatedAt, ninetyDaysAgo),
         ),
       )
       .returning();
 
-    console.log(`✅ Deleted ${deleted.length} old notifications`);
+    console.log(`✅ Deleted ${deleted.length} old completed reservations`);
   } catch (error) {
-    console.error("❌ Error cleaning up notifications:", error);
+    console.error("❌ Error cleaning up old reservations:", error);
   }
 }
 
@@ -166,15 +171,15 @@ async function checkDatabaseHealth() {
 
   try {
     // 1. Check database size
-    const dbSizeResult = await client.unsafe<Array<{ size: string }>>`
-      SELECT pg_size_pretty(pg_database_size(current_database())) as size
-    `;
+    const dbSizeResult = await client.unsafe<Array<{ size: string }>>(
+      "SELECT pg_size_pretty(pg_database_size(current_database())) as size",
+    );
     console.log(`📦 Database size: ${dbSizeResult[0]?.size}`);
 
     // 2. Check table sizes
     const tableSizeResult = await client.unsafe<
       Array<{ table_name: string; size: string; row_count: string }>
-    >`
+    >(`
       SELECT
         schemaname || '.' || tablename as table_name,
         pg_size_pretty(pg_total_relation_size(schemaname || '.' || tablename)) as size,
@@ -183,7 +188,7 @@ async function checkDatabaseHealth() {
       WHERE schemaname = 'public'
       ORDER BY pg_total_relation_size(schemaname || '.' || tablename) DESC
       LIMIT 10
-    `;
+    `);
     console.log("\n📊 Top 10 tables by size:");
     tableSizeResult.forEach((row) => {
       console.log(
@@ -194,7 +199,7 @@ async function checkDatabaseHealth() {
     // 3. Check index usage
     const indexUsageResult = await client.unsafe<
       Array<{ table_name: string; index_name: string; scans: number }>
-    >`
+    >(`
       SELECT
         schemaname || '.' || tablename as table_name,
         indexname as index_name,
@@ -203,7 +208,7 @@ async function checkDatabaseHealth() {
       WHERE schemaname = 'public'
       ORDER BY idx_scan ASC
       LIMIT 10
-    `;
+    `);
     console.log("\n🔍 Least used indexes (consider removing if scans = 0):");
     indexUsageResult.forEach((row) => {
       console.log(
@@ -214,7 +219,7 @@ async function checkDatabaseHealth() {
     // 4. Check for bloat
     const bloatResult = await client.unsafe<
       Array<{ table_name: string; bloat_pct: number }>
-    >`
+    >(`
       SELECT
         tablename as table_name,
         ROUND(100 * (pg_relation_size(schemaname || '.' || tablename) -
@@ -224,7 +229,7 @@ async function checkDatabaseHealth() {
       WHERE schemaname = 'public' AND n_live_tup > 0
       ORDER BY bloat_pct DESC
       LIMIT 5
-    `;
+    `);
     console.log("\n💨 Tables with potential bloat (run VACUUM if > 20%):");
     bloatResult.forEach((row) => {
       const bloatPct = row.bloat_pct || 0;
@@ -237,14 +242,14 @@ async function checkDatabaseHealth() {
     // 5. Check connection count
     const connectionResult = await client.unsafe<
       Array<{ total: number; active: number; idle: number }>
-    >`
+    >(`
       SELECT
         COUNT(*) as total,
         SUM(CASE WHEN state = 'active' THEN 1 ELSE 0 END) as active,
         SUM(CASE WHEN state = 'idle' THEN 1 ELSE 0 END) as idle
       FROM pg_stat_activity
       WHERE datname = current_database()
-    `;
+    `);
     console.log("\n🔌 Database connections:");
     console.log(
       `   Total: ${connectionResult[0]?.total}, Active: ${connectionResult[0]?.active}, Idle: ${connectionResult[0]?.idle}`,
@@ -253,7 +258,7 @@ async function checkDatabaseHealth() {
     // 6. Check long-running queries
     const longQueriesResult = await client.unsafe<
       Array<{ duration: string; query: string }>
-    >`
+    >(`
       SELECT
         now() - query_start as duration,
         query
@@ -261,7 +266,7 @@ async function checkDatabaseHealth() {
       WHERE state = 'active' AND query NOT ILIKE '%pg_stat_activity%'
       ORDER BY query_start
       LIMIT 5
-    `;
+    `);
     if (longQueriesResult.length > 0) {
       console.log("\n⏱️  Active queries:");
       longQueriesResult.forEach((row) => {
@@ -293,7 +298,7 @@ Commands:
   reindex         - Rebuild all indexes (monthly)
   analyze         - Update query planner statistics (daily)
   cleanup-expired - Remove expired reservations (daily)
-  cleanup-old     - Remove old read notifications (weekly)
+  cleanup-old     - Remove old completed reservations (quarterly)
   health          - Run database health checks
 
 Examples:
@@ -325,7 +330,7 @@ Examples:
       break;
 
     case "cleanup-old":
-      await cleanupOldNotifications();
+      await cleanupOldReservations();
       break;
 
     case "health":

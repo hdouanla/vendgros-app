@@ -364,10 +364,36 @@ This project follows:
 - Next steps guidance
 - Payment integration ready
 
+#### 5. Image Upload System
+**Created**: `packages/api/src/router/upload.ts`
+- tRPC router for pre-signed URL generation
+- AWS SDK integration for DigitalOcean Spaces
+- S3-compatible PUT operations with public-read ACL
+- User-specific storage paths: `listings/{userId}/{uuid}.{ext}`
+- URL expiry: 5 minutes for security
+- Supports JPEG, PNG, WebP formats
+
+**Component**: `apps/nextjs/src/components/listings/image-upload.tsx`
+- Drag-and-drop file upload interface
+- Client-to-S3 direct uploads (no server passthrough)
+- Photo preview grid with cover indicator
+- Individual photo removal
+- Real-time upload progress
+- File validation: type, size (5MB max), count (10 max)
+- Error handling with user-friendly messages
+
+**Integration**: Enhanced `listing-form.tsx`
+- ImageUpload component embedded in form
+- Photo validation (minimum 1 required)
+- Photos array state management
+- Automatic first-photo-as-cover selection
+- Translations for EN/FR/ES
+
 ### 🎨 Design System
 - **Tailwind CSS**: Responsive utility-first styling
 - **shadcn/ui**: Base component library (buttons, inputs, modals)
 - **QR Code Integration**: Canvas-based generation with logo support
+- **Image Upload**: Direct-to-CDN via pre-signed URLs
 - **i18n**: Full translation support across all pages
 - **Type Safety**: End-to-end TypeScript via tRPC
 
@@ -383,12 +409,13 @@ This project follows:
 ## 📊 Updated Statistics
 
 ### Development Metrics
-- **23 commits** with detailed messages
-- **45+ files** created
-- **10,000+ lines** of code
-- **6 tRPC routers** with 40+ endpoints
+- **24 commits** with detailed messages
+- **47+ files** created
+- **11,000+ lines** of code
+- **7 tRPC routers** with 42+ endpoints (added upload router)
 - **4 complete UI pages** with components
-- **200+ translations** in 3 languages
+- **Image upload system** with S3 integration
+- **205+ translations** in 3 languages
 - **880K+ postal codes** ready for production
 
 ### Feature Completion
@@ -401,12 +428,12 @@ This project follows:
 - Internationalization
 - QR code system
 
-✅ **Week 2 (60% Complete)**
+✅ **Week 2 (75% Complete)**
 - Listing creation UI ✅
 - Listing search UI ✅
 - Admin moderation UI ✅
 - Reservation detail UI ✅
-- Image upload integration ⏳
+- Image upload integration ✅
 - Map visualization ⏳
 - Listing detail page ⏳
 
@@ -426,6 +453,7 @@ This project follows:
 ## 🚀 Latest Commits
 
 ```
+d08fe35 feat: implement image upload to DigitalOcean Spaces
 569503f feat: add admin moderation and reservation detail pages
 1e8d0c0 feat: add listing creation and search UI pages
 1c28594 docs: add comprehensive development session summary
@@ -436,7 +464,6 @@ c6f91f0 docs: add comprehensive README with setup instructions
 c30029b feat: add multi-channel notification system
 d051cb0 feat: integrate Stripe payment system for 5% deposits
 bd51f92 feat: add admin moderation system with user management
-85f1c92 feat: add blind rating system with 7-day window
 ```
 
 ---
@@ -519,7 +546,7 @@ bd51f92 feat: add admin moderation system with user management
 - [x] Listing search UI
 - [x] Admin moderation UI
 - [x] Reservation detail UI
-- [ ] Image upload integration
+- [x] Image upload integration
 - [ ] Map visualization
 - [ ] Payment flow UI
 - [ ] Rating submission UI
@@ -529,7 +556,7 @@ bd51f92 feat: add admin moderation system with user management
 
 ---
 
-**Status**: Week 1 Complete ✅ | Week 2 In Progress (60%) 🚧
-**Ready for**: Frontend development continuation, testing, deployment prep
-**Built with**: T3 Stack + PostGIS + Stripe + QR Codes 🚀
+**Status**: Week 1 Complete ✅ | Week 2 In Progress (75%) 🚧
+**Ready for**: Frontend development continuation, map integration, testing
+**Built with**: T3 Stack + PostGIS + Stripe + QR Codes + DigitalOcean Spaces 🚀
 

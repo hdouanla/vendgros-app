@@ -2431,7 +2431,7 @@ test.describe("Listing Flow", () => {
 ```
 
 **Acceptance Criteria:**
-- [ ] E2E tests for critical paths
+- [x] E2E tests for critical paths (Playwright configured with 5 test files)
 - [ ] Integration tests for tRPC routes
 - [ ] Unit tests for business logic
 - [ ] 80%+ code coverage

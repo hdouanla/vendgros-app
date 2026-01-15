@@ -8,8 +8,14 @@ import {
 } from "@tanstack/react-query";
 
 import type { RouterOutputs } from "@acme/api";
-import { CreatePostSchema } from "@acme/db/schema";
 import { cn } from "@acme/ui";
+
+// Legacy Post type for deprecated demo code
+type Post = {
+  id: string;
+  title: string;
+  content: string;
+};
 import { Button } from "@acme/ui/button";
 import {
   Field,
@@ -47,9 +53,6 @@ export function CreatePostForm() {
     defaultValues: {
       content: "",
       title: "",
-    },
-    validators: {
-      onSubmit: CreatePostSchema,
     },
     onSubmit: (data) => createPost.mutate(data.value),
   });

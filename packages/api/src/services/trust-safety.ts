@@ -1,8 +1,15 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid errors during build
+let openaiInstance: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!openaiInstance) {
+    openaiInstance = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiInstance;
+}
 
 export interface FraudDetectionResult {
   isFraudulent: boolean;
@@ -393,7 +400,7 @@ export async function checkReviewAuthenticity(params: {
 
   // Use OpenAI to detect AI-generated content
   try {
-    const aiDetectionResponse = await openai.chat.completions.create({
+    const aiDetectionResponse = await getOpenAI().chat.completions.create({
       model: "gpt-4-turbo-preview",
       messages: [
         {
@@ -463,7 +470,7 @@ async function analyzeWithAI(params: {
   userMetrics: any;
 }): Promise<string> {
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-4-turbo-preview",
       messages: [
         {

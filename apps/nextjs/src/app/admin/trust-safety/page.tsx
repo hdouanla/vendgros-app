@@ -1,5 +1,8 @@
 "use client";
 
+// Prevent prerendering for authenticated pages
+export const dynamic = 'force-dynamic';
+
 import { useState } from "react";
 import { api } from "~/trpc/react";
 

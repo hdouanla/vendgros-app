@@ -379,3 +379,39 @@ export async function notifyRatingReceived(params: {
     `,
   });
 }
+
+export async function sendMessageNotification(params: {
+  recipientEmail: string;
+  recipientPhone?: string;
+  senderEmail: string;
+  listingTitle: string;
+  messagePreview: string;
+}): Promise<void> {
+  const { recipientEmail, recipientPhone, senderEmail, listingTitle, messagePreview } = params;
+
+  // Email notification
+  await sendEmail({
+    to: recipientEmail,
+    subject: "New Message - Vendgros",
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <body>
+          <h2>New Message Received</h2>
+          <p>You have a new message about "${listingTitle}".</p>
+          <p><strong>From:</strong> ${senderEmail}</p>
+          <p><strong>Message:</strong> ${messagePreview}${messagePreview.length >= 50 ? "..." : ""}</p>
+          <p>Log in to Vendgros to read the full message and reply.</p>
+        </body>
+      </html>
+    `,
+  });
+
+  // SMS notification (optional)
+  if (recipientPhone) {
+    await sendSms({
+      to: recipientPhone,
+      message: `Vendgros: New message about "${listingTitle}". Log in to read and reply.`,
+    });
+  }
+}

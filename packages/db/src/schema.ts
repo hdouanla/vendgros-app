@@ -91,6 +91,9 @@ export const userRelations = relations(user, ({ many }) => ({
   reservationsAsBuyer: many(reservation),
   ratingsGiven: many(rating, { relationName: "raterRatings" }),
   ratingsReceived: many(rating, { relationName: "ratedRatings" }),
+  conversationsAsBuyer: many(conversation, { relationName: "buyerConversations" }),
+  conversationsAsSeller: many(conversation, { relationName: "sellerConversations" }),
+  messagesSent: many(message),
 }));
 
 // ============================================================================
@@ -334,6 +337,121 @@ export const ratingRelations = relations(rating, ({ one }) => ({
 }));
 
 // ============================================================================
+// MESSAGING TABLES
+// ============================================================================
+
+export const conversation = pgTable(
+  "conversation",
+  (t) => ({
+    id: t.text().primaryKey().$defaultFn(() => crypto.randomUUID()),
+    listingId: t
+      .text()
+      .notNull()
+      .references(() => listing.id, { onDelete: "cascade" }),
+    buyerId: t
+      .text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    sellerId: t
+      .text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+
+    // Last message metadata (for list view)
+    lastMessageAt: t.timestamp(),
+    lastMessageText: t.text(),
+    lastMessageSenderId: t.text(),
+
+    // Read receipts
+    buyerLastReadAt: t.timestamp(),
+    sellerLastReadAt: t.timestamp(),
+
+    createdAt: t.timestamp().notNull().defaultNow(),
+    updatedAt: t
+      .timestamp({ mode: "date", withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => sql`now()`),
+  }),
+  (table) => ({
+    listingIdx: index("conversation_listing_idx").on(table.listingId),
+    buyerIdx: index("conversation_buyer_idx").on(table.buyerId),
+    sellerIdx: index("conversation_seller_idx").on(table.sellerId),
+    buyerSellerListingIdx: index("conversation_buyer_seller_listing_idx").on(
+      table.buyerId,
+      table.sellerId,
+      table.listingId,
+    ),
+  }),
+);
+
+export const conversationRelations = relations(conversation, ({ one, many }) => ({
+  listing: one(listing, {
+    fields: [conversation.listingId],
+    references: [listing.id],
+  }),
+  buyer: one(user, {
+    fields: [conversation.buyerId],
+    references: [user.id],
+    relationName: "buyerConversations",
+  }),
+  seller: one(user, {
+    fields: [conversation.sellerId],
+    references: [user.id],
+    relationName: "sellerConversations",
+  }),
+  messages: many(message),
+}));
+
+export const message = pgTable(
+  "message",
+  (t) => ({
+    id: t.text().primaryKey().$defaultFn(() => crypto.randomUUID()),
+    conversationId: t
+      .text()
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    senderId: t
+      .text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+
+    content: t.text().notNull(),
+    isEncrypted: t.boolean().notNull().default(false),
+
+    // Attachments (images)
+    attachments: t.text().array().default(sql`ARRAY[]::text[]`),
+
+    // Message status
+    isRead: t.boolean().notNull().default(false),
+    readAt: t.timestamp(),
+
+    createdAt: t.timestamp().notNull().defaultNow(),
+    updatedAt: t
+      .timestamp({ mode: "date", withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => sql`now()`),
+  }),
+  (table) => ({
+    conversationIdx: index("message_conversation_idx").on(table.conversationId),
+    senderIdx: index("message_sender_idx").on(table.senderId),
+    createdAtIdx: index("message_created_at_idx").on(table.createdAt),
+  }),
+);
+
+export const messageRelations = relations(message, ({ one }) => ({
+  conversation: one(conversation, {
+    fields: [message.conversationId],
+    references: [conversation.id],
+  }),
+  sender: one(user, {
+    fields: [message.senderId],
+    references: [user.id],
+  }),
+}));
+
+// ============================================================================
 // POSTAL CODES TABLE (Canadian)
 // ============================================================================
 
@@ -405,6 +523,17 @@ export const insertPostalCodeSchema = createInsertSchema(postalCode, {
 });
 
 export const selectPostalCodeSchema = createSelectSchema(postalCode);
+
+// Conversation schemas
+export const insertConversationSchema = createInsertSchema(conversation);
+export const selectConversationSchema = createSelectSchema(conversation);
+
+// Message schemas
+export const insertMessageSchema = createInsertSchema(message, {
+  content: z.string().min(1).max(5000),
+  attachments: z.array(z.string().url()).max(5).optional(),
+});
+export const selectMessageSchema = createSelectSchema(message);
 
 // Export all
 export * from "./auth-schema";

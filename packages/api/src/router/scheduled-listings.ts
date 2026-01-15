@@ -3,6 +3,7 @@ import { and, eq, lte, sql } from "drizzle-orm";
 
 import { listing } from "@acme/db/schema";
 
+import { notifyScheduledListingPublished } from "../lib/notifications";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const scheduledListingsRouter = createTRPCRouter({
@@ -151,7 +152,20 @@ export const scheduledListingsRouter = createTRPCRouter({
 
         published.push(updated);
 
-        // TODO: Send notification to seller about successful publication
+        // Send notification to seller about successful publication
+        if (updated) {
+          const seller = await ctx.db.query.user.findFirst({
+            where: (users, { eq }) => eq(users.id, updated.sellerId),
+          });
+
+          if (seller) {
+            await notifyScheduledListingPublished({
+              sellerEmail: seller.email,
+              sellerPhone: seller.phone,
+              listingTitle: updated.title,
+            });
+          }
+        }
       } catch (error) {
         console.error(
           `Failed to publish scheduled listing ${listingData.id}:`,

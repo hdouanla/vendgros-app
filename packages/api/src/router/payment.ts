@@ -4,6 +4,7 @@ import Stripe from "stripe";
 
 import { listing, reservation } from "@acme/db/schema";
 
+import { notifyRefundProcessed, notifyReservationConfirmed } from "../lib/notifications";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 // Initialize Stripe (API key should be in environment variables)
@@ -143,7 +144,32 @@ export const paymentRouter = createTRPCRouter({
           .where(eq(listing.id, existingReservation.listingId));
       });
 
-      // TODO: Send confirmation notification to buyer and seller
+      // Fetch buyer and seller info for notifications
+      const [buyer, seller] = await Promise.all([
+        ctx.db.query.user.findFirst({
+          where: (users, { eq }) => eq(users.id, existingReservation.buyerId),
+        }),
+        ctx.db.query.user.findFirst({
+          where: (users, { eq }) =>
+            eq(users.id, existingReservation.listing.sellerId),
+        }),
+      ]);
+
+      if (buyer && seller) {
+        await notifyReservationConfirmed({
+          buyerEmail: buyer.email,
+          buyerPhone: buyer.phone,
+          sellerEmail: seller.email,
+          sellerPhone: seller.phone,
+          listingTitle: existingReservation.listing.title,
+          quantity: existingReservation.quantityReserved,
+          verificationCode: existingReservation.verificationCode,
+          depositPaid: existingReservation.depositAmount,
+          balanceDue:
+            existingReservation.totalPrice - existingReservation.depositAmount,
+          pickupAddress: existingReservation.listing.pickupAddress,
+        });
+      }
 
       return { success: true, alreadyConfirmed: false };
     }),
@@ -335,7 +361,19 @@ export const paymentRouter = createTRPCRouter({
         })
         .where(eq(listing.id, existingReservation.listingId));
 
-      // TODO: Send refund notification to buyer
+      // Send refund notification to buyer
+      const buyer = await ctx.db.query.user.findFirst({
+        where: (users, { eq }) => eq(users.id, existingReservation.buyerId),
+      });
+
+      if (buyer) {
+        await notifyRefundProcessed({
+          buyerEmail: buyer.email,
+          buyerPhone: buyer.phone,
+          listingTitle: existingReservation.listing.title,
+          refundAmount: refund.amount / 100,
+        });
+      }
 
       return {
         success: true,

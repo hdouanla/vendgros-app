@@ -415,3 +415,110 @@ export async function sendMessageNotification(params: {
     });
   }
 }
+
+export async function notifyRefundProcessed(params: {
+  buyerEmail: string;
+  buyerPhone?: string;
+  listingTitle: string;
+  refundAmount: number;
+}): Promise<void> {
+  const { buyerEmail, buyerPhone, listingTitle, refundAmount } = params;
+
+  await sendEmail({
+    to: buyerEmail,
+    subject: "Refund Processed - Vendgros",
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <body>
+          <h2>Refund Processed</h2>
+          <p>Your deposit for "${listingTitle}" has been refunded.</p>
+          <p><strong>Refund Amount:</strong> $${refundAmount.toFixed(2)} CAD</p>
+          <p>The refund will appear in your account within 5-10 business days.</p>
+        </body>
+      </html>
+    `,
+  });
+
+  if (buyerPhone) {
+    await sendSms({
+      to: buyerPhone,
+      message: `Vendgros: Your deposit of $${refundAmount.toFixed(2)} for "${listingTitle}" has been refunded.`,
+    });
+  }
+}
+
+export async function notifyAccountReactivated(params: {
+  userEmail: string;
+}): Promise<void> {
+  const { userEmail } = params;
+
+  await sendEmail({
+    to: userEmail,
+    subject: "Account Reactivated - Vendgros",
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <body>
+          <h2>Account Reactivated</h2>
+          <p>Your Vendgros account has been reactivated.</p>
+          <p>You can now access all features of the platform again.</p>
+          <p>Welcome back!</p>
+        </body>
+      </html>
+    `,
+  });
+}
+
+export async function notifyAccountBanned(params: {
+  userEmail: string;
+  reason: string;
+}): Promise<void> {
+  const { userEmail, reason } = params;
+
+  await sendEmail({
+    to: userEmail,
+    subject: "Account Banned - Vendgros",
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <body>
+          <h2>Account Banned</h2>
+          <p>Your Vendgros account has been permanently banned.</p>
+          <p><strong>Reason:</strong> ${reason}</p>
+          <p>If you believe this was done in error, please contact support.</p>
+        </body>
+      </html>
+    `,
+  });
+}
+
+export async function notifyScheduledListingPublished(params: {
+  sellerEmail: string;
+  sellerPhone?: string;
+  listingTitle: string;
+}): Promise<void> {
+  const { sellerEmail, sellerPhone, listingTitle } = params;
+
+  await sendEmail({
+    to: sellerEmail,
+    subject: "Scheduled Listing Published - Vendgros",
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <body>
+          <h2>Listing Now Live</h2>
+          <p>Your scheduled listing "${listingTitle}" has been automatically published.</p>
+          <p>Buyers in your area can now discover and reserve your items.</p>
+        </body>
+      </html>
+    `,
+  });
+
+  if (sellerPhone) {
+    await sendSms({
+      to: sellerPhone,
+      message: `Vendgros: Your scheduled listing "${listingTitle}" is now live!`,
+    });
+  }
+}

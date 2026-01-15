@@ -4,6 +4,8 @@ import { and, desc, eq, or } from "drizzle-orm";
 import { listing, user } from "@acme/db/schema";
 
 import {
+  notifyAccountBanned,
+  notifyAccountReactivated,
   notifyAccountSuspended,
   notifyListingApproved,
   notifyListingRejected,
@@ -143,7 +145,18 @@ export const adminRouter = createTRPCRouter({
         .where(eq(listing.id, input.listingId))
         .returning();
 
-      // TODO: Send rejection notification to seller with reason
+      // Send rejection notification to seller
+      const seller = await ctx.db.query.user.findFirst({
+        where: (users, { eq }) => eq(users.id, existingListing.sellerId),
+      });
+
+      if (seller && updated) {
+        await notifyListingRejected({
+          sellerEmail: seller.email,
+          listingTitle: updated.title,
+          reason: input.reason,
+        });
+      }
 
       return updated;
     }),
@@ -223,7 +236,14 @@ export const adminRouter = createTRPCRouter({
         .where(eq(user.id, input.userId))
         .returning();
 
-      // TODO: Send suspension notification to user
+      // Send suspension notification to user
+      if (updated) {
+        await notifyAccountSuspended({
+          userEmail: updated.email,
+          reason: input.reason,
+        });
+      }
+
       // TODO: Cancel all active listings
 
       return updated;
@@ -256,7 +276,12 @@ export const adminRouter = createTRPCRouter({
         .where(eq(user.id, input.userId))
         .returning();
 
-      // TODO: Send reactivation notification to user
+      // Send reactivation notification to user
+      if (updated) {
+        await notifyAccountReactivated({
+          userEmail: updated.email,
+        });
+      }
 
       return updated;
     }),
@@ -293,7 +318,14 @@ export const adminRouter = createTRPCRouter({
         .where(eq(user.id, input.userId))
         .returning();
 
-      // TODO: Send ban notification to user
+      // Send ban notification to user
+      if (updated) {
+        await notifyAccountBanned({
+          userEmail: updated.email,
+          reason: input.reason,
+        });
+      }
+
       // TODO: Cancel all active listings and reservations
 
       return updated;

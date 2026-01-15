@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import twilio from "twilio";
+import { Expo, ExpoPushMessage, ExpoPushTicket } from "expo-server-sdk";
 
 // ============================================================================
 // Types
@@ -94,14 +95,113 @@ export async function sendSms(params: SmsNotification): Promise<void> {
 // Push Notifications (Expo Push)
 // ============================================================================
 
+// Initialize Expo SDK client
+let expoClient: Expo | null = null;
+
+function getExpoClient(): Expo | null {
+  if (!process.env.EXPO_ACCESS_TOKEN && process.env.NODE_ENV === "production") {
+    console.warn("EXPO_ACCESS_TOKEN not configured for production");
+    return null;
+  }
+
+  if (!expoClient) {
+    expoClient = new Expo({
+      accessToken: process.env.EXPO_ACCESS_TOKEN,
+      useFcmV1: true, // Use FCM v1 API
+    });
+  }
+
+  return expoClient;
+}
+
 export async function sendPushNotification(
   params: PushNotification,
 ): Promise<void> {
-  // TODO: Implement Expo Push Notifications
-  // This will be implemented when the mobile app is set up
-  console.log(`📱 Push notification queued for ${params.tokens.length} devices`);
+  const expo = getExpoClient();
+
+  if (!expo) {
+    console.warn("Expo client not configured, skipping push notification");
+    return;
+  }
+
+  // Filter out invalid tokens
+  const validTokens = params.tokens.filter((token) =>
+    Expo.isExpoPushToken(token),
+  );
+
+  if (validTokens.length === 0) {
+    console.warn("No valid Expo push tokens provided");
+    return;
+  }
+
+  // Create messages
+  const messages: ExpoPushMessage[] = validTokens.map((token) => ({
+    to: token,
+    sound: "default",
+    title: params.title,
+    body: params.body,
+    data: params.data || {},
+    priority: "high",
+    channelId: "default",
+  }));
+
+  try {
+    // Send notifications in chunks (Expo recommends chunks of 100)
+    const chunks = expo.chunkPushNotifications(messages);
+    const tickets: ExpoPushTicket[] = [];
+
+    for (const chunk of chunks) {
+      try {
+        const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+        tickets.push(...ticketChunk);
+      } catch (error) {
+        console.error("Error sending push notification chunk:", error);
+      }
+    }
+
+    // Check for errors in tickets
+    const errors = tickets.filter(
+      (ticket) => ticket.status === "error",
+    );
+
+    if (errors.length > 0) {
+      console.error(
+        `${errors.length} push notifications failed:`,
+        errors,
+      );
+    }
+
+    console.log(
+      `✅ Sent ${tickets.length - errors.length} push notifications successfully`,
+    );
+  } catch (error) {
+    console.error("Failed to send push notifications:", error);
+    throw error;
+  }
+}
+
+/**
+ * Send push notification to multiple users
+ */
+export async function sendPushToUsers(params: {
+  userIds: string[];
+  title: string;
+  body: string;
+  data?: Record<string, string>;
+}): Promise<void> {
+  // In production, you would query the database for push tokens
+  // For now, this is a placeholder that logs the intent
+  console.log(`📱 Would send push to ${params.userIds.length} users:`);
   console.log(`   Title: ${params.title}`);
   console.log(`   Body: ${params.body}`);
+
+  // Example implementation:
+  // const users = await db.user.findMany({
+  //   where: { id: { in: params.userIds } },
+  //   select: { pushTokens: true },
+  // });
+  // const tokens = users.flatMap(u => u.pushTokens || []);
+  // await sendPushNotification({ ...params, tokens });
 }
 
 // ============================================================================

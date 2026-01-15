@@ -21,6 +21,7 @@ export const userTypeEnum = pgEnum("user_type", [
   "BUYER",
   "SELLER_INDIVIDUAL",
   "SELLER_MERCHANT",
+  "ADMIN",
 ]);
 
 export const accountStatusEnum = pgEnum("account_status", [
@@ -69,6 +70,7 @@ export const user = pgTable(
 
     ratingAverage: t.doublePrecision().default(0),
     ratingCount: t.integer().notNull().default(0),
+    moderationNotes: t.text(),
 
     createdAt: t.timestamp().notNull().defaultNow(),
     updatedAt: t
@@ -179,6 +181,8 @@ export const listing = pgTable(
     longitude: t.doublePrecision().notNull(),
 
     status: listingStatusEnum().notNull().default("DRAFT"),
+    moderationNotes: t.text(),
+    publishedAt: t.timestamp(),
 
     createdAt: t.timestamp().notNull().defaultNow(),
     updatedAt: t

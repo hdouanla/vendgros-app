@@ -1,3 +1,4 @@
+import { adminRouter } from "./router/admin";
 import { authRouter } from "./router/auth";
 import { listingRouter } from "./router/listing";
 import { postRouter } from "./router/post";
@@ -11,6 +12,7 @@ export const appRouter = createTRPCRouter({
   listing: listingRouter,
   reservation: reservationRouter,
   rating: ratingRouter,
+  admin: adminRouter,
 });
 
 // export type definition of API

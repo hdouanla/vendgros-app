@@ -18,7 +18,12 @@
       "Bash(pnpm --filter @acme/db with-env drizzle-kit generate:*)",
       "Bash(pnpm --filter @acme/db with-env drizzle-kit migrate:*)",
       "Bash(pnpm:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "Bash(test:*)",
+      "Bash(POSTGRES_URL=\"postgresql://localhost:5432/vendgros\" pnpm drizzle-kit generate:*)",
+      "Bash(POSTGRES_URL=\"postgresql://localhost:5432/vendgros\" pnpm --filter @acme/db drizzle-kit:*)",
+      "Bash(source:*)",
+      "Bash(export POSTGRES_URL=\"postgresql://localhost:5432/vendgros\")"
     ]
   }
 }

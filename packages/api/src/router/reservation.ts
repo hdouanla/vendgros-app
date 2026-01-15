@@ -2,7 +2,7 @@ import { z } from "zod/v4";
 import { and, eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
 
-import { listing, reservation } from "@acme/db/schema";
+import { listing, rating, reservation } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
@@ -299,7 +299,9 @@ export const reservationRouter = createTRPCRouter({
         .where(eq(reservation.id, input.reservationId))
         .returning();
 
-      // TODO: Trigger rating prompts for both parties
+      // Rating prompts will be triggered by the frontend
+      // Users have 7 days to rate each other after completion
+      // Ratings are blind (hidden until both parties submit)
 
       return updated;
     }),
@@ -333,7 +335,7 @@ export const reservationRouter = createTRPCRouter({
         // Mark as no-show
         await tx
           .update(reservation)
-          .set({ status: "NO_SHOW" })
+          .set({ status: "NO_SHOW", completedAt: new Date() })
           .where(eq(reservation.id, input.reservationId));
 
         // Return quantity to listing
@@ -346,7 +348,14 @@ export const reservationRouter = createTRPCRouter({
           })
           .where(eq(listing.id, existingReservation.listingId));
 
-        // TODO: Auto-assign 1-star rating to buyer
+        // Auto-assign 1-star rating from seller to buyer for no-show
+        await tx.insert(rating).values({
+          reservationId: input.reservationId,
+          raterId: ctx.session.user.id, // seller
+          rateeId: existingReservation.buyerId,
+          stars: 1,
+          comment: "No-show - buyer did not pick up items within 48 hours",
+        });
       });
 
       return { success: true };

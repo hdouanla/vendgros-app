@@ -36,6 +36,13 @@
       "when": 1768486634794,
       "tag": "0004_silly_romulus",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1768496891173,
+      "tag": "0005_parched_scalphunter",
+      "breakpoints": true
     }
   ]
 }

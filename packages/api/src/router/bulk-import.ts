@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, desc } from "drizzle-orm";
 
-import { listing } from "@acme/db/schema";
+import { listing, bulkImport } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { geocodeAddress } from "../services/geocoding";
@@ -161,67 +161,116 @@ export const bulkImportRouter = createTRPCRouter({
           }),
         ),
         publishImmediately: z.boolean().default(false),
+        fileName: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Create bulk import record
+      const [importRecord] = await ctx.db
+        .insert(bulkImport)
+        .values({
+          userId: ctx.session.user.id,
+          fileName: input.fileName,
+          totalRows: input.rows.length,
+          publishImmediately: input.publishImmediately,
+          status: "PROCESSING",
+          startedAt: new Date(),
+        })
+        .returning();
+
       const importResults: ImportResult[] = [];
 
-      // Process each row
-      for (let i = 0; i < input.rows.length; i++) {
-        const row = input.rows[i]!;
+      try {
+        // Process each row
+        for (let i = 0; i < input.rows.length; i++) {
+          const row = input.rows[i]!;
 
-        try {
-          // Geocode address
-          const geocodeResult = await geocodeAddress(row.pickupAddress, "CA");
-          const latitude = geocodeResult.latitude;
-          const longitude = geocodeResult.longitude;
+          try {
+            // Geocode address
+            const geocodeResult = await geocodeAddress(row.pickupAddress, "CA");
+            const latitude = geocodeResult.latitude;
+            const longitude = geocodeResult.longitude;
 
-          // Create listing
-          const [newListing] = await ctx.db
-            .insert(listing)
-            .values({
-              sellerId: ctx.session.user.id,
-              title: row.title,
-              description: row.description,
-              category: row.category,
-              photos: row.photos ?? [],
-              pricePerPiece: row.pricePerPiece,
-              quantityTotal: row.quantityTotal,
-              quantityAvailable: row.quantityTotal,
-              maxPerBuyer: row.maxPerBuyer,
-              pickupAddress: row.pickupAddress,
-              pickupInstructions: row.pickupInstructions,
-              latitude,
-              longitude,
-              location: `POINT(${longitude} ${latitude})`,
-              status: input.publishImmediately ? "PUBLISHED" : "DRAFT",
-              publishedAt: input.publishImmediately ? new Date() : null,
-            })
-            .returning();
+            // Create listing
+            const [newListing] = await ctx.db
+              .insert(listing)
+              .values({
+                sellerId: ctx.session.user.id,
+                title: row.title,
+                description: row.description,
+                category: row.category,
+                photos: row.photos ?? [],
+                pricePerPiece: row.pricePerPiece,
+                quantityTotal: row.quantityTotal,
+                quantityAvailable: row.quantityTotal,
+                maxPerBuyer: row.maxPerBuyer,
+                pickupAddress: row.pickupAddress,
+                pickupInstructions: row.pickupInstructions,
+                latitude,
+                longitude,
+                location: `POINT(${longitude} ${latitude})`,
+                status: input.publishImmediately ? "PUBLISHED" : "DRAFT",
+                publishedAt: input.publishImmediately ? new Date() : null,
+              })
+              .returning();
 
-          importResults.push({
-            success: true,
-            listingId: newListing!.id,
-            rowNumber: i + 1,
-          });
-        } catch (error: any) {
-          importResults.push({
-            success: false,
-            rowNumber: i + 1,
-            error: error.message ?? "Unknown error occurred",
-          });
+            importResults.push({
+              success: true,
+              listingId: newListing!.id,
+              rowNumber: i + 1,
+            });
+          } catch (error: any) {
+            importResults.push({
+              success: false,
+              rowNumber: i + 1,
+              error: error.message ?? "Unknown error occurred",
+            });
+          }
         }
+
+        const successCount = importResults.filter((r) => r.success).length;
+        const failureCount = importResults.filter((r) => !r.success).length;
+
+        // Determine final status
+        let finalStatus: "COMPLETED" | "FAILED" | "PARTIAL" = "COMPLETED";
+        if (failureCount === input.rows.length) {
+          finalStatus = "FAILED";
+        } else if (failureCount > 0) {
+          finalStatus = "PARTIAL";
+        }
+
+        // Update import record
+        await ctx.db
+          .update(bulkImport)
+          .set({
+            successCount,
+            failureCount,
+            status: finalStatus,
+            results: JSON.stringify(importResults),
+            completedAt: new Date(),
+          })
+          .where(eq(bulkImport.id, importRecord!.id));
+
+        return {
+          importId: importRecord!.id,
+          success: successCount,
+          failed: failureCount,
+          total: input.rows.length,
+          results: importResults,
+        };
+      } catch (error: any) {
+        // Update import record with error
+        await ctx.db
+          .update(bulkImport)
+          .set({
+            status: "FAILED",
+            errorMessage: error.message ?? "Unknown error occurred",
+            completedAt: new Date(),
+          })
+          .where(eq(bulkImport.id, importRecord!.id));
+
+        throw error;
       }
-
-      const successCount = importResults.filter((r) => r.success).length;
-      const failureCount = importResults.filter((r) => !r.success).length;
-
-      return {
-        success: successCount,
-        failed: failureCount,
-        total: input.rows.length,
-        results: importResults,
-      };
     }),
 
   /**
@@ -234,15 +283,45 @@ export const bulkImportRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      // TODO: Create a bulk_imports table to track import batches
-      // For now, return recent listings created by the user
-      const recentListings = await ctx.db.query.listing.findMany({
-        where: (listings, { eq }) => eq(listings.sellerId, ctx.session.user.id),
-        orderBy: (listings, { desc }) => [desc(listings.createdAt)],
+      const imports = await ctx.db.query.bulkImport.findMany({
+        where: (imports, { eq }) => eq(imports.userId, ctx.session.user.id),
+        orderBy: (imports, { desc }) => [desc(imports.createdAt)],
         limit: input.limit,
       });
 
-      return recentListings;
+      // Parse results JSON for each import
+      return imports.map((imp) => ({
+        ...imp,
+        results: imp.results ? JSON.parse(imp.results) : [],
+      }));
+    }),
+
+  /**
+   * Get details of a specific bulk import
+   */
+  getImportDetails: protectedProcedure
+    .input(
+      z.object({
+        importId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const importRecord = await ctx.db.query.bulkImport.findFirst({
+        where: (imports, { and, eq }) =>
+          and(
+            eq(imports.id, input.importId),
+            eq(imports.userId, ctx.session.user.id),
+          ),
+      });
+
+      if (!importRecord) {
+        throw new Error("Import not found");
+      }
+
+      return {
+        ...importRecord,
+        results: importRecord.results ? JSON.parse(importRecord.results) : [],
+      };
     }),
 
   /**

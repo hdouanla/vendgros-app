@@ -56,6 +56,14 @@ export const verificationBadgeEnum = pgEnum("verification_badge", [
   "PREMIUM",
 ]);
 
+export const bulkImportStatusEnum = pgEnum("bulk_import_status", [
+  "PENDING",
+  "PROCESSING",
+  "COMPLETED",
+  "FAILED",
+  "PARTIAL",
+]);
+
 // ============================================================================
 // USERS TABLE
 // ============================================================================
@@ -492,6 +500,59 @@ export const messageRelations = relations(message, ({ one }) => ({
 }));
 
 // ============================================================================
+// BULK IMPORT TABLE
+// ============================================================================
+
+export const bulkImport = pgTable(
+  "bulk_import",
+  (t) => ({
+    id: t.text().primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: t
+      .text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+
+    // Import metadata
+    fileName: t.varchar({ length: 255 }),
+    totalRows: t.integer().notNull(),
+    successCount: t.integer().notNull().default(0),
+    failureCount: t.integer().notNull().default(0),
+
+    // Status
+    status: bulkImportStatusEnum().notNull().default("PENDING"),
+
+    // Results data (JSON)
+    results: t.text(), // JSON string of ImportResult[]
+    errorMessage: t.text(),
+
+    // Publishing
+    publishImmediately: t.boolean().notNull().default(false),
+
+    // Timestamps
+    startedAt: t.timestamp(),
+    completedAt: t.timestamp(),
+    createdAt: t.timestamp().notNull().defaultNow(),
+    updatedAt: t
+      .timestamp({ mode: "date", withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => sql`now()`),
+  }),
+  (table) => ({
+    userIdx: index("bulk_import_user_idx").on(table.userId),
+    statusIdx: index("bulk_import_status_idx").on(table.status),
+    createdAtIdx: index("bulk_import_created_at_idx").on(table.createdAt),
+  }),
+);
+
+export const bulkImportRelations = relations(bulkImport, ({ one }) => ({
+  user: one(user, {
+    fields: [bulkImport.userId],
+    references: [user.id],
+  }),
+}));
+
+// ============================================================================
 // POSTAL CODES TABLE (Canadian)
 // ============================================================================
 
@@ -574,6 +635,14 @@ export const insertMessageSchema = createInsertSchema(message, {
   attachments: z.array(z.string().url()).max(5).optional(),
 });
 export const selectMessageSchema = createSelectSchema(message);
+
+// Bulk import schemas
+export const insertBulkImportSchema = createInsertSchema(bulkImport, {
+  totalRows: z.number().int().positive(),
+  successCount: z.number().int().min(0),
+  failureCount: z.number().int().min(0),
+});
+export const selectBulkImportSchema = createSelectSchema(bulkImport);
 
 // Export all
 export * from "./auth-schema";

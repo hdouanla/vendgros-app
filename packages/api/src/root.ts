@@ -5,6 +5,7 @@ import { listingRouter } from "./router/listing";
 import { messagingRouter } from "./router/messaging";
 import { moderationRouter } from "./router/moderation";
 import { paymentRouter } from "./router/payment";
+import { pricingRouter } from "./router/pricing";
 import { postRouter } from "./router/post";
 import { ratingRouter } from "./router/rating";
 import { reservationRouter } from "./router/reservation";
@@ -23,6 +24,7 @@ export const appRouter = createTRPCRouter({
   moderation: moderationRouter,
   messaging: messagingRouter,
   analytics: analyticsRouter,
+  pricing: pricingRouter,
 });
 
 // export type definition of API

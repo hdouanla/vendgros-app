@@ -127,7 +127,7 @@ importers:
         version: 11.7.1(@tanstack/react-query@5.90.8(react@19.1.4))(@trpc/client@11.7.1(@trpc/server@11.7.1(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.7.1(typescript@5.9.3))(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)
       better-auth:
         specifier: 'catalog:'
-        version: 1.4.0-beta.9(better-sqlite3@12.2.0)(next@16.0.10(@opentelemetry/api@1.9.0)(@playwright/test@1.57.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4))(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 1.4.0-beta.9(better-sqlite3@12.2.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(solid-js@1.9.9)
       expo:
         specifier: ~54.0.20
         version: 54.0.20(@babel/core@7.28.6)(@expo/metro-runtime@6.1.1)(bufferutil@4.0.8)(expo-router@6.0.13)(graphql@15.8.0)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.12)(bufferutil@4.0.8)(react@19.1.4))(react@19.1.4)
@@ -143,6 +143,9 @@ importers:
       expo-linking:
         specifier: ~8.0.8
         version: 8.0.8(expo@54.0.20)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.12)(bufferutil@4.0.8)(react@19.1.4))(react@19.1.4)
+      expo-location:
+        specifier: ~18.0.8
+        version: 18.0.10(expo@54.0.20)
       expo-router:
         specifier: ~6.0.13
         version: 6.0.13(07256a7759849f0ab0c80c48af4102b7)
@@ -536,7 +539,7 @@ importers:
         version: 0.13.8(arktype@2.1.20)(typescript@5.9.3)(valibot@1.0.0-beta.15(typescript@5.9.3))(zod@4.1.12)
       better-auth:
         specifier: 'catalog:'
-        version: 1.4.0-beta.9(better-sqlite3@12.2.0)(next@16.0.10(@opentelemetry/api@1.9.0)(@playwright/test@1.57.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4))(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 1.4.0-beta.9(better-sqlite3@12.2.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(solid-js@1.9.9)
       resend:
         specifier: ^6.7.0
         version: 6.7.0(@react-email/render@1.1.2(react-dom@19.1.4(react@19.1.4))(react@19.1.4))
@@ -6295,6 +6298,11 @@ packages:
       react: '*'
       react-native: '*'
 
+  expo-location@18.0.10:
+    resolution: {integrity: sha512-R0Iioz0UZ9Ts8TACPngh8uDFbajJhVa5/igLqWB8Pq/gp8UHuwj7PC8XbZV7avsFoShYjaxrOhf4U7IONeKLgg==}
+    peerDependencies:
+      expo: '*'
+
   expo-manifests@1.0.8:
     resolution: {integrity: sha512-nA5PwU2uiUd+2nkDWf9e71AuFAtbrb330g/ecvuu52bmaXtN8J8oiilc9BDvAX0gg2fbtOaZdEdjBYopt1jdlQ==}
     peerDependencies:
@@ -11354,7 +11362,7 @@ snapshots:
       '@prisma/client': 5.22.0(prisma@5.22.0)
       '@types/better-sqlite3': 7.6.13
       '@types/prompts': 2.4.9
-      better-auth: 1.4.0-beta.9(better-sqlite3@12.2.0)(next@16.0.10(@opentelemetry/api@1.9.0)(@playwright/test@1.57.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4))(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+      better-auth: 1.4.0-beta.9(better-sqlite3@12.2.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(solid-js@1.9.9)
       better-sqlite3: 12.2.0
       c12: 3.2.0
       chalk: 5.6.2
@@ -11420,7 +11428,7 @@ snapshots:
   '@better-auth/expo@1.4.0-beta.9(better-auth@1.4.0-beta.9(better-sqlite3@12.2.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4))(expo-constants@18.0.10)(expo-crypto@15.0.7(expo@54.0.20))(expo-linking@8.0.8)(expo-secure-store@15.0.7(expo@54.0.20))(expo-web-browser@15.0.8(expo@54.0.20)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.12)(bufferutil@4.0.8)(react@19.1.4)))':
     dependencies:
       '@better-fetch/fetch': 1.1.18
-      better-auth: 1.4.0-beta.9(better-sqlite3@12.2.0)(next@16.0.10(@opentelemetry/api@1.9.0)(@playwright/test@1.57.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4))(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+      better-auth: 1.4.0-beta.9(better-sqlite3@12.2.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(solid-js@1.9.9)
       expo-constants: 18.0.10(expo@54.0.20)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.12)(bufferutil@4.0.8)(react@19.1.4))
       expo-crypto: 15.0.7(expo@54.0.20)
       expo-linking: 8.0.8(expo@54.0.20)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.12)(bufferutil@4.0.8)(react@19.1.4))(react@19.1.4)
@@ -11431,7 +11439,7 @@ snapshots:
   '@better-auth/expo@1.4.0-beta.9(better-auth@1.4.0-beta.9(better-sqlite3@12.2.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4))(expo-constants@18.0.10)(expo-crypto@15.0.7(expo@54.0.20))(expo-linking@8.0.8)(expo-secure-store@15.0.7(expo@54.0.20))(expo-web-browser@15.0.8(expo@54.0.20)(react-native@0.82.0(@babel/core@7.28.6)(@types/react@19.1.12)(bufferutil@4.0.8)(react@19.1.4)(utf-8-validate@6.0.4)))':
     dependencies:
       '@better-fetch/fetch': 1.1.18
-      better-auth: 1.4.0-beta.9(better-sqlite3@12.2.0)(next@16.0.10(@opentelemetry/api@1.9.0)(@playwright/test@1.57.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4))(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+      better-auth: 1.4.0-beta.9(better-sqlite3@12.2.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(solid-js@1.9.9)
       expo-constants: 18.0.10(expo@54.0.20)(react-native@0.82.0(@babel/core@7.28.6)(@types/react@19.1.12)(bufferutil@4.0.8)(react@19.1.4)(utf-8-validate@6.0.4))
       expo-crypto: 15.0.7(expo@54.0.20)
       expo-linking: 8.0.8(expo@54.0.20)(react-native@0.82.0(@babel/core@7.28.6)(@types/react@19.1.12)(bufferutil@4.0.8)(react@19.1.4)(utf-8-validate@6.0.4))(react@19.1.4)
@@ -12179,7 +12187,7 @@ snapshots:
       metro-babel-transformer: 0.83.2
       metro-cache: 0.83.2
       metro-cache-key: 0.83.2
-      metro-config: 0.83.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      metro-config: 0.83.2(bufferutil@4.0.8)
       metro-core: 0.83.2
       metro-file-map: 0.83.2
       metro-resolver: 0.83.2
@@ -16830,6 +16838,10 @@ snapshots:
       - expo
       - supports-color
 
+  expo-location@18.0.10(expo@54.0.20):
+    dependencies:
+      expo: 54.0.20(@babel/core@7.28.6)(@expo/metro-runtime@6.1.1)(bufferutil@4.0.8)(expo-router@6.0.13)(graphql@15.8.0)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.12)(bufferutil@4.0.8)(react@19.1.4))(react@19.1.4)
+
   expo-manifests@1.0.8(expo@54.0.20):
     dependencies:
       '@expo/config': 12.0.10
@@ -18268,21 +18280,6 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  metro-config@0.83.2(bufferutil@4.0.8)(utf-8-validate@6.0.4):
-    dependencies:
-      connect: 3.7.0
-      flow-enums-runtime: 0.0.6
-      jest-validate: 29.7.0
-      metro: 0.83.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)
-      metro-cache: 0.83.2
-      metro-core: 0.83.2
-      metro-runtime: 0.83.2
-      yaml: 2.8.1
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-
   metro-config@0.83.3(bufferutil@4.0.8):
     dependencies:
       connect: 3.7.0
@@ -18608,7 +18605,7 @@ snapshots:
       metro-babel-transformer: 0.83.2
       metro-cache: 0.83.2
       metro-cache-key: 0.83.2
-      metro-config: 0.83.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      metro-config: 0.83.2(bufferutil@4.0.8)
       metro-core: 0.83.2
       metro-file-map: 0.83.2
       metro-resolver: 0.83.2

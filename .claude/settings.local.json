@@ -2,7 +2,23 @@
   "permissions": {
     "allow": [
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(pnpm drizzle-kit generate:*)",
+      "Bash(POSTGRES_URL=\"postgresql://postgres:@127.0.0.1:5432/vendgros-app\" pnpm --filter @acme/db drizzle-kit generate:*)",
+      "Bash(psql:*)",
+      "Bash(pnpm push)",
+      "Bash(POSTGRES_URL=\"postgresql://postgres:@127.0.0.1:5432/vendgros-app\" pnpm with-env:*)",
+      "Bash(pnpm db:generate:*)",
+      "Bash(pnpm db:migrate:*)",
+      "Bash(POSTGRES_URL=\"postgresql://postgres:@127.0.0.1:5432/vendgros-app\" npx drizzle-kit:*)",
+      "Bash(POSTGRES_URL=\"postgresql://postgres:@127.0.0.1:5432/vendgros-app\" pnpm:*)",
+      "Bash(POSTGRES_URL=\"postgresql://postgres:@127.0.0.1:5432/vendgros-app\" pnpm --filter @acme/db with-env drizzle-kit push:*)",
+      "Bash(pnpm db:push:*)",
+      "Bash(TURBO_FORCE=true pnpm:*)",
+      "Bash(pnpm --filter @acme/db with-env drizzle-kit generate:*)",
+      "Bash(pnpm --filter @acme/db with-env drizzle-kit migrate:*)",
+      "Bash(pnpm:*)",
+      "Bash(tail:*)"
     ]
   }
 }

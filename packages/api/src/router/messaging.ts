@@ -351,10 +351,11 @@ export const messagingRouter = createTRPCRouter({
       }
 
       // Get messages after lastMessageId
-      let newMessages;
+      let newMessages: Awaited<ReturnType<typeof ctx.db.query.message.findMany>>;
       if (input.lastMessageId) {
+        const lastMessageId = input.lastMessageId; // Capture for type narrowing
         const lastMessage = await ctx.db.query.message.findFirst({
-          where: (messages, { eq }) => eq(messages.id, input.lastMessageId),
+          where: (messages, { eq }) => eq(messages.id, lastMessageId),
         });
 
         if (lastMessage) {

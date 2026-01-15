@@ -8,8 +8,14 @@ import {
 import { createFileRoute } from "@tanstack/react-router";
 
 import type { RouterOutputs } from "@acme/api";
-import { CreatePostSchema } from "@acme/db/schema";
 import { cn } from "@acme/ui";
+
+// Legacy Post type for deprecated demo code
+type Post = {
+  id: string;
+  title: string;
+  content: string;
+};
 import { Button } from "@acme/ui/button";
 import {
   Field,
@@ -85,9 +91,6 @@ function CreatePostForm() {
       content: "",
       title: "",
     },
-    validators: {
-      onSubmit: CreatePostSchema,
-    },
     onSubmit: (data) => createPost.mutate(data.value),
   });
 
@@ -156,7 +159,7 @@ function CreatePostForm() {
 
 function PostList() {
   const trpc = useTRPC();
-  const { data: posts } = useSuspenseQuery(trpc.post.all.queryOptions());
+  const { data: posts } = useSuspenseQuery(trpc.post.all.queryOptions()) as { data: Post[] };
 
   if (posts.length === 0) {
     return (
@@ -181,7 +184,7 @@ function PostList() {
   );
 }
 
-function PostCard(props: { post: RouterOutputs["post"]["all"][number] }) {
+function PostCard(props: { post: Post }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const deletePost = useMutation(

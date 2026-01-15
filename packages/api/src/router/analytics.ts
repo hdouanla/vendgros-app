@@ -389,11 +389,17 @@ export const analyticsRouter = createTRPCRouter({
       const hourOfDay = date.getHours();
       const revenue = res.status === "COMPLETED" ? res.totalPrice : 0;
 
-      dayOfWeekData[dayOfWeek].reservations++;
-      dayOfWeekData[dayOfWeek].revenue += revenue;
+      const dayData = dayOfWeekData[dayOfWeek];
+      if (dayData) {
+        dayData.reservations++;
+        dayData.revenue += revenue;
+      }
 
-      hourOfDayData[hourOfDay].reservations++;
-      hourOfDayData[hourOfDay].revenue += revenue;
+      const hourData = hourOfDayData[hourOfDay];
+      if (hourData) {
+        hourData.reservations++;
+        hourData.revenue += revenue;
+      }
     }
 
     return {

@@ -1,3 +1,5 @@
+import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
+
 import { adminRouter } from "./router/admin";
 import { analyticsRouter } from "./router/analytics";
 import { apiIntegrationsRouter } from "./router/api-integrations";
@@ -20,26 +22,29 @@ import { whiteLabelRouter } from "./router/white-label";
 import { createTRPCRouter } from "./trpc";
 
 export const appRouter = createTRPCRouter({
-  auth: authRouter,
-  post: postRouter,
-  listing: listingRouter,
-  reservation: reservationRouter,
-  rating: ratingRouter,
-  admin: adminRouter,
-  payment: paymentRouter,
-  upload: uploadRouter,
-  moderation: moderationRouter,
-  messaging: messagingRouter,
-  analytics: analyticsRouter,
-  pricing: pricingRouter,
-  verification: verificationRouter,
-  trustSafety: trustSafetyRouter,
-  scheduledListings: scheduledListingsRouter,
-  bulkImport: bulkImportRouter,
-  apiIntegrations: apiIntegrationsRouter,
-  whiteLabel: whiteLabelRouter,
-  international: internationalRouter,
+  auth: authRouter as typeof authRouter,
+  post: postRouter as typeof postRouter,
+  listing: listingRouter as typeof listingRouter,
+  reservation: reservationRouter as typeof reservationRouter,
+  rating: ratingRouter as typeof ratingRouter,
+  admin: adminRouter as typeof adminRouter,
+  payment: paymentRouter as typeof paymentRouter,
+  upload: uploadRouter as typeof uploadRouter,
+  moderation: moderationRouter as typeof moderationRouter,
+  messaging: messagingRouter as typeof messagingRouter,
+  analytics: analyticsRouter as typeof analyticsRouter,
+  pricing: pricingRouter as typeof pricingRouter,
+  verification: verificationRouter as typeof verificationRouter,
+  trustSafety: trustSafetyRouter as typeof trustSafetyRouter,
+  scheduledListings: scheduledListingsRouter as typeof scheduledListingsRouter,
+  bulkImport: bulkImportRouter as typeof bulkImportRouter,
+  apiIntegrations: apiIntegrationsRouter as typeof apiIntegrationsRouter,
+  whiteLabel: whiteLabelRouter as typeof whiteLabelRouter,
+  international: internationalRouter as typeof internationalRouter,
 });
 
 // export type definition of API
 export type AppRouter = typeof appRouter;
+
+export type RouterInputs = inferRouterInputs<AppRouter>;
+export type RouterOutputs = inferRouterOutputs<AppRouter>;

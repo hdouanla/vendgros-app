@@ -20,7 +20,7 @@ export const localeNames: Record<Locale, string> = {
 
 // i18n configuration
 i18n.use(initReactI18next).init({
-  compatibilityJSON: "v3", // For compatibility with older versions
+  compatibilityJSON: "v4",
   resources: {
     en: { translation: en },
     fr: { translation: fr },

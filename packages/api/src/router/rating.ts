@@ -61,7 +61,7 @@ export const ratingRouter = createTRPCRouter({
         throw new Error("You have already rated this transaction");
       }
 
-      const rateeId = isBuyer
+      const ratedId = isBuyer
         ? existingReservation.listing.sellerId
         : existingReservation.buyerId;
 
@@ -71,24 +71,28 @@ export const ratingRouter = createTRPCRouter({
         .values({
           reservationId: input.reservationId,
           raterId: ctx.session.user.id,
-          rateeId,
+          ratedId,
           score: input.score,
           comment: input.comment ?? null,
         })
         .returning();
+
+      if (!newRating) {
+        throw new Error("Failed to create rating");
+      }
 
       // Check if both parties have rated
       const otherRating = await ctx.db.query.rating.findFirst({
         where: (ratings, { and, eq }) =>
           and(
             eq(ratings.reservationId, input.reservationId),
-            eq(ratings.raterId, rateeId),
+            eq(ratings.raterId, ratedId),
           ),
       });
 
       // If both rated, update user rating averages
       if (otherRating) {
-        await updateUserRating(ctx.db, rateeId);
+        await updateUserRating(ctx.db, ratedId);
         await updateUserRating(ctx.db, ctx.session.user.id);
       }
 
@@ -194,7 +198,7 @@ export const ratingRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       // Only show ratings where both parties have rated
       const allRatings = await ctx.db.query.rating.findMany({
-        where: (ratings, { eq }) => eq(ratings.rateeId, input.userId),
+        where: (ratings, { eq }) => eq(ratings.ratedId, input.userId),
         with: {
           rater: {
             columns: {
@@ -310,7 +314,7 @@ export const ratingRouter = createTRPCRouter({
 async function updateUserRating(db: any, userId: string) {
   // Get all visible ratings for this user (where both parties rated)
   const allRatings = await db.query.rating.findMany({
-    where: (ratings: any, { eq }: any) => eq(ratings.rateeId, userId),
+    where: (ratings: any, { eq }: any) => eq(ratings.ratedId, userId),
   });
 
   // Filter to only ratings where both parties have rated

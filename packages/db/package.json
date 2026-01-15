@@ -14,6 +14,10 @@
     "./schema": {
       "types": "./dist/schema.d.ts",
       "default": "./src/schema.ts"
+    },
+    "./schema-extensions": {
+      "types": "./dist/schema-extensions.d.ts",
+      "default": "./src/schema-extensions.ts"
     }
   },
   "license": "MIT",

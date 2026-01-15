@@ -9,8 +9,15 @@ import type { RouterOutputs } from "~/utils/api";
 import { trpc } from "~/utils/api";
 import { authClient } from "~/utils/auth";
 
+// Legacy Post type for deprecated demo code
+type Post = {
+  id: string;
+  title: string;
+  content: string;
+};
+
 function PostCard(props: {
-  post: RouterOutputs["post"]["all"][number];
+  post: Post;
   onDelete: () => void;
 }) {
   return (
@@ -126,7 +133,7 @@ function MobileAuth() {
 export default function Index() {
   const queryClient = useQueryClient();
 
-  const postQuery = useQuery(trpc.post.all.queryOptions());
+  const postQuery = useQuery(trpc.post.all.queryOptions()) as { data: Post[] | undefined };
 
   const deletePostMutation = useMutation(
     trpc.post.delete.mutationOptions({
@@ -153,7 +160,7 @@ export default function Index() {
         </View>
 
         <LegendList
-          data={postQuery.data ?? []}
+          data={(postQuery.data ?? []) as Post[]}
           estimatedItemSize={20}
           keyExtractor={(item) => item.id}
           ItemSeparatorComponent={() => <View className="h-2" />}

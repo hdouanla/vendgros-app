@@ -4,9 +4,16 @@ import { useQuery } from "@tanstack/react-query";
 
 import { trpc } from "~/utils/api";
 
+// Legacy Post type for deprecated demo code
+type Post = {
+  id: string;
+  title: string;
+  content: string;
+} | null;
+
 export default function Post() {
   const { id } = useGlobalSearchParams<{ id: string }>();
-  const { data } = useQuery(trpc.post.byId.queryOptions({ id }));
+  const { data } = useQuery(trpc.post.byId.queryOptions({ id })) as { data: Post };
 
   if (!data) return null;
 

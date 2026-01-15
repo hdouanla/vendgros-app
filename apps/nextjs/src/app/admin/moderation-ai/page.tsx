@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 
-export default function AIModeration Dashboard() {
+export default function AIModerationDashboard() {
   const t = useTranslations();
   const [filter, setFilter] = useState<"all" | "ai_approved" | "ai_flagged" | "no_ai">("all");
   const [showStatsModal, setShowStatsModal] = useState(false);

@@ -1,34 +1,28 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
-import { desc, eq } from "@acme/db";
-import { CreatePostSchema, Post } from "@acme/db/schema";
-
 import { protectedProcedure, publicProcedure } from "../trpc";
 
+// Legacy post router - deprecated in favor of listing router
+// Kept for backward compatibility but returns empty data
 export const postRouter = {
-  all: publicProcedure.query(({ ctx }) => {
-    return ctx.db.query.Post.findMany({
-      orderBy: desc(Post.id),
-      limit: 10,
-    });
+  all: publicProcedure.query(() => {
+    return [];
   }),
 
   byId: publicProcedure
     .input(z.object({ id: z.string() }))
-    .query(({ ctx, input }) => {
-      return ctx.db.query.Post.findFirst({
-        where: eq(Post.id, input.id),
-      });
+    .query(() => {
+      return null;
     }),
 
   create: protectedProcedure
-    .input(CreatePostSchema)
-    .mutation(({ ctx, input }) => {
-      return ctx.db.insert(Post).values(input);
+    .input(z.object({ title: z.string(), content: z.string() }))
+    .mutation(() => {
+      throw new Error("This endpoint is deprecated. Use listing.create instead.");
     }),
 
-  delete: protectedProcedure.input(z.string()).mutation(({ ctx, input }) => {
-    return ctx.db.delete(Post).where(eq(Post.id, input));
+  delete: protectedProcedure.input(z.string()).mutation(() => {
+    throw new Error("This endpoint is deprecated. Use listing.delete instead.");
   }),
 } satisfies TRPCRouterRecord;

@@ -74,12 +74,16 @@ export const reservationRouter = createTRPCRouter({
       // Send notification to buyer
       await notifyReservationCreated({
         buyerEmail: ctx.session.user.email!,
-        buyerPhone: ctx.session.user.phone,
+        buyerPhone: undefined,
         listingTitle: targetListing.title,
         depositAmount,
         verificationCode,
         expiresAt,
       }).catch((err) => console.error("Failed to send notification:", err));
+
+      if (!newReservation) {
+        throw new Error("Failed to create reservation");
+      }
 
       return {
         reservationId: newReservation.id,
@@ -288,7 +292,12 @@ export const reservationRouter = createTRPCRouter({
       const existingReservation = await ctx.db.query.reservation.findFirst({
         where: (reservations, { eq }) => eq(reservations.id, input.reservationId),
         with: {
-          listing: true,
+          listing: {
+            with: {
+              seller: true,
+            },
+          },
+          buyer: true,
         },
       });
 
@@ -367,7 +376,7 @@ export const reservationRouter = createTRPCRouter({
           reservationId: input.reservationId,
           raterId: ctx.session.user.id, // seller
           ratedId: existingReservation.buyerId,
-          stars: 1,
+          score: 1,
           comment: "No-show - buyer did not pick up items within 48 hours",
         });
       });

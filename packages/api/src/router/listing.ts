@@ -231,7 +231,7 @@ export const listingRouter = createTRPCRouter({
         ) / 1000
       `;
 
-      let query = ctx.db
+      const baseQuery = ctx.db
         .select({
           listing: listing,
           distance: distanceCalc,
@@ -258,16 +258,18 @@ export const listingRouter = createTRPCRouter({
               ? sql`${listing.pricePerPiece} <= ${input.maxPrice}`
               : undefined,
           ),
-        )
-        .limit(input.limit);
+        );
 
-      // Apply sorting
+      // Apply sorting, then limit
+      let query;
       if (input.sortBy === "price") {
-        query = query.orderBy(listing.pricePerPiece);
+        query = baseQuery.orderBy(listing.pricePerPiece).limit(input.limit);
       } else if (input.sortBy === "date") {
-        query = query.orderBy(desc(listing.createdAt));
+        query = baseQuery.orderBy(desc(listing.createdAt)).limit(input.limit);
+      } else {
+        // Distance sorting is default
+        query = baseQuery.limit(input.limit);
       }
-      // Distance sorting is default via ST_Distance
 
       const results = await query;
       return results;
@@ -294,13 +296,33 @@ export const listingRouter = createTRPCRouter({
         return [];
       }
 
-      // Reuse searchNearby logic
-      return ctx.procedures.listing.searchNearby({
-        latitude: postal.latitude,
-        longitude: postal.longitude,
-        radiusKm: input.radiusKm,
-        category: input.category,
-        limit: input.limit,
-      });
+      // Use PostGIS ST_Distance for proximity search
+      const distanceCalc = sql<number>`
+        ST_Distance(
+          ST_GeomFromText(${listing.location}, 4326)::geography,
+          ST_MakePoint(${postal.longitude}, ${postal.latitude})::geography
+        ) / 1000
+      `;
+
+      const results = await ctx.db
+        .select({
+          listing: listing,
+          distance: distanceCalc,
+        })
+        .from(listing)
+        .where(
+          and(
+            eq(listing.status, "PUBLISHED"),
+            sql`ST_DWithin(
+              ST_GeomFromText(${listing.location}, 4326)::geography,
+              ST_MakePoint(${postal.longitude}, ${postal.latitude})::geography,
+              ${input.radiusKm * 1000}
+            )`,
+            input.category ? eq(listing.category, input.category) : undefined,
+          ),
+        )
+        .limit(input.limit);
+
+      return results;
     }),
 });

@@ -4,6 +4,7 @@ import { eq, inArray } from "drizzle-orm";
 import { listing } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { geocodeAddress } from "../services/geocoding";
 
 interface ListingImportRow {
   title: string;
@@ -170,9 +171,10 @@ export const bulkImportRouter = createTRPCRouter({
         const row = input.rows[i]!;
 
         try {
-          // TODO: Geocode address - for now using mock coordinates
-          const latitude = 43.6532;
-          const longitude = -79.3832;
+          // Geocode address
+          const geocodeResult = await geocodeAddress(row.pickupAddress, "CA");
+          const latitude = geocodeResult.latitude;
+          const longitude = geocodeResult.longitude;
 
           // Create listing
           const [newListing] = await ctx.db

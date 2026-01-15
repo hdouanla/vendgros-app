@@ -120,7 +120,7 @@ export const analyticsRouter = createTRPCRouter({
             .filter((r) => r.status === "COMPLETED")
             .reduce((sum, r) => sum + r.totalPrice, 0);
 
-          const views = 0; // TODO: Track views when implemented
+          const views = l.viewCount ?? 0;
 
           return {
             id: l.id,

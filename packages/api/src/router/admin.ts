@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
-import { and, desc, eq, or } from "drizzle-orm";
+import { and, desc, eq, inArray, or } from "drizzle-orm";
 
-import { listing, user } from "@acme/db/schema";
+import { listing, reservation, user } from "@acme/db/schema";
 
 import {
   notifyAccountBanned,
@@ -242,9 +242,18 @@ export const adminRouter = createTRPCRouter({
           userEmail: updated.email,
           reason: input.reason,
         });
-      }
 
-      // TODO: Cancel all active listings
+        // Cancel all active listings
+        await ctx.db
+          .update(listing)
+          .set({ status: "EXPIRED" })
+          .where(
+            and(
+              eq(listing.sellerId, input.userId),
+              inArray(listing.status, ["PUBLISHED", "DRAFT", "PENDING_REVIEW"]),
+            ),
+          );
+      }
 
       return updated;
     }),
@@ -324,9 +333,32 @@ export const adminRouter = createTRPCRouter({
           userEmail: updated.email,
           reason: input.reason,
         });
-      }
 
-      // TODO: Cancel all active listings and reservations
+        // Cancel all active listings
+        await ctx.db
+          .update(listing)
+          .set({ status: "EXPIRED" })
+          .where(
+            and(
+              eq(listing.sellerId, input.userId),
+              inArray(listing.status, ["PUBLISHED", "DRAFT", "PENDING_REVIEW"]),
+            ),
+          );
+
+        // Cancel all active reservations (both as buyer and seller)
+        await ctx.db
+          .update(reservation)
+          .set({ status: "CANCELLED" })
+          .where(
+            and(
+              or(
+                eq(reservation.buyerId, input.userId),
+                eq(reservation.sellerId, input.userId),
+              ),
+              inArray(reservation.status, ["PENDING", "CONFIRMED"]),
+            ),
+          );
+      }
 
       return updated;
     }),

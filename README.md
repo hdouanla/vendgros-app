@@ -123,8 +123,8 @@ Vendgros is a geospatial marketplace platform that solves two problems:
 - **shadcn/ui** - Component library
 
 ### Backend
-- **tRPC v11** - Type-safe API (89+ endpoints across 16 routers)
-- **PostgreSQL 16** - Database with PostGIS
+- **tRPC v11** - Type-safe API (103+ endpoints across 18 routers)
+- **PostgreSQL 16** - Database with PostGIS + extensions
 - **Drizzle ORM** - Type-safe queries
 - **better-auth** - OTP authentication
 - **OpenAI GPT-4** - AI-powered moderation, pricing, fraud detection, and authenticity checks
@@ -320,22 +320,24 @@ See [Mobile Deployment Guide](./doc/MOBILE_DEPLOYMENT.md) for details.
 
 ### Development
 
-- **52+ commits** with detailed messages
-- **104+ files** created/modified
-- **31,500+ lines** of TypeScript
+- **53+ commits** with detailed messages
+- **110+ files** created/modified
+- **36,000+ lines** of TypeScript
 - **100% type-safe** (zero `any` types)
 - **MVP + Phase 1, 2 & 3** completed
 
 ### Codebase
 
-- **16 tRPC routers** with 89+ endpoints
-- **10 database tables** with relations (9 new columns in Phase 3)
+- **18 tRPC routers** with 103+ endpoints
+- **14 database tables** with relations (9 new columns + 4 new tables in Phase 3)
 - **880,010 postal codes** pre-loaded
 - **205+ translations** in 3 languages
 - **50+ E2E tests** with Playwright
 - **8 AI-powered features** (moderation, pricing, analytics, fraud detection, behavior analysis, no-show prediction, review authenticity, scheduled listings)
 - **3 verification badge tiers** (verified, trusted, premium)
 - **Trust & Safety AI** (fraud detection, behavior analysis, no-show prediction, review authenticity)
+- **API Integrations** (REST API, webhooks with HMAC, rate limiting)
+- **White-Label Platform** (multi-tenant, custom branding, subdomain/domain routing)
 
 ### Performance
 

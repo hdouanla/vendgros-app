@@ -86,6 +86,14 @@ export const user = pgTable(
     identityVerificationMethod: t.varchar({ length: 50 }), // e.g., "government_id", "business_license"
     identityVerificationNotes: t.text(),
 
+    // Trust & Safety
+    fraudRiskScore: t.doublePrecision(), // 0-1, higher = more risky
+    fraudFlags: t.text().array().default(sql`ARRAY[]::text[]`),
+    lastFraudCheckAt: t.timestamp(),
+    trustScore: t.integer(), // 0-100
+    behaviorFlags: t.text().array().default(sql`ARRAY[]::text[]`),
+    lastBehaviorCheckAt: t.timestamp(),
+
     createdAt: t.timestamp().notNull().defaultNow(),
     updatedAt: t
       .timestamp({ mode: "date", withTimezone: true })
@@ -201,6 +209,10 @@ export const listing = pgTable(
     moderationNotes: t.text(),
     publishedAt: t.timestamp(),
 
+    // Scheduled publishing
+    scheduledPublishAt: t.timestamp(), // When to auto-publish
+    autoPublishEnabled: t.boolean().notNull().default(false),
+
     // AI Moderation fields
     aiModerationScore: t.doublePrecision(), // 0-1 confidence score
     aiModerationFlags: t.text().array().default(sql`ARRAY[]::text[]`),
@@ -315,6 +327,12 @@ export const rating = pgTable(
     score: t.integer().notNull(), // 1-5
     comment: t.text(),
     isVisible: t.boolean().notNull().default(false), // Hidden until both parties rate
+
+    // Review authenticity
+    authenticityScore: t.doublePrecision(), // 0-1 confidence in authenticity
+    authenticityFlags: t.text().array().default(sql`ARRAY[]::text[]`),
+    aiGenerated: t.boolean(),
+    lastAuthenticityCheckAt: t.timestamp(),
 
     createdAt: t.timestamp().notNull().defaultNow(),
     updatedAt: t

@@ -51,10 +51,13 @@ Vendgros is a geospatial marketplace platform that solves two problems:
 ### 🤖 AI & Automation
 - **AI Moderation** - Automated listing screening with 85%+ accuracy
 - **Smart Pricing** - AI-powered price recommendations
-- **Fraud Detection** - Pattern recognition for suspicious activity
+- **Fraud Detection** - Multi-factor risk assessment with AI analysis
 - **Content Analysis** - Image and text analysis with OpenAI GPT-4
 - **Dynamic Pricing** - Time and inventory-based price optimization
 - **Performance Insights** - Automated sell-through analysis
+- **Behavior Analysis** - Trust score calculation (0-100 scale)
+- **No-Show Prediction** - ML-powered risk assessment
+- **Review Authenticity** - AI-generated content detection
 
 ### 💬 Communication & Trust
 - **In-App Messaging** - Real-time buyer-seller chat
@@ -91,6 +94,8 @@ Vendgros is a geospatial marketplace platform that solves two problems:
 - 💵 **Smart Pricing** - AI-powered price recommendations
 - ⭐ **Verification Badges** - Earn trust badges through performance
 - 📊 **Advanced Insights** - Buyer analytics, category performance, peak hours
+- ⏰ **Scheduled Listings** - Auto-publish at future date/time
+- 📦 **Bulk Import** - CSV import for batch listing creation (1000+ rows)
 
 ### Admin Tools
 - ✓ **Listing Approval** - Review and approve/reject submissions
@@ -101,6 +106,10 @@ Vendgros is a geospatial marketplace platform that solves two problems:
 - ⚡ **Bulk Auto-Approval** - Approve high-confidence listings automatically
 - 🎖️ **Badge Management** - Manually verify sellers and assign badges
 - 📈 **AI Statistics** - Track moderation efficiency and performance
+- 🛡️ **Trust & Safety Dashboard** - Fraud detection and risk monitoring
+- 🚨 **High-Risk Users** - Automated fraud scoring and flagging
+- ⚠️ **Suspicious Reviews** - AI-powered authenticity checking
+- 📈 **Risk Analytics** - Trust scores, no-show predictions, behavior patterns
 
 ---
 
@@ -114,11 +123,11 @@ Vendgros is a geospatial marketplace platform that solves two problems:
 - **shadcn/ui** - Component library
 
 ### Backend
-- **tRPC v11** - Type-safe API (71+ endpoints across 13 routers)
+- **tRPC v11** - Type-safe API (89+ endpoints across 16 routers)
 - **PostgreSQL 16** - Database with PostGIS
 - **Drizzle ORM** - Type-safe queries
 - **better-auth** - OTP authentication
-- **OpenAI GPT-4** - AI-powered moderation and pricing
+- **OpenAI GPT-4** - AI-powered moderation, pricing, fraud detection, and authenticity checks
 
 ### Infrastructure
 - **Turborepo** - Monorepo management
@@ -145,12 +154,13 @@ Comprehensive guides available in the `/doc` directory:
 | [Executive Summary](./doc/EXECUTIVE_SUMMARY.md) | High-level project overview | 461 |
 | [Development Summary](./doc/DEVELOPMENT_SUMMARY.md) | Detailed MVP development log | 700+ |
 | [Post-MVP Summary](./doc/POST_MVP_SUMMARY.md) | Phase 1 & 2 features documentation | 580 |
+| [Phase 3 Summary](./doc/PHASE3_SUMMARY.md) | Phase 3 features documentation | 650+ |
 | [API Reference](./doc/API_REFERENCE.md) | Complete tRPC API docs | 1,175 |
 | [User Guide](./doc/USER_GUIDE.md) | End-user instructions | 627 |
 | [Deployment Guide](./doc/DEPLOYMENT_GUIDE.md) | Web deployment (DO + Cloudflare) | 780 |
 | [Mobile Deployment](./doc/MOBILE_DEPLOYMENT.md) | iOS/Android deployment | 665 |
 
-**Total Documentation: 4,988 lines** 📖
+**Total Documentation: 5,638+ lines** 📖
 
 ---
 
@@ -310,21 +320,22 @@ See [Mobile Deployment Guide](./doc/MOBILE_DEPLOYMENT.md) for details.
 
 ### Development
 
-- **50+ commits** with detailed messages
-- **97+ files** created/modified
-- **28,000+ lines** of TypeScript
+- **52+ commits** with detailed messages
+- **104+ files** created/modified
+- **31,500+ lines** of TypeScript
 - **100% type-safe** (zero `any` types)
-- **MVP + Phase 1 & 2** completed
+- **MVP + Phase 1, 2 & 3** completed
 
 ### Codebase
 
-- **13 tRPC routers** with 71+ endpoints
-- **10 database tables** with relations
+- **16 tRPC routers** with 89+ endpoints
+- **10 database tables** with relations (9 new columns in Phase 3)
 - **880,010 postal codes** pre-loaded
 - **205+ translations** in 3 languages
 - **50+ E2E tests** with Playwright
-- **5 AI-powered features** (moderation, pricing, analytics)
+- **8 AI-powered features** (moderation, pricing, analytics, fraud detection, behavior analysis, no-show prediction, review authenticity, scheduled listings)
 - **3 verification badge tiers** (verified, trusted, premium)
+- **Trust & Safety AI** (fraud detection, behavior analysis, no-show prediction, review authenticity)
 
 ### Performance
 

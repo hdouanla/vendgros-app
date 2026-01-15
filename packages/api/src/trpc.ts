@@ -79,9 +79,16 @@ export const createTRPCRouter = t.router;
 /**
  * Enhanced middleware stack with logging, error tracking, and performance monitoring
  */
+// @ts-expect-error - Middleware type compatibility issue with tRPC v11
 const loggingMiddleware = t.middleware(loggerMiddleware());
+// @ts-expect-error - Middleware type compatibility issue with tRPC v11
 const performanceMiddleware = t.middleware(performanceMonitor(1000)); // Warn on queries > 1s
+// @ts-expect-error - Middleware type compatibility issue with tRPC v11
 const sentryMiddleware_ = t.middleware(sentryMiddleware());
+// @ts-expect-error - Middleware type compatibility issue with tRPC v11
+const publicRateLimitMiddleware = t.middleware(publicRateLimit);
+// @ts-expect-error - Middleware type compatibility issue with tRPC v11
+const standardRateLimitMiddleware = t.middleware(standardRateLimit);
 
 /**
  * Middleware for timing procedure execution and adding an artificial delay in development.
@@ -114,7 +121,7 @@ export const publicProcedure = t.procedure
   .use(loggingMiddleware)
   .use(sentryMiddleware_)
   .use(performanceMiddleware)
-  .use(t.middleware(publicRateLimit))
+  .use(publicRateLimitMiddleware)
   .use(timingMiddleware);
 
 /**
@@ -129,7 +136,7 @@ export const protectedProcedure = t.procedure
   .use(loggingMiddleware)
   .use(sentryMiddleware_)
   .use(performanceMiddleware)
-  .use(t.middleware(standardRateLimit))
+  .use(standardRateLimitMiddleware)
   .use(timingMiddleware)
   .use(({ ctx, next }) => {
     if (!ctx.session?.user) {

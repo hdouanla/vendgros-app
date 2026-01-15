@@ -345,19 +345,35 @@ export const adminRouter = createTRPCRouter({
             ),
           );
 
-        // Cancel all active reservations (both as buyer and seller)
+        // Cancel all active reservations as buyer
         await ctx.db
           .update(reservation)
           .set({ status: "CANCELLED" })
           .where(
             and(
-              or(
-                eq(reservation.buyerId, input.userId),
-                eq(reservation.sellerId, input.userId),
-              ),
+              eq(reservation.buyerId, input.userId),
               inArray(reservation.status, ["PENDING", "CONFIRMED"]),
             ),
           );
+
+        // Cancel all active reservations as seller (through listings)
+        const userListings = await ctx.db.query.listing.findMany({
+          where: (listings, { eq }) => eq(listings.sellerId, input.userId),
+          columns: { id: true },
+        });
+
+        if (userListings.length > 0) {
+          const listingIds = userListings.map((l) => l.id);
+          await ctx.db
+            .update(reservation)
+            .set({ status: "CANCELLED" })
+            .where(
+              and(
+                inArray(reservation.listingId, listingIds),
+                inArray(reservation.status, ["PENDING", "CONFIRMED"]),
+              ),
+            );
+        }
       }
 
       return updated;

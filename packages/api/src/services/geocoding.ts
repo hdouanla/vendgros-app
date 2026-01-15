@@ -3,7 +3,7 @@
  * Converts addresses to coordinates using Mapbox Geocoding API
  */
 
-interface GeocodingResult {
+export interface GeocodingResult {
   latitude: number;
   longitude: number;
   formattedAddress: string;

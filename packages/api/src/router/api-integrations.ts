@@ -341,15 +341,15 @@ export const apiIntegrationsRouter = createTRPCRouter({
       }
 
       // Implement webhook delivery retry with exponential backoff
-      const retryCount = delivery.retryCount + 1;
+      const currentAttempts = delivery.attempts;
       const maxRetries = 5;
 
-      if (retryCount > maxRetries) {
+      if (currentAttempts >= maxRetries) {
         await ctx.db
           .update(webhookDelivery)
           .set({
             status: "failed",
-            error: "Max retries exceeded",
+            errorMessage: "Max retries exceeded",
           })
           .where(eq(webhookDelivery.id, input.deliveryId));
 
@@ -362,8 +362,15 @@ export const apiIntegrationsRouter = createTRPCRouter({
       // Calculate next retry time with exponential backoff
       // Retry schedule: 1min, 5min, 15min, 1hour, 3hours
       const retryDelays = [60, 300, 900, 3600, 10800]; // in seconds
-      const delay = retryDelays[retryCount - 1] ?? 10800; // Default to 3 hours
+      const delay = retryDelays[currentAttempts] ?? 10800; // Default to 3 hours
       const nextRetryAt = new Date(Date.now() + delay * 1000);
+
+      // Generate HMAC signature for webhook
+      const crypto = await import("crypto");
+      const signature = crypto
+        .createHmac("sha256", delivery.webhook.secret)
+        .update(delivery.payload)
+        .digest("hex");
 
       // Attempt delivery
       try {
@@ -372,7 +379,7 @@ export const apiIntegrationsRouter = createTRPCRouter({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Vendgros-Signature": delivery.signature,
+            "X-Vendgros-Signature": signature,
             "X-Vendgros-Event": delivery.event,
           },
           body: delivery.payload,
@@ -385,7 +392,7 @@ export const apiIntegrationsRouter = createTRPCRouter({
             .update(webhookDelivery)
             .set({
               status: "delivered",
-              responseStatus: response.status,
+              responseCode: response.status,
               deliveredAt: new Date(),
             })
             .where(eq(webhookDelivery.id, input.deliveryId));
@@ -400,10 +407,10 @@ export const apiIntegrationsRouter = createTRPCRouter({
             .update(webhookDelivery)
             .set({
               status: "pending",
-              retryCount,
+              attempts: currentAttempts + 1,
               nextRetryAt,
-              responseStatus: response.status,
-              error: `HTTP ${response.status}: ${await response.text()}`,
+              responseCode: response.status,
+              errorMessage: `HTTP ${response.status}: ${await response.text()}`,
             })
             .where(eq(webhookDelivery.id, input.deliveryId));
 
@@ -418,9 +425,9 @@ export const apiIntegrationsRouter = createTRPCRouter({
           .update(webhookDelivery)
           .set({
             status: "pending",
-            retryCount,
+            attempts: currentAttempts + 1,
             nextRetryAt,
-            error: error instanceof Error ? error.message : "Unknown error",
+            errorMessage: error instanceof Error ? error.message : "Unknown error",
           })
           .where(eq(webhookDelivery.id, input.deliveryId));
 
@@ -512,15 +519,15 @@ export const apiIntegrationsRouter = createTRPCRouter({
     for (const delivery of pendingDeliveries) {
       results.processed++;
 
-      const retryCount = delivery.retryCount + 1;
+      const currentAttempts = delivery.attempts;
       const maxRetries = 5;
 
-      if (retryCount > maxRetries) {
+      if (currentAttempts >= maxRetries) {
         await ctx.db
           .update(webhookDelivery)
           .set({
             status: "failed",
-            error: "Max retries exceeded",
+            errorMessage: "Max retries exceeded",
           })
           .where(eq(webhookDelivery.id, delivery.id));
 
@@ -530,8 +537,15 @@ export const apiIntegrationsRouter = createTRPCRouter({
 
       // Calculate next retry time
       const retryDelays = [60, 300, 900, 3600, 10800];
-      const delay = retryDelays[retryCount - 1] ?? 10800;
+      const delay = retryDelays[currentAttempts] ?? 10800;
       const nextRetryAt = new Date(Date.now() + delay * 1000);
+
+      // Generate HMAC signature
+      const crypto = await import("crypto");
+      const signature = crypto
+        .createHmac("sha256", delivery.webhook.secret)
+        .update(delivery.payload)
+        .digest("hex");
 
       // Attempt delivery
       try {
@@ -539,7 +553,7 @@ export const apiIntegrationsRouter = createTRPCRouter({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Vendgros-Signature": delivery.signature,
+            "X-Vendgros-Signature": signature,
             "X-Vendgros-Event": delivery.event,
           },
           body: delivery.payload,
@@ -551,7 +565,7 @@ export const apiIntegrationsRouter = createTRPCRouter({
             .update(webhookDelivery)
             .set({
               status: "delivered",
-              responseStatus: response.status,
+              responseCode: response.status,
               deliveredAt: now,
             })
             .where(eq(webhookDelivery.id, delivery.id));
@@ -562,10 +576,10 @@ export const apiIntegrationsRouter = createTRPCRouter({
             .update(webhookDelivery)
             .set({
               status: "pending",
-              retryCount,
+              attempts: currentAttempts + 1,
               nextRetryAt,
-              responseStatus: response.status,
-              error: `HTTP ${response.status}`,
+              responseCode: response.status,
+              errorMessage: `HTTP ${response.status}`,
             })
             .where(eq(webhookDelivery.id, delivery.id));
 
@@ -576,9 +590,9 @@ export const apiIntegrationsRouter = createTRPCRouter({
           .update(webhookDelivery)
           .set({
             status: "pending",
-            retryCount,
+            attempts: currentAttempts + 1,
             nextRetryAt,
-            error: error instanceof Error ? error.message : "Unknown error",
+            errorMessage: error instanceof Error ? error.message : "Unknown error",
           })
           .where(eq(webhookDelivery.id, delivery.id));
 

@@ -60,7 +60,7 @@ export function initSentry() {
 
     integrations: [
       // HTTP instrumentation enabled by default in modern Sentry
-      Sentry.httpIntegration({ tracing: true }),
+      Sentry.httpIntegration(),
 
       // Postgres integration
       Sentry.postgresIntegration(),

@@ -364,7 +364,24 @@ This project follows:
 - Next steps guidance
 - Payment integration ready
 
-#### 5. Image Upload System
+#### 5. Listing Detail Page
+**Created**: `apps/nextjs/src/app/listings/[id]/page.tsx`
+- Full product page with complete listing information
+- Image gallery with main photo and thumbnail grid
+- Sticky purchase card with quantity selector
+- Real-time price calculations (total, deposit, balance)
+- Reservation modal with confirmation flow
+- Interactive map showing pickup location (Mapbox integration)
+- Seller profile with rating and account type
+- Pickup address and instructions display
+- Quantity validation (max per buyer, availability)
+- Disabled state for out-of-stock items
+- Back button with browser history navigation
+- Responsive 2-column layout (stacked on mobile)
+- Dynamic route handling with Next.js app router
+- Direct integration with reservation creation API
+
+#### 6. Image Upload System
 **Created**: `packages/api/src/router/upload.ts`
 - tRPC router for pre-signed URL generation
 - AWS SDK integration for DigitalOcean Spaces
@@ -389,7 +406,7 @@ This project follows:
 - Automatic first-photo-as-cover selection
 - Translations for EN/FR/ES
 
-#### 6. Map Visualization System
+#### 7. Map Visualization System
 **Created**: `apps/nextjs/src/components/map/listing-map.tsx`
 - Mapbox GL JS integration for interactive maps
 - Custom green markers with pin emoji indicators
@@ -440,9 +457,9 @@ This project follows:
 ## 📊 Updated Statistics
 
 ### Development Metrics
-- **26 commits** with detailed messages
-- **48+ files** created
-- **11,500+ lines** of code
+- **28 commits** with detailed messages
+- **49+ files** created
+- **12,000+ lines** of code
 - **7 tRPC routers** with 42+ endpoints (added upload router)
 - **4 complete UI pages** with components
 - **Image upload system** with S3 integration
@@ -459,14 +476,14 @@ This project follows:
 - Internationalization
 - QR code system
 
-✅ **Week 2 (90% Complete)**
+✅ **Week 2 (100% Complete) ✅**
 - Listing creation UI ✅
 - Listing search UI ✅
 - Admin moderation UI ✅
 - Reservation detail UI ✅
 - Image upload integration ✅
 - Map visualization ✅
-- Listing detail page ⏳
+- Listing detail page ✅
 
 ⏳ **Week 3 (Pending)**
 - Stripe payment flow UI
@@ -484,6 +501,8 @@ This project follows:
 ## 🚀 Latest Commits
 
 ```
+cd009c2 feat: implement comprehensive listing detail page
+5bf2908 docs: update development summary with map visualization
 16359fe feat: implement Mapbox map visualization for listings
 951c222 docs: update development summary with image upload feature
 d08fe35 feat: implement image upload to DigitalOcean Spaces
@@ -579,6 +598,7 @@ bd51f92 feat: add admin moderation system with user management
 - [x] Listing search UI
 - [x] Admin moderation UI
 - [x] Reservation detail UI
+- [x] Listing detail page
 - [x] Image upload integration
 - [x] Map visualization
 - [ ] Payment flow UI
@@ -589,7 +609,7 @@ bd51f92 feat: add admin moderation system with user management
 
 ---
 
-**Status**: Week 1 Complete ✅ | Week 2 In Progress (90%) 🚧
-**Ready for**: Listing detail page, Week 3 payment/rating UI, testing
+**Status**: Week 1 Complete ✅ | Week 2 Complete (100%) ✅ 🚧
+**Ready for**: Week 3 payment/rating UI, testing, production deployment
 **Built with**: T3 Stack + PostGIS + Stripe + Mapbox + DigitalOcean Spaces + QR Codes 🚀
 

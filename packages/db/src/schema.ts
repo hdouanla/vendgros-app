@@ -222,6 +222,9 @@ export const listing = pgTable(
     aiModerationFlags: t.text().array().default(sql`ARRAY[]::text[]`),
     aiModeratedAt: t.timestamp(),
 
+    // View tracking
+    viewCount: t.integer().notNull().default(0),
+
     createdAt: t.timestamp().notNull().defaultNow(),
     updatedAt: t
       .timestamp({ mode: "date", withTimezone: true })

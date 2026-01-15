@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
@@ -22,12 +22,21 @@ export default function ListingDetailPage({
     id,
   });
 
+  const trackView = api.listing.trackView.useMutation();
+
   const createReservation = api.reservation.create.useMutation({
     onSuccess: (data) => {
       // Redirect to payment page to pay deposit
       router.push(`/payment/${data.id}`);
     },
   });
+
+  // Track view when component mounts
+  useEffect(() => {
+    if (id && listing) {
+      trackView.mutate({ listingId: id });
+    }
+  }, [id, listing]); // Only track once when listing loads
 
   const handleReserve = async () => {
     if (!listing) return;

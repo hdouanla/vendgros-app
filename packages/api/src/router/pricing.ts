@@ -207,7 +207,7 @@ export const pricingRouter = createTRPCRouter({
         ),
       );
 
-      const viewsCount = 0; // TODO: Implement view tracking
+      const viewsCount = listingData.viewCount ?? 0;
 
       const analysis = await analyzePricePerformance({
         listingId: input.listingId,

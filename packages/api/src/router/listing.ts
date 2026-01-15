@@ -339,4 +339,19 @@ export const listingRouter = createTRPCRouter({
       const result = await geocodeAddress(input.address, input.countryCode);
       return result;
     }),
+
+  // Track listing view
+  trackView: publicProcedure
+    .input(z.object({ listingId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      // Increment view count
+      await ctx.db
+        .update(listing)
+        .set({
+          viewCount: sql`${listing.viewCount} + 1`,
+        })
+        .where(eq(listing.id, input.listingId));
+
+      return { success: true };
+    }),
 });

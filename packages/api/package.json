@@ -24,6 +24,7 @@
     "@aws-sdk/client-s3": "^3.969.0",
     "@aws-sdk/s3-request-presigner": "^3.969.0",
     "@trpc/server": "catalog:",
+    "openai": "^6.16.0",
     "stripe": "^17.6.0",
     "superjson": "2.2.3",
     "zod": "catalog:"

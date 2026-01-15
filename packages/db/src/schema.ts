@@ -184,6 +184,11 @@ export const listing = pgTable(
     moderationNotes: t.text(),
     publishedAt: t.timestamp(),
 
+    // AI Moderation fields
+    aiModerationScore: t.doublePrecision(), // 0-1 confidence score
+    aiModerationFlags: t.text().array().default(sql`ARRAY[]::text[]`),
+    aiModeratedAt: t.timestamp(),
+
     createdAt: t.timestamp().notNull().defaultNow(),
     updatedAt: t
       .timestamp({ mode: "date", withTimezone: true })

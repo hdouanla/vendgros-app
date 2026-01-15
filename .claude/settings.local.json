@@ -26,7 +26,8 @@
       "Bash(export POSTGRES_URL=\"postgresql://localhost:5432/vendgros\")",
       "Bash(git restore:*)",
       "Bash(git reset:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(POSTGRES_URL=\"postgresql://postgres:@127.0.0.1:5432/vendgros-app\" pnpm drizzle-kit generate:*)"
     ]
   }
 }

@@ -5,6 +5,7 @@ import { paymentRouter } from "./router/payment";
 import { postRouter } from "./router/post";
 import { ratingRouter } from "./router/rating";
 import { reservationRouter } from "./router/reservation";
+import { uploadRouter } from "./router/upload";
 import { createTRPCRouter } from "./trpc";
 
 export const appRouter = createTRPCRouter({
@@ -15,6 +16,7 @@ export const appRouter = createTRPCRouter({
   rating: ratingRouter,
   admin: adminRouter,
   payment: paymentRouter,
+  upload: uploadRouter,
 });
 
 // export type definition of API

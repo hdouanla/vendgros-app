@@ -3,6 +3,7 @@
     "vendgros": "Vendgros",
     "tagline": "Ventes en Vrac Communautaires",
     "loading": "Chargement...",
+    "uploading": "Téléchargement",
     "error": "Erreur",
     "success": "Succès",
     "cancel": "Annuler",
@@ -16,7 +17,8 @@
     "submit": "Soumettre",
     "search": "Rechercher",
     "filter": "Filtrer",
-    "sort": "Trier"
+    "sort": "Trier",
+    "select": "Sélectionner..."
   },
   "auth": {
     "signIn": "Se connecter",
@@ -62,6 +64,9 @@
     "description": "Description",
     "category": "Catégorie",
     "photos": "Photos",
+    "addPhotos": "Ajouter des photos",
+    "coverPhoto": "Photo de couverture",
+    "photoHelp": "La première photo sera la couverture. Formats supportés: JPEG, PNG, WebP. Max 5 Mo par photo.",
     "pricePerPiece": "Prix par pièce",
     "quantity": "Quantité",
     "quantityAvailable": "Disponible",

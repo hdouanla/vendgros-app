@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
+import { ImageUpload } from "./image-upload";
 
 interface ListingFormProps {
   mode?: "create" | "edit";
@@ -81,6 +82,10 @@ export function ListingForm({
 
     if (!formData.category) {
       newErrors.category = t("errors.required");
+    }
+
+    if (formData.photos.length === 0) {
+      newErrors.photos = t("errors.required");
     }
 
     const price = parseFloat(formData.pricePerPiece);
@@ -187,6 +192,18 @@ export function ListingForm({
         />
         {errors.description && (
           <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+        )}
+      </div>
+
+      {/* Photos */}
+      <div>
+        <ImageUpload
+          photos={formData.photos}
+          onChange={(photos) => setFormData((prev) => ({ ...prev, photos }))}
+          maxPhotos={10}
+        />
+        {errors.photos && (
+          <p className="mt-1 text-sm text-red-600">{errors.photos}</p>
         )}
       </div>
 

@@ -25,7 +25,8 @@
       "Bash(source:*)",
       "Bash(export POSTGRES_URL=\"postgresql://localhost:5432/vendgros\")",
       "Bash(git restore:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(ls:*)"
     ]
   }
 }

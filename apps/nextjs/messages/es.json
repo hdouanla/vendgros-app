@@ -3,6 +3,7 @@
     "vendgros": "Vendgros",
     "tagline": "Ventas al Por Mayor Comunitarias",
     "loading": "Cargando...",
+    "uploading": "Subiendo",
     "error": "Error",
     "success": "Éxito",
     "cancel": "Cancelar",
@@ -16,7 +17,8 @@
     "submit": "Enviar",
     "search": "Buscar",
     "filter": "Filtrar",
-    "sort": "Ordenar"
+    "sort": "Ordenar",
+    "select": "Seleccionar..."
   },
   "auth": {
     "signIn": "Iniciar sesión",
@@ -62,6 +64,9 @@
     "description": "Descripción",
     "category": "Categoría",
     "photos": "Fotos",
+    "addPhotos": "Agregar fotos",
+    "coverPhoto": "Foto de portada",
+    "photoHelp": "La primera foto será la portada. Formatos soportados: JPEG, PNG, WebP. Máx 5 MB por foto.",
     "pricePerPiece": "Precio por pieza",
     "quantity": "Cantidad",
     "quantityAvailable": "Disponible",

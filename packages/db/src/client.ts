@@ -1,11 +1,18 @@
-import { sql } from "@vercel/postgres";
-import { drizzle } from "drizzle-orm/vercel-postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
 import * as schema from "./schema";
 import * as schemaExtensions from "./schema-extensions";
 
-export const db = drizzle({
-  client: sql,
+// Get database URL from environment
+const connectionString = process.env.POSTGRES_URL!;
+
+// Create postgres client
+const client = postgres(connectionString, {
+  max: 10, // Maximum number of connections in the pool
+});
+
+export const db = drizzle(client, {
   schema: { ...schema, ...schemaExtensions },
   casing: "snake_case",
 });

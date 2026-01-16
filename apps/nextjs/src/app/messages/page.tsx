@@ -1,20 +1,33 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "~/trpc/react";
 
 export default function MessagesPage() {
   const t = useTranslations();
+  const router = useRouter();
 
-  const { data: conversations, isLoading } = api.messaging.getConversations.useQuery();
+  const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
+  const { data: conversations, isLoading: conversationsLoading } = api.messaging.getConversations.useQuery(
+    undefined,
+    {
+      enabled: !!session?.user,
+    }
+  );
 
-  if (isLoading) {
+  if (sessionLoading || conversationsLoading) {
     return (
       <div className="py-12 text-center">
         <p className="text-gray-600">{t("common.loading")}</p>
       </div>
     );
+  }
+
+  if (!session?.user) {
+    router.push("/auth/signin?callbackUrl=" + encodeURIComponent("/messages"));
+    return null;
   }
 
   return (

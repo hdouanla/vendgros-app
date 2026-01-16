@@ -75,3 +75,6 @@ export function initAuth<TExtraPlugins extends BetterAuthPlugin[] = []>(options:
 
 export type Auth = ReturnType<typeof initAuth>;
 export type Session = Auth["$Infer"]["Session"];
+
+// Re-export client utilities
+export * from "./client";

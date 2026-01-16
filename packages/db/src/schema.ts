@@ -17,6 +17,11 @@ import { z } from "zod/v4";
 // ENUMS
 // ============================================================================
 
+// User verification level (NOT an exclusive role - all users can buy AND sell)
+// - BUYER: Standard user (default) - can create listings and make purchases
+// - SELLER_INDIVIDUAL: Verified individual seller - has trust badge
+// - SELLER_MERCHANT: Verified business seller - higher trust level
+// - ADMIN: Administrator privileges
 export const userTypeEnum = pgEnum("user_type", [
   "BUYER",
   "SELLER_INDIVIDUAL",
@@ -80,6 +85,8 @@ export const user = pgTable(
     phoneVerified: t.boolean().notNull().default(false),
     accountStatus: accountStatusEnum().notNull().default("UNVERIFIED"),
 
+    // Verification level - all users can buy and sell regardless of this value
+    // SELLER_INDIVIDUAL and SELLER_MERCHANT provide trust badges
     userType: userTypeEnum().notNull().default("BUYER"),
     languagePreference: t.varchar({ length: 5 }).notNull().default("en"),
 

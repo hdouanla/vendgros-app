@@ -2,23 +2,66 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 
 export default function AIModerationDashboard() {
   const t = useTranslations();
+  const router = useRouter();
   const [filter, setFilter] = useState<"all" | "ai_approved" | "ai_flagged" | "no_ai">("all");
   const [showStatsModal, setShowStatsModal] = useState(false);
 
   const utils = api.useUtils();
 
-  const { data: moderationQueue, isLoading } =
+  const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
+  const { data: moderationQueue, isLoading: queueLoading } =
     api.moderation.getModerationQueue.useQuery({
       limit: 50,
       offset: 0,
       filter,
+    }, {
+      enabled: !!session?.user,
     });
 
-  const { data: stats } = api.moderation.getModerationStats.useQuery();
+  const { data: stats } = api.moderation.getModerationStats.useQuery(
+    undefined,
+    {
+      enabled: !!session?.user,
+    }
+  );
+
+  if (sessionLoading || queueLoading) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-gray-600">{t("common.loading")}</p>
+      </div>
+    );
+  }
+
+  if (!session?.user) {
+    router.push("/auth/signin?callbackUrl=" + encodeURIComponent("/admin/moderation-ai"));
+    return null;
+  }
+
+  // Check if user is admin
+  if (session.user.userType !== "ADMIN") {
+    return (
+      <div className="py-12 text-center">
+        <div className="mx-auto max-w-md">
+          <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
+          <p className="mt-4 text-gray-600">
+            You do not have permission to access this page.
+          </p>
+          <button
+            onClick={() => router.push("/")}
+            className="mt-6 rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+          >
+            Go to Homepage
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const runAIModeration = api.moderation.runAIModeration.useMutation({
     onSuccess: () => {

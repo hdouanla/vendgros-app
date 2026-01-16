@@ -4,21 +4,66 @@
 export const dynamic = 'force-dynamic';
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 
 export default function TrustSafetyDashboard() {
+  const router = useRouter();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedRatingId, setSelectedRatingId] = useState<string | null>(null);
 
-  const { data: stats } = api.trustSafety.getDashboardStats.useQuery();
+  const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
+  const { data: stats, isLoading: statsLoading } = api.trustSafety.getDashboardStats.useQuery(
+    undefined,
+    {
+      enabled: !!session?.user,
+    }
+  );
   const { data: highRiskUsers } = api.trustSafety.getHighRiskUsers.useQuery({
     minRiskScore: 0.6,
     limit: 20,
+  }, {
+    enabled: !!session?.user,
   });
   const { data: suspiciousReviews } = api.trustSafety.getSuspiciousReviews.useQuery({
     maxAuthenticityScore: 0.7,
     limit: 20,
+  }, {
+    enabled: !!session?.user,
   });
+
+  if (sessionLoading || statsLoading) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!session?.user) {
+    router.push("/auth/signin?callbackUrl=" + encodeURIComponent("/admin/trust-safety"));
+    return null;
+  }
+
+  // Check if user is admin
+  if (session.user.userType !== "ADMIN") {
+    return (
+      <div className="py-12 text-center">
+        <div className="mx-auto max-w-md">
+          <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
+          <p className="mt-4 text-gray-600">
+            You do not have permission to access this page.
+          </p>
+          <button
+            onClick={() => router.push("/")}
+            className="mt-6 rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+          >
+            Go to Homepage
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const scanUser = api.trustSafety.scanUserForFraud.useMutation({
     onSuccess: (data) => {

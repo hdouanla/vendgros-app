@@ -63,7 +63,7 @@ export default function SettingsPage() {
   }
 
   if (!session?.user) {
-    router.push("/auth/signin");
+    router.push("/auth/signin?callbackUrl=" + encodeURIComponent("/profile/settings"));
     return null;
   }
 

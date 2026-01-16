@@ -25,7 +25,7 @@ export default function ProfilePage() {
   }
 
   if (!session?.user) {
-    router.push("/auth/signin");
+    router.push("/auth/signin?callbackUrl=" + encodeURIComponent("/profile"));
     return null;
   }
 

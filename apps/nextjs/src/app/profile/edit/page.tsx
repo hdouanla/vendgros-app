@@ -44,7 +44,7 @@ export default function EditProfilePage() {
   }
 
   if (!session?.user) {
-    router.push("/auth/signin");
+    router.push("/auth/signin?callbackUrl=" + encodeURIComponent("/profile/edit"));
     return null;
   }
 

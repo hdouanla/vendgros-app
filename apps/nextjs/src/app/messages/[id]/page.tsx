@@ -17,14 +17,36 @@ export default function ChatPage() {
 
   const utils = api.useUtils();
 
+  const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
+
   const { data: messages, isLoading: messagesLoading } =
     api.messaging.getMessages.useQuery({
       conversationId,
       limit: 100,
+    }, {
+      enabled: !!session?.user,
     });
 
-  const { data: conversations } = api.messaging.getConversations.useQuery();
+  const { data: conversations } = api.messaging.getConversations.useQuery(
+    undefined,
+    {
+      enabled: !!session?.user,
+    }
+  );
   const currentConversation = conversations?.find((c) => c.id === conversationId);
+
+  if (sessionLoading || messagesLoading) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-gray-600">{t("common.loading")}</p>
+      </div>
+    );
+  }
+
+  if (!session?.user) {
+    router.push("/auth/signin?callbackUrl=" + encodeURIComponent(`/messages/${conversationId}`));
+    return null;
+  }
 
   const sendMessage = api.messaging.sendMessage.useMutation({
     onSuccess: () => {

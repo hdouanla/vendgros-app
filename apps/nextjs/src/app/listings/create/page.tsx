@@ -1,14 +1,21 @@
-import { useTranslations } from "next-intl";
+import { redirect } from "next/navigation";
+
+import { getSession } from "~/auth/server";
 import { ListingForm } from "~/components/listings/listing-form";
 
-export default function CreateListingPage() {
-  const t = useTranslations();
+export default async function CreateListingPage() {
+  const session = await getSession();
+
+  // Redirect to signin if not authenticated, with callback to return here
+  if (!session) {
+    redirect("/auth/signin?callbackUrl=" + encodeURIComponent("/listings/create"));
+  }
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
-          {t("listing.createListing")}
+          Create Listing
         </h1>
         <p className="mt-2 text-sm text-gray-600">
           List your bulk items for sale to the community. All listings are

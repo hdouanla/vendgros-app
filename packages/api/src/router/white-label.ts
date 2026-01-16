@@ -264,22 +264,40 @@ export const whiteLabelRouter = createTRPCRouter({
       // Count users
       const tenantUsers = await ctx.db.query.user.findMany({
         where: (users, { eq }) => eq(users.tenantId, input.tenantId),
+        with: {
+          listingsAsSeller: true,
+          reservationsAsBuyer: true,
+        },
       });
 
-      // Count active sellers
-      const sellers = tenantUsers.filter((u: any) =>
+      // Count users who have created listings (active sellers)
+      const usersWithListings = tenantUsers.filter(
+        (u: any) => u.listingsAsSeller && u.listingsAsSeller.length > 0,
+      );
+
+      // Count users who have made reservations (active buyers)
+      const usersWithReservations = tenantUsers.filter(
+        (u: any) => u.reservationsAsBuyer && u.reservationsAsBuyer.length > 0,
+      );
+
+      // Count verified sellers (SELLER_INDIVIDUAL or SELLER_MERCHANT)
+      const verifiedSellers = tenantUsers.filter((u: any) =>
         ["SELLER_INDIVIDUAL", "SELLER_MERCHANT"].includes(u.userType),
       );
 
-      // Count buyers
-      const buyers = tenantUsers.filter((u: any) => u.userType === "BUYER");
-
       return {
         totalUsers: tenantUsers.length,
-        sellers: sellers.length,
-        buyers: buyers.length,
-        activeSellers: sellers.filter((s: any) => s.accountStatus === "ACTIVE").length,
-        activeBuyers: buyers.filter((b: any) => b.accountStatus === "ACTIVE").length,
+        // Users who have actually created listings
+        activeSellers: usersWithListings.length,
+        // Users who have actually made purchases
+        activeBuyers: usersWithReservations.length,
+        // Users with verified seller status
+        verifiedSellers: verifiedSellers.length,
+        // Users who are both buyers and sellers
+        bothBuyersAndSellers: tenantUsers.filter(
+          (u: any) =>
+            u.listingsAsSeller?.length > 0 && u.reservationsAsBuyer?.length > 0,
+        ).length,
       };
     }),
 

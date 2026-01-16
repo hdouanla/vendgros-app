@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { api } from "~/trpc/react";
-import { ListingCard } from "~/components/listings/listing-card";
-import { ListingMap } from "~/components/map/listing-map";
+import { useQuery } from "@tanstack/react-query";
+import { useTRPC } from "~/trpc/react";
+// import { ListingCard } from "~/components/listings/listing-card";
+// import { ListingMap } from "~/components/map/listing-map";
 
 const CATEGORIES = [
   "ALL",
@@ -20,8 +20,8 @@ const CATEGORIES = [
 ];
 
 export default function SearchListingsPage() {
-  const t = useTranslations();
   const router = useRouter();
+  const trpc = useTRPC();
 
   const [searchParams, setSearchParams] = useState({
     postalCode: "",
@@ -52,8 +52,8 @@ export default function SearchListingsPage() {
   };
 
   // Search by coordinates
-  const { data: nearbyListings, isLoading: isLoadingNearby } =
-    api.listing.searchNearby.useQuery(
+  const { data: nearbyListings, isLoading: isLoadingNearby } = useQuery(
+    trpc.listing.searchNearby.queryOptions(
       {
         latitude: latitude!,
         longitude: longitude!,
@@ -68,26 +68,32 @@ export default function SearchListingsPage() {
         sortBy: searchParams.sortBy,
       },
       {
+        trpc: {
+          abortOnUnmount: true,
+        },
         enabled: latitude !== null && longitude !== null,
       },
-    );
+    ),
+  );
 
   // Search by postal code
-  const { data: postalListings, isLoading: isLoadingPostal } =
-    api.listing.searchByPostalCode.useQuery(
+  const { data: postalListings, isLoading: isLoadingPostal } = useQuery(
+    trpc.listing.searchByPostalCode.queryOptions(
       {
         postalCode: searchParams.postalCode,
         radiusKm: searchParams.radiusKm,
         category: searchParams.category || undefined,
       },
       {
+        trpc: {
+          abortOnUnmount: true,
+        },
         enabled: searchParams.postalCode.length > 0,
       },
-    );
+    ),
+  );
 
-  const listings = searchParams.postalCode
-    ? postalListings
-    : nearbyListings;
+  const listings = searchParams.postalCode ? postalListings : nearbyListings;
   const isLoading = isLoadingNearby || isLoadingPostal;
 
   const handlePostalCodeSearch = (e: React.FormEvent) => {
@@ -100,7 +106,7 @@ export default function SearchListingsPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
-          {t("listing.searchNearby")}
+          Search Nearby Listings
         </h1>
         <p className="mt-2 text-sm text-gray-600">
           Find bulk deals in your area
@@ -113,7 +119,7 @@ export default function SearchListingsPage() {
           {/* Postal Code Search */}
           <div className="lg:col-span-2">
             <label htmlFor="postalCode" className="block text-sm font-medium">
-              {t("listing.searchByPostalCode")}
+              Search by Postal Code
             </label>
             <div className="mt-1 flex gap-2">
               <input
@@ -142,7 +148,7 @@ export default function SearchListingsPage() {
           {/* Radius */}
           <div>
             <label htmlFor="radius" className="block text-sm font-medium">
-              {t("listing.radius")}
+              Radius
             </label>
             <select
               id="radius"
@@ -166,7 +172,7 @@ export default function SearchListingsPage() {
           {/* Sort By */}
           <div>
             <label htmlFor="sortBy" className="block text-sm font-medium">
-              {t("common.sort")}
+              Sort By
             </label>
             <select
               id="sortBy"
@@ -179,17 +185,17 @@ export default function SearchListingsPage() {
               }
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
             >
-              <option value="distance">{t("listing.distance")}</option>
+              <option value="distance">Distance</option>
               <option value="price">Price</option>
               <option value="date">Newest</option>
-              <option value="rating">{t("listing.rating")}</option>
+              <option value="rating">Rating</option>
             </select>
           </div>
 
           {/* Category Filter */}
           <div>
             <label htmlFor="category" className="block text-sm font-medium">
-              {t("listing.category")}
+              Category
             </label>
             <select
               id="category"
@@ -257,7 +263,7 @@ export default function SearchListingsPage() {
       <div>
         {isLoading ? (
           <div className="py-12 text-center">
-            <p className="text-gray-600">{t("common.loading")}</p>
+            <p className="text-gray-600">Loading...</p>
           </div>
         ) : !latitude && !longitude && !searchParams.postalCode ? (
           <div className="rounded-lg bg-blue-50 p-8 text-center">
@@ -271,7 +277,7 @@ export default function SearchListingsPage() {
             {/* View Toggle and Results Count */}
             <div className="mb-4 flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                {listings.length} {t("listing.listings")} found
+                {listings.length} listings found
               </div>
               <div className="flex gap-2">
                 <button
@@ -326,15 +332,27 @@ export default function SearchListingsPage() {
             {/* Grid View */}
             {viewMode === "grid" && (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {listings.map((item: any) => (
+                <div className="rounded-lg bg-white p-6 shadow-md">
+                  <p className="text-gray-600">
+                    Listing cards will appear here once API is connected
+                  </p>
+                </div>
+                {/* TODO: Re-enable once ListingCard component is available */}
+                {/* {listings.map((item: any) => (
                   <ListingCard key={item.listing.id} listing={item.listing} />
-                ))}
+                ))} */}
               </div>
             )}
 
             {/* Map View */}
             {viewMode === "map" && (
-              <ListingMap
+              <div className="rounded-lg bg-gray-100 p-12 text-center">
+                <p className="text-gray-600">
+                  Map view will be available once API and map component are connected
+                </p>
+              </div>
+              /* TODO: Re-enable once ListingMap component is available */
+              /* <ListingMap
                 listings={listings.map((item: any) => ({
                   id: item.listing.id,
                   latitude: item.listing.latitude,
@@ -360,12 +378,12 @@ export default function SearchListingsPage() {
                 }}
                 height="600px"
                 className="w-full"
-              />
+              /> */
             )}
           </>
         ) : (
           <div className="rounded-lg bg-gray-50 p-8 text-center">
-            <p className="text-gray-700">{t("listing.noListings")}</p>
+            <p className="text-gray-700">No listings found</p>
           </div>
         )}
       </div>

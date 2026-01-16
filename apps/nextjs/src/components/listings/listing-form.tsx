@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { api } from "~/trpc/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "~/trpc/react";
 import { ImageUpload } from "./image-upload";
 
 interface ListingFormProps {
@@ -23,13 +23,37 @@ const CATEGORIES = [
   "OTHER",
 ];
 
+// Simple translation stub - replace with actual translations later
+const t = (key: string, params?: any) => {
+  const translations: Record<string, string> = {
+    "errors.minLength": `Minimum length is ${params?.min} characters`,
+    "errors.minValue": `Minimum value is ${params?.min}`,
+    "errors.required": "This field is required",
+    "listing.itemTitle": "Item Title",
+    "listing.description": "Description",
+    "listing.category": "Category",
+    "common.select": "Select...",
+    "listing.pricePerPiece": "Price Per Piece",
+    "listing.quantity": "Quantity",
+    "listing.maxPerBuyer": "Max Per Buyer",
+    "listing.pickupAddress": "Pickup Address",
+    "listing.pickupInstructions": "Pickup Instructions",
+    "common.loading": "Loading...",
+    "common.save": "Save as Draft",
+    "common.submit": "Submit for Review",
+    "listing.submitForReview": "Submit for Review",
+  };
+  return translations[key] || key;
+};
+
 export function ListingForm({
   mode = "create",
   initialData,
   listingId,
 }: ListingFormProps) {
-  const t = useTranslations();
   const router = useRouter();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     title: initialData?.title ?? "",
@@ -46,31 +70,39 @@ export function ListingForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isGeocoding, setIsGeocoding] = useState(false);
 
-  const createListing = api.listing.create.useMutation({
-    onSuccess: (data) => {
-      router.push(`/listings/${data.id}`);
-    },
-    onError: (error) => {
-      console.error("Failed to create listing:", error);
-      setErrors({ submit: error.message });
-    },
-  });
+  const createListing = useMutation(
+    trpc.listing.create.mutationOptions({
+      onSuccess: (data) => {
+        router.push(`/listings/${data.id}`);
+      },
+      onError: (error) => {
+        console.error("Failed to create listing:", error);
+        setErrors({ submit: error.message });
+      },
+    }),
+  );
 
-  const updateListing = api.listing.update.useMutation({
-    onSuccess: () => {
-      router.push(`/listings/${listingId}`);
-    },
-    onError: (error) => {
-      console.error("Failed to update listing:", error);
-      setErrors({ submit: error.message });
-    },
-  });
+  const updateListing = useMutation(
+    trpc.listing.update.mutationOptions({
+      onSuccess: () => {
+        if (listingId) {
+          router.push(`/listings/${listingId}`);
+        }
+      },
+      onError: (error) => {
+        console.error("Failed to update listing:", error);
+        setErrors({ submit: error.message });
+      },
+    }),
+  );
 
-  const submitForReview = api.listing.submitForReview.useMutation({
-    onError: (error) => {
-      console.error("Failed to submit for review:", error);
-    },
-  });
+  const submitForReview = useMutation(
+    trpc.listing.submitForReview.mutationOptions({
+      onError: (error) => {
+        console.error("Failed to submit for review:", error);
+      },
+    }),
+  );
 
   const handleSubmit = async (e: React.FormEvent, saveAs: "draft" | "review") => {
     e.preventDefault();

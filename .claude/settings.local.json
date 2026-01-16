@@ -29,7 +29,14 @@
       "Bash(ls:*)",
       "Bash(POSTGRES_URL=\"postgresql://postgres:@127.0.0.1:5432/vendgros-app\" pnpm drizzle-kit generate:*)",
       "Bash(POSTGRES_URL=\"postgresql://dummy:dummy@localhost:5432/dummy\" pnpm drizzle-kit:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(head:*)",
+      "Bash(grep:*)"
     ]
   }
 }

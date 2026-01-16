@@ -27,12 +27,17 @@ const getQueryClient = () => {
   }
 };
 
-export const { useTRPC, TRPCProvider } = createTRPCContext<AppRouter>();
+const trpcContext = createTRPCContext<AppRouter>();
 
-// Export api as an alias for convenience
-export const api = useTRPC;
+// Export the hook that provides access to tRPC
+export const useTRPC = trpcContext.useTRPC;
+export const TRPCProvider = trpcContext.TRPCProvider;
 
-export function TRPCReactProvider(props: { children: React.ReactNode }) {
+// Export api for backwards compatibility (even though it won't work as expected)
+// Components importing this will need to be updated
+export const api = trpcContext.useTRPC;
+
+export function TRPCReactProvider(props: { children: React.ReactNode}) {
   const queryClient = getQueryClient();
 
   const [trpcClient] = useState(() =>

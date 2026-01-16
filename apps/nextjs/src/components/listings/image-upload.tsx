@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useTranslations } from "next-intl";
-import { api } from "~/trpc/react";
+import { useMutation } from "@tanstack/react-query";
+import { useTRPC } from "~/trpc/react";
 
 interface ImageUploadProps {
   photos: string[];
@@ -11,12 +11,14 @@ interface ImageUploadProps {
 }
 
 export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadProps) {
-  const t = useTranslations();
+  const trpc = useTRPC();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const getUploadUrl = api.upload.getUploadUrl.useMutation();
+  const getUploadUrl = useMutation(
+    trpc.upload.getUploadUrl.mutationOptions(),
+  );
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -88,7 +90,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium mb-2">
-          {t("listing.photos")} ({photos.length}/{maxPhotos})
+          Photos ({photos.length}/{maxPhotos})
         </label>
 
         {/* Photo Grid */}
@@ -122,7 +124,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
                 </button>
                 {index === 0 && (
                   <div className="absolute bottom-2 left-2 rounded bg-green-600 px-2 py-1 text-xs text-white">
-                    {t("listing.coverPhoto")}
+                    Cover Photo
                   </div>
                 )}
               </div>
@@ -169,7 +171,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  {t("common.uploading")}...
+                  Uploading...
                 </>
               ) : (
                 <>
@@ -186,7 +188,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
                       d="M12 4v16m8-8H4"
                     />
                   </svg>
-                  {t("listing.addPhotos")} (Max 5MB each)
+                  Add Photos (Max 5MB each)
                 </>
               )}
             </button>
@@ -200,7 +202,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
 
         {/* Help Text */}
         <p className="mt-2 text-xs text-gray-500">
-          {t("listing.photoHelp")}
+          Upload photos of your items. The first photo will be used as the cover photo.
         </p>
       </div>
     </div>

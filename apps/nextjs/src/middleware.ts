@@ -1,19 +1,13 @@
-import createMiddleware from "next-intl/middleware";
+// Middleware temporarily disabled to simplify the setup
+// You can re-enable i18n routing and auth middleware later
 
-import { defaultLocale, locales } from "./i18n";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default createMiddleware({
-  // A list of all locales that are supported
-  locales,
-
-  // Used when no locale matches
-  defaultLocale,
-
-  // Don't use locale prefixes for the default locale
-  localePrefix: "as-needed",
-});
+export function middleware(request: NextRequest) {
+  return NextResponse.next();
+}
 
 export const config = {
-  // Match only internationalized pathnames
-  matcher: ["/", "/(fr|es)/:path*", "/((?!_next|_vercel|.*\\..*).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

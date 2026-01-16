@@ -77,8 +77,9 @@ export const user = pgTable(
   "user",
   (t) => ({
     id: t.text().primaryKey(),
+    name: t.text().notNull(),
     email: t.text().notNull().unique(),
-    phone: t.text().notNull().unique(),
+    phone: t.text().unique(),
     passwordHash: t.text(),
 
     emailVerified: t.boolean().notNull().default(false),

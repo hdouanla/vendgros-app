@@ -24,6 +24,9 @@ export function initAuth<TExtraPlugins extends BetterAuthPlugin[] = []>(options:
 
   extraPlugins?: TExtraPlugins;
 }) {
+  // Only require email verification if Resend API key is configured
+  const hasEmailConfig = !!options.resendApiKey;
+
   const config = {
     database: drizzleAdapter(db, {
       provider: "pg",
@@ -32,34 +35,33 @@ export function initAuth<TExtraPlugins extends BetterAuthPlugin[] = []>(options:
     secret: options.secret,
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: true,
+      requireEmailVerification: hasEmailConfig,
     },
     plugins: [
       oAuthProxy({
         productionURL: options.productionUrl,
       }),
       expo(),
-      // OTP plugin for email verification
-      emailOTP({
-        sendVerificationOTP: async (data: {
-          email: string;
-          otp: string;
-          type: "sign-in" | "email-verification" | "forget-password";
-        }) => {
-          // Send OTP via Resend
-          if (!options.resendApiKey) {
-            throw new Error("Resend API key not configured");
-          }
-
-          await sendEmailOTP({
-            email: data.email,
-            code: data.otp,
-            resendApiKey: options.resendApiKey,
-          });
-        },
-        expiresIn: 600, // 10 minutes expiry
-        sendVerificationOnSignUp: true,
-      }),
+      // OTP plugin for email verification (only if Resend key is available)
+      ...(hasEmailConfig
+        ? [
+            emailOTP({
+              sendVerificationOTP: async (data: {
+                email: string;
+                otp: string;
+                type: "sign-in" | "email-verification" | "forget-password";
+              }) => {
+                await sendEmailOTP({
+                  email: data.email,
+                  code: data.otp,
+                  resendApiKey: options.resendApiKey!,
+                });
+              },
+              expiresIn: 600, // 10 minutes expiry
+              sendVerificationOnSignUp: true,
+            }),
+          ]
+        : []),
       ...(options.extraPlugins ?? []),
     ],
     trustedOrigins: ["expo://"],

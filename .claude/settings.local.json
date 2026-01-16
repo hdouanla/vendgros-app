@@ -36,7 +36,8 @@
       "Bash(lsof:*)",
       "Bash(xargs kill:*)",
       "Bash(head:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(openssl rand:*)"
     ]
   }
 }

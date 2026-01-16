@@ -4,15 +4,21 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { randomUUID } from "crypto";
 
-// Initialize S3 client for DigitalOcean Spaces
-const s3Client = new S3Client({
-  endpoint: process.env.DO_SPACES_ENDPOINT,
-  region: process.env.DO_SPACES_REGION || "tor1",
-  credentials: {
-    accessKeyId: process.env.DO_SPACES_KEY!,
-    secretAccessKey: process.env.DO_SPACES_SECRET!,
-  },
-});
+// Helper function to create S3 client with current environment variables
+function createS3Client() {
+  if (!process.env.DO_SPACES_KEY || !process.env.DO_SPACES_SECRET) {
+    throw new Error("DigitalOcean Spaces credentials not configured");
+  }
+
+  return new S3Client({
+    endpoint: process.env.DO_SPACES_ENDPOINT,
+    region: process.env.DO_SPACES_REGION || "tor1",
+    credentials: {
+      accessKeyId: process.env.DO_SPACES_KEY,
+      secretAccessKey: process.env.DO_SPACES_SECRET,
+    },
+  });
+}
 
 export const uploadRouter = createTRPCRouter({
   /**
@@ -31,6 +37,9 @@ export const uploadRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // Create S3 client with current environment variables
+      const s3Client = createS3Client();
+
       // Generate unique key for the file
       const fileExtension = input.fileName.split('.').pop() || 'jpg';
       const uniqueFileName = `${randomUUID()}.${fileExtension}`;

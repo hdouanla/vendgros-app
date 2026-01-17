@@ -1,10 +1,32 @@
 "use client";
 
 import { use } from "react";
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import { QRCode } from "@acme/ui/qr-code";
+
+// Simple translation stub - replace with actual translations later
+const t = (key: string) => {
+  const translations: Record<string, string> = {
+    "common.loading": "Loading...",
+    "errors.notFound": "Reservation not found",
+    "reservation.reservation": "Reservation",
+    "reservation.reservationCode": "Reservation Code",
+    "reservation.status.confirmed": "Confirmed - Ready for pickup",
+    "reservation.status.pending": "Pending payment",
+    "reservation.status.completed": "Completed",
+    "reservation.status.cancelled": "Cancelled",
+    "listing.quantity": "Quantity",
+    "reservation.totalPrice": "Total Price",
+    "reservation.depositAmount": "Deposit Paid (5%)",
+    "reservation.balanceDue": "Balance Due at Pickup",
+    "reservation.payDeposit": "Pay Deposit Now",
+    "listing.seller": "Seller Information",
+    "reservation.qrCode": "Pickup QR Code",
+    "reservation.pickupInstructions": "Show this QR code to the seller during pickup",
+  };
+  return translations[key] || key;
+};
 
 export default function ReservationDetailPage({
   params,
@@ -12,7 +34,6 @@ export default function ReservationDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const t = useTranslations();
   const router = useRouter();
 
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();

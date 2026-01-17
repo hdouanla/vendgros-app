@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import {
   PaymentElement,
@@ -10,13 +9,24 @@ import {
 } from "@stripe/react-stripe-js";
 import { api } from "~/trpc/react";
 
+// Simple translation stub - replace with actual translations later
+const t = (key: string) => {
+  const translations: Record<string, string> = {
+    "payment.paymentSuccessful": "Payment successful! Redirecting...",
+    "payment.paymentFailed": "Payment failed. Please try again.",
+    "payment.paymentMethod": "Payment Method",
+    "payment.processing": "Processing...",
+    "payment.payNow": "Pay Now",
+  };
+  return translations[key] || key;
+};
+
 interface PaymentFormProps {
   reservationId: string;
   amount: number;
 }
 
 export function PaymentForm({ reservationId, amount }: PaymentFormProps) {
-  const t = useTranslations();
   const router = useRouter();
   const stripe = useStripe();
   const elements = useElements();

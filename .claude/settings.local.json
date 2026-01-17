@@ -44,7 +44,8 @@
       "Bash(cd:*)",
       "Bash(npm run build:*)",
       "Bash(pgrep:*)",
-      "Bash(redis-cli ping:*)"
+      "Bash(redis-cli ping:*)",
+      "Bash(kill:*)"
     ]
   }
 }

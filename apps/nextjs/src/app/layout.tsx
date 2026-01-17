@@ -51,6 +51,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           geistSans.variable,
           geistMono.variable,
         )}
+        suppressHydrationWarning
       >
         <ThemeProvider>
           <TRPCReactProvider>{props.children}</TRPCReactProvider>

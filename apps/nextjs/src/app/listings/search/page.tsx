@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
-// import { ListingCard } from "~/components/listings/listing-card";
-// import { ListingMap } from "~/components/map/listing-map";
+import { ListingMap } from "~/components/map/listing-map";
 
 const CATEGORIES = [
   "ALL",
@@ -33,6 +32,7 @@ export default function SearchListingsPage() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
+  const [activePostalCode, setActivePostalCode] = useState<string>("");
 
   // Get user location
   const getUserLocation = () => {
@@ -41,11 +41,46 @@ export default function SearchListingsPage() {
         (position) => {
           setLatitude(position.coords.latitude);
           setLongitude(position.coords.longitude);
+          setActivePostalCode(""); // Clear postal code when using location
         },
         (error) => {
           console.error("Error getting location:", error);
         },
       );
+    }
+  };
+
+  // Format postal code as user types
+  const formatPostalCode = (value: string) => {
+    // Remove all non-alphanumeric characters
+    const cleaned = value.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+
+    // Limit to 6 characters
+    const limited = cleaned.slice(0, 6);
+
+    // Add space after 3rd character if we have more than 3 characters
+    if (limited.length > 3) {
+      return `${limited.slice(0, 3)} ${limited.slice(3)}`;
+    }
+
+    return limited;
+  };
+
+  // Handle postal code input change
+  const handlePostalCodeChange = (value: string) => {
+    const formatted = formatPostalCode(value);
+    setSearchParams((prev) => ({
+      ...prev,
+      postalCode: formatted,
+    }));
+  };
+
+  // Handle postal code search
+  const handlePostalCodeSearch = () => {
+    if (searchParams.postalCode.trim()) {
+      setActivePostalCode(searchParams.postalCode);
+      setLatitude(null); // Clear location when using postal code
+      setLongitude(null);
     }
   };
 
@@ -74,22 +109,17 @@ export default function SearchListingsPage() {
   const { data: postalListings, isLoading: isLoadingPostal } =
     api.listing.searchByPostalCode.useQuery(
       {
-        postalCode: searchParams.postalCode,
+        postalCode: activePostalCode,
         radiusKm: searchParams.radiusKm,
         category: searchParams.category || undefined,
       },
       {
-        enabled: searchParams.postalCode.length > 0,
+        enabled: activePostalCode.length > 0,
       },
     );
 
-  const listings = searchParams.postalCode ? postalListings : nearbyListings;
+  const listings = activePostalCode ? postalListings : nearbyListings;
   const isLoading = isLoadingNearby || isLoadingPostal;
-
-  const handlePostalCodeSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Postal code search will automatically trigger via the query
-  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -116,15 +146,24 @@ export default function SearchListingsPage() {
                 type="text"
                 id="postalCode"
                 value={searchParams.postalCode}
-                onChange={(e) =>
-                  setSearchParams((prev) => ({
-                    ...prev,
-                    postalCode: e.target.value.toUpperCase(),
-                  }))
-                }
+                onChange={(e) => handlePostalCodeChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handlePostalCodeSearch();
+                  }
+                }}
                 placeholder="A1A 1A1"
+                maxLength={7}
                 className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
               />
+              <button
+                type="button"
+                onClick={handlePostalCodeSearch}
+                disabled={!searchParams.postalCode.trim()}
+                className="whitespace-nowrap rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Search
+              </button>
               <button
                 type="button"
                 onClick={getUserLocation}
@@ -255,11 +294,10 @@ export default function SearchListingsPage() {
           <div className="py-12 text-center">
             <p className="text-gray-600">Loading...</p>
           </div>
-        ) : !latitude && !longitude && !searchParams.postalCode ? (
+        ) : !latitude && !longitude && !activePostalCode ? (
           <div className="rounded-lg bg-blue-50 p-8 text-center">
             <p className="text-gray-700">
-              Enter a postal code or allow location access to see nearby
-              listings
+              Enter a postal code and click "Search", or use "Use My Location" to see nearby listings
             </p>
           </div>
         ) : listings && listings.length > 0 ? (
@@ -322,27 +360,75 @@ export default function SearchListingsPage() {
             {/* Grid View */}
             {viewMode === "grid" && (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <div className="rounded-lg bg-white p-6 shadow-md">
-                  <p className="text-gray-600">
-                    Listing cards will appear here once API is connected
-                  </p>
-                </div>
-                {/* TODO: Re-enable once ListingCard component is available */}
-                {/* {listings.map((item: any) => (
-                  <ListingCard key={item.listing.id} listing={item.listing} />
-                ))} */}
+                {listings.map((item: any) => (
+                  <div
+                    key={item.listing.id}
+                    className="cursor-pointer overflow-hidden rounded-lg bg-white shadow-md transition-shadow hover:shadow-lg"
+                    onClick={() => router.push(`/listings/${item.listing.id}`)}
+                  >
+                    {/* Image */}
+                    <div className="aspect-video bg-gray-200">
+                      {item.listing.photos && item.listing.photos.length > 0 ? (
+                        <img
+                          src={item.listing.photos[0]}
+                          alt={item.listing.title}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-gray-400">
+                          No photo
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-4">
+                      <div className="mb-2 flex items-start justify-between">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {item.listing.title}
+                        </h3>
+                        {item.distance && (
+                          <span className="ml-2 flex-shrink-0 text-sm text-gray-500">
+                            {item.distance.toFixed(1)} km
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="inline-block rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                          {item.listing.category}
+                        </span>
+                        <span className="inline-block rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                          {item.listing.status}
+                        </span>
+                      </div>
+
+                      <p className="mb-3 line-clamp-2 text-sm text-gray-600">
+                        {item.listing.description}
+                      </p>
+
+                      <div className="flex items-baseline justify-between">
+                        <div>
+                          <span className="text-2xl font-bold text-green-600">
+                            ${item.listing.pricePerPiece.toFixed(2)}
+                          </span>
+                          <span className="ml-1 text-sm text-gray-600">
+                            / piece
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {item.listing.quantityAvailable} available
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
             {/* Map View */}
             {viewMode === "map" && (
-              <div className="rounded-lg bg-gray-100 p-12 text-center">
-                <p className="text-gray-600">
-                  Map view will be available once API and map component are connected
-                </p>
-              </div>
-              /* TODO: Re-enable once ListingMap component is available */
-              /* <ListingMap
+              <ListingMap
                 listings={listings.map((item: any) => ({
                   id: item.listing.id,
                   latitude: item.listing.latitude,
@@ -368,7 +454,7 @@ export default function SearchListingsPage() {
                 }}
                 height="600px"
                 className="w-full"
-              /> */
+              />
             )}
           </>
         ) : (

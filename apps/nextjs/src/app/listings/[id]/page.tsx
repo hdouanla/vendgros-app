@@ -49,6 +49,7 @@ export default function ListingDetailPage({
   const [showReserveModal, setShowReserveModal] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
+  const [reservationError, setReservationError] = useState<string | null>(null);
 
   const { data: listing, isLoading } = api.listing.getById.useQuery({
     id,
@@ -59,7 +60,14 @@ export default function ListingDetailPage({
   const createReservation = api.reservation.create.useMutation({
     onSuccess: (data) => {
       // Redirect to payment page to pay deposit
-      router.push(`/payment/${data.id}`);
+      router.push(`/payment/${data.reservationId}`);
+    },
+    onError: (error) => {
+      if (error.data?.code === "UNAUTHORIZED") {
+        setReservationError("Please sign in to make a reservation");
+      } else {
+        setReservationError(error.message || "Failed to create reservation");
+      }
     },
   });
 
@@ -95,10 +103,17 @@ export default function ListingDetailPage({
   const handleReserve = async () => {
     if (!listing) return;
 
-    await createReservation.mutateAsync({
-      listingId: id,
-      quantityReserved: quantityToReserve,
-    });
+    setReservationError(null); // Clear any previous errors
+
+    try {
+      await createReservation.mutateAsync({
+        listingId: id,
+        quantity: quantityToReserve,
+      });
+    } catch (error) {
+      // Error will be handled by onError callback
+      console.error("Reservation error:", error);
+    }
   };
 
   if (isLoading) {
@@ -415,7 +430,7 @@ export default function ListingDetailPage({
 
       {/* Reservation Confirmation Modal */}
       {showReserveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
             <h2 className="mb-4 text-xl font-semibold">
               {t("reservation.confirmReservation")}
@@ -440,6 +455,23 @@ export default function ListingDetailPage({
               </div>
             </div>
 
+            {reservationError && (
+              <div className="mb-4 rounded-md bg-red-50 p-3">
+                <p className="text-sm text-red-800">{reservationError}</p>
+                {reservationError.includes("sign in") && (
+                  <button
+                    onClick={() => {
+                      const callbackUrl = encodeURIComponent(`/listings/${id}`);
+                      router.push(`/auth/signin?callbackUrl=${callbackUrl}`);
+                    }}
+                    className="mt-2 text-sm font-medium text-red-900 underline hover:text-red-700"
+                  >
+                    Go to Sign In
+                  </button>
+                )}
+              </div>
+            )}
+
             <p className="mb-6 text-sm text-gray-600">
               You'll be redirected to payment to secure your reservation. The
               remaining ${balanceDue.toFixed(2)} CAD will be paid at pickup.
@@ -447,7 +479,10 @@ export default function ListingDetailPage({
 
             <div className="flex gap-3">
               <button
-                onClick={() => setShowReserveModal(false)}
+                onClick={() => {
+                  setShowReserveModal(false);
+                  setReservationError(null);
+                }}
                 className="flex-1 rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
               >
                 {t("common.cancel")}

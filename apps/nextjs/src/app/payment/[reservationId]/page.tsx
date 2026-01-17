@@ -1,12 +1,29 @@
 "use client";
 
 import { use, useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { PaymentForm } from "~/components/payment/payment-form";
+
+// Simple translation stub - replace with actual translations later
+const t = (key: string, params?: any) => {
+  const translations: Record<string, string> = {
+    "common.loading": "Loading...",
+    "errors.notFound": "Reservation not found",
+    "payment.payment": "Payment",
+    "payment.securePayment": "Secure Payment",
+    "payment.processing": "Processing...",
+    "listing.itemTitle": "Item",
+    "listing.quantity": "Quantity",
+    "listing.pricePerPiece": "Price per piece",
+    "reservation.totalPrice": "Total Price",
+    "reservation.depositAmount": "Deposit Amount (5%)",
+    "reservation.balancePayment": `Pay remaining balance at pickup`,
+  };
+  return translations[key] || key;
+};
 
 // Initialize Stripe
 const stripePromise = loadStripe(
@@ -19,7 +36,6 @@ export default function PaymentPage({
   params: Promise<{ reservationId: string }>;
 }) {
   const { reservationId } = use(params);
-  const t = useTranslations();
   const router = useRouter();
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -38,7 +54,7 @@ export default function PaymentPage({
     },
   );
 
-  const createPaymentIntent = api.payment.createPaymentIntent.useMutation({
+  const createPaymentIntent = api.payment.createDepositPayment.useMutation({
     onSuccess: (data) => {
       setClientSecret(data.clientSecret);
     },
@@ -49,7 +65,6 @@ export default function PaymentPage({
       // Create payment intent automatically
       createPaymentIntent.mutate({
         reservationId,
-        amount: reservation.depositAmount,
       });
     }
   }, [reservation, paymentStatus, clientSecret]);

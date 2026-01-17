@@ -101,8 +101,8 @@ Place the file at: `data/canadian-postal-codes.csv` (relative to project root)
 From the project root:
 
 ```bash
-# Ensure .env has POSTGRES_URL configured
-pnpm db:import-postal-codes
+# Ensure .env.local has POSTGRES_URL configured
+pnpm --filter @acme/db import-postal-codes
 ```
 
 The import script will:
@@ -214,7 +214,7 @@ The import script is idempotent (can be re-run):
 
 ```bash
 # Re-import to update data
-pnpm db:import-postal-codes
+pnpm --filter @acme/db import-postal-codes
 ```
 
 Uses `ON CONFLICT DO NOTHING` to avoid duplicates.

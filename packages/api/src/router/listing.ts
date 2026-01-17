@@ -48,9 +48,13 @@ export const listingRouter = createTRPCRouter({
           status: "DRAFT",
           location: null, // Will be set by PostGIS trigger
         })
-        .returning();
+        .returning({ id: listing.id });
 
-      return newListing;
+      return {
+        id: newListing.id,
+        status: "DRAFT" as const,
+        success: true,
+      };
     }),
 
   // Submit listing for review
@@ -73,13 +77,16 @@ export const listingRouter = createTRPCRouter({
         throw new Error("Only draft listings can be submitted for review");
       }
 
-      const [updated] = await ctx.db
+      await ctx.db
         .update(listing)
-        .set({ status: "PENDING_REVIEW" })
-        .where(eq(listing.id, input.listingId))
-        .returning();
+        .set({ status: "PENDING_REVIEW", updatedAt: new Date() })
+        .where(eq(listing.id, input.listingId));
 
-      return updated;
+      return {
+        id: input.listingId,
+        status: "PENDING_REVIEW" as const,
+        success: true
+      };
     }),
 
   // Update listing
@@ -127,16 +134,20 @@ export const listingRouter = createTRPCRouter({
         ? "PENDING_REVIEW"
         : existingListing.status;
 
-      const [updated] = await ctx.db
+      await ctx.db
         .update(listing)
         .set({
           ...input.data,
           status: newStatus,
+          updatedAt: new Date(),
         })
-        .where(eq(listing.id, input.listingId))
-        .returning();
+        .where(eq(listing.id, input.listingId));
 
-      return updated;
+      return {
+        id: input.listingId,
+        status: newStatus,
+        success: true,
+      };
     }),
 
   // Delete (cancel) listing
@@ -167,13 +178,16 @@ export const listingRouter = createTRPCRouter({
         throw new Error("Cannot delete listing with active reservations");
       }
 
-      const [updated] = await ctx.db
+      await ctx.db
         .update(listing)
-        .set({ status: "CANCELLED" })
-        .where(eq(listing.id, input.listingId))
-        .returning();
+        .set({ status: "CANCELLED", updatedAt: new Date() })
+        .where(eq(listing.id, input.listingId));
 
-      return updated;
+      return {
+        id: input.listingId,
+        status: "CANCELLED" as const,
+        success: true,
+      };
     }),
 
   // Get listing by ID (public)
@@ -227,7 +241,7 @@ export const listingRouter = createTRPCRouter({
       // Use PostGIS ST_Distance for proximity search
       const distanceCalc = sql<number>`
         ST_Distance(
-          ST_GeomFromText(${listing.location}, 4326)::geography,
+          ST_MakePoint(${listing.longitude}, ${listing.latitude})::geography,
           ST_MakePoint(${input.longitude}, ${input.latitude})::geography
         ) / 1000
       `;
@@ -236,10 +250,6 @@ export const listingRouter = createTRPCRouter({
         .select({
           listing: listing,
           distance: distanceCalc,
-          sellerRating: sql<number>`${ctx.db.query.user.findFirst({
-            where: (users) => eq(users.id, listing.sellerId),
-            columns: { ratingAverage: true },
-          })}`,
         })
         .from(listing)
         .where(
@@ -247,7 +257,7 @@ export const listingRouter = createTRPCRouter({
             eq(listing.status, "PUBLISHED"),
             // PostGIS proximity filter
             sql`ST_DWithin(
-              ST_GeomFromText(${listing.location}, 4326)::geography,
+              ST_MakePoint(${listing.longitude}, ${listing.latitude})::geography,
               ST_MakePoint(${input.longitude}, ${input.latitude})::geography,
               ${input.radiusKm * 1000}
             )`,
@@ -300,7 +310,7 @@ export const listingRouter = createTRPCRouter({
       // Use PostGIS ST_Distance for proximity search
       const distanceCalc = sql<number>`
         ST_Distance(
-          ST_GeomFromText(${listing.location}, 4326)::geography,
+          ST_MakePoint(${listing.longitude}, ${listing.latitude})::geography,
           ST_MakePoint(${postal.longitude}, ${postal.latitude})::geography
         ) / 1000
       `;
@@ -315,7 +325,7 @@ export const listingRouter = createTRPCRouter({
           and(
             eq(listing.status, "PUBLISHED"),
             sql`ST_DWithin(
-              ST_GeomFromText(${listing.location}, 4326)::geography,
+              ST_MakePoint(${listing.longitude}, ${listing.latitude})::geography,
               ST_MakePoint(${postal.longitude}, ${postal.latitude})::geography,
               ${input.radiusKm * 1000}
             )`,
@@ -340,6 +350,36 @@ export const listingRouter = createTRPCRouter({
       return result;
     }),
 
+  // Lookup postal code and return coordinates
+  geocodePostalCode: publicProcedure
+    .input(
+      z.object({
+        postalCode: z.string().regex(/^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/i),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      // Format postal code to uppercase with space
+      const formatted = input.postalCode.replace(/\s/g, "").toUpperCase();
+      const postalWithSpace = `${formatted.slice(0, 3)} ${formatted.slice(3)}`;
+
+      const postal = await ctx.db.query.postalCode.findFirst({
+        where: (postalCodes, { eq }) =>
+          eq(postalCodes.code, postalWithSpace),
+      });
+
+      if (!postal) {
+        throw new Error("Postal code not found");
+      }
+
+      return {
+        code: postal.code,
+        city: postal.city,
+        province: postal.province,
+        latitude: postal.latitude,
+        longitude: postal.longitude,
+      };
+    }),
+
   // Track listing view
   trackView: publicProcedure
     .input(z.object({ listingId: z.string() }))
@@ -349,6 +389,7 @@ export const listingRouter = createTRPCRouter({
         .update(listing)
         .set({
           viewCount: sql`${listing.viewCount} + 1`,
+          updatedAt: new Date(),
         })
         .where(eq(listing.id, input.listingId));
 

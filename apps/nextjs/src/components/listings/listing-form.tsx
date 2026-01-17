@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTRPC } from "~/trpc/react";
+import { api } from "~/trpc/react";
 import { ImageUpload } from "./image-upload";
 
 interface ListingFormProps {
@@ -52,7 +52,6 @@ export function ListingForm({
   listingId,
 }: ListingFormProps) {
   const router = useRouter();
-  const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
@@ -63,46 +62,45 @@ export function ListingForm({
     quantityTotal: initialData?.quantityTotal ?? "",
     maxPerBuyer: initialData?.maxPerBuyer ?? "",
     pickupAddress: initialData?.pickupAddress ?? "",
+    postalCode: initialData?.postalCode ?? "",
     pickupInstructions: initialData?.pickupInstructions ?? "",
     photos: initialData?.photos ?? [],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [coordinates, setCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
-  const createListing = useMutation(
-    trpc.listing.create.mutationOptions({
-      onSuccess: (data) => {
-        router.push(`/listings/${data.id}`);
-      },
-      onError: (error) => {
-        console.error("Failed to create listing:", error);
-        setErrors({ submit: error.message });
-      },
-    }),
-  );
+  const createListing = api.listing.create.useMutation({
+    onSuccess: (data) => {
+      router.push(`/listings/${data.id}`);
+    },
+    onError: (error) => {
+      console.error("Failed to create listing:", error);
+      setErrors({ submit: error.message });
+    },
+  });
 
-  const updateListing = useMutation(
-    trpc.listing.update.mutationOptions({
-      onSuccess: () => {
-        if (listingId) {
-          router.push(`/listings/${listingId}`);
-        }
-      },
-      onError: (error) => {
-        console.error("Failed to update listing:", error);
-        setErrors({ submit: error.message });
-      },
-    }),
-  );
+  const updateListing = api.listing.update.useMutation({
+    onSuccess: () => {
+      if (listingId) {
+        router.push(`/listings/${listingId}`);
+      }
+    },
+    onError: (error) => {
+      console.error("Failed to update listing:", error);
+      setErrors({ submit: error.message });
+    },
+  });
 
-  const submitForReview = useMutation(
-    trpc.listing.submitForReview.mutationOptions({
-      onError: (error) => {
-        console.error("Failed to submit for review:", error);
-      },
-    }),
-  );
+  const submitForReview = api.listing.submitForReview.useMutation({
+    onError: (error) => {
+      console.error("Failed to submit for review:", error);
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent, saveAs: "draft" | "review") => {
     e.preventDefault();
@@ -141,34 +139,27 @@ export function ListingForm({
       newErrors.pickupAddress = t("errors.required");
     }
 
+    if (!formData.postalCode) {
+      newErrors.postalCode = "Postal code is required";
+    } else if (!/^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/i.test(formData.postalCode)) {
+      newErrors.postalCode = "Invalid Canadian postal code format (e.g., M5H 2N2)";
+    }
+
+    if (!coordinates) {
+      newErrors.postalCode = "Please verify your postal code to get coordinates";
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    // Geocode address to get coordinates
-    setIsGeocoding(true);
-    let latitude = 43.6532; // Default to Toronto
-    let longitude = -79.3832;
-
-    try {
-      const geocodeResult = await fetch(
-        `/api/trpc/listing.geocodeAddress?input=${encodeURIComponent(JSON.stringify({ address: formData.pickupAddress, countryCode: "CA" }))}`,
-      );
-
-      if (geocodeResult.ok) {
-        const geocodeData = await geocodeResult.json();
-        if (geocodeData?.result?.data) {
-          latitude = geocodeData.result.data.latitude;
-          longitude = geocodeData.result.data.longitude;
-        }
-      }
-    } catch (error) {
-      console.error("Geocoding failed:", error);
-      // Use default coordinates
-    } finally {
-      setIsGeocoding(false);
+    if (!coordinates) {
+      setErrors({ submit: "Unable to geocode address. Please verify postal code." });
+      return;
     }
+
+    const { latitude, longitude } = coordinates;
 
     const listingData = {
       title: formData.title,
@@ -220,6 +211,63 @@ export function ListingForm({
         delete newErrors[name];
         return newErrors;
       });
+    }
+  };
+
+  const handlePostalCodeLookup = async () => {
+    if (!formData.postalCode) {
+      setErrors((prev) => ({ ...prev, postalCode: "Please enter a postal code" }));
+      return;
+    }
+
+    // Format postal code (add space if missing)
+    const formatted = formData.postalCode.replace(/\s/g, "").toUpperCase();
+    const postalWithSpace = `${formatted.slice(0, 3)} ${formatted.slice(3)}`;
+
+    setIsGeocoding(true);
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.postalCode;
+      return newErrors;
+    });
+
+    try {
+      const response = await fetch(
+        `/api/trpc/listing.geocodePostalCode?batch=1&input=${encodeURIComponent(
+          JSON.stringify({ 0: { json: { postalCode: postalWithSpace } } })
+        )}`
+      );
+
+      const data = await response.json();
+
+      if (data[0]?.result?.data?.json) {
+        const coords = data[0].result.data.json;
+        setCoordinates({
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        });
+        setFormData((prev) => ({ ...prev, postalCode: postalWithSpace }));
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.postalCode;
+          return newErrors;
+        });
+      } else {
+        setErrors((prev) => ({
+          ...prev,
+          postalCode: "Postal code not found. Please verify it's a valid Canadian postal code.",
+        }));
+        setCoordinates(null);
+      }
+    } catch (error) {
+      console.error("Postal code lookup failed:", error);
+      setErrors((prev) => ({
+        ...prev,
+        postalCode: "Failed to lookup postal code. Please try again.",
+      }));
+      setCoordinates(null);
+    } finally {
+      setIsGeocoding(false);
     }
   };
 
@@ -354,23 +402,62 @@ export function ListingForm({
         </div>
       </div>
 
-      {/* Pickup Address */}
-      <div>
-        <label htmlFor="pickupAddress" className="block text-sm font-medium">
-          {t("listing.pickupAddress")} *
-        </label>
-        <input
-          type="text"
-          id="pickupAddress"
-          name="pickupAddress"
-          value={formData.pickupAddress}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-          placeholder="123 Main St, Toronto, ON M5V 1A1"
-        />
-        {errors.pickupAddress && (
-          <p className="mt-1 text-sm text-red-600">{errors.pickupAddress}</p>
-        )}
+      {/* Pickup Address and Postal Code */}
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="pickupAddress" className="block text-sm font-medium">
+            {t("listing.pickupAddress")} *
+          </label>
+          <input
+            type="text"
+            id="pickupAddress"
+            name="pickupAddress"
+            value={formData.pickupAddress}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+            placeholder="123 Main St, Toronto, ON"
+          />
+          {errors.pickupAddress && (
+            <p className="mt-1 text-sm text-red-600">{errors.pickupAddress}</p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="postalCode" className="block text-sm font-medium">
+            Postal Code *
+          </label>
+          <div className="mt-1 flex gap-2">
+            <input
+              type="text"
+              id="postalCode"
+              name="postalCode"
+              value={formData.postalCode}
+              onChange={handleChange}
+              className="block flex-1 rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+              placeholder="M5H 2N2"
+              maxLength={7}
+            />
+            <button
+              type="button"
+              onClick={handlePostalCodeLookup}
+              disabled={isGeocoding || !formData.postalCode}
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isGeocoding ? "Verifying..." : "Verify"}
+            </button>
+          </div>
+          {errors.postalCode && (
+            <p className="mt-1 text-sm text-red-600">{errors.postalCode}</p>
+          )}
+          {coordinates && (
+            <p className="mt-1 text-sm text-green-600">
+              ✓ Coordinates verified: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
+            </p>
+          )}
+          <p className="mt-1 text-xs text-gray-500">
+            Enter a valid Canadian postal code (e.g., M5H 2N2) and click Verify to confirm location
+          </p>
+        </div>
       </div>
 
       {/* Pickup Instructions */}

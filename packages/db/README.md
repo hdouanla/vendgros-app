@@ -52,7 +52,13 @@ A community-driven marketplace for bulk sales of surplus items (groceries, cloth
 
 3. **Set up database**:
    \`\`\`bash
+   # Run migrations
    pnpm --filter @acme/db db:migrate
+
+   # Import sample postal codes for development
+   # (See packages/db/README_POSTAL_CODES.md for production setup)
+   mkdir -p data
+   cp packages/db/sample-postal-codes.csv data/canadian-postal-codes.csv
    pnpm --filter @acme/db import-postal-codes
    \`\`\`
 
@@ -66,6 +72,7 @@ Visit http://localhost:3000 for the web app.
 ## Documentation
 
 - **Setup Guide**: See `.env.example` for required environment variables
+- **Postal Codes Setup**: See `packages/db/README_POSTAL_CODES.md` for importing Canadian postal codes
 - **Project Plan**: See `doc/PROJECT_PLAN.md` for implementation roadmap
 - **API Documentation**: All routes in `packages/api/src/router/`
 

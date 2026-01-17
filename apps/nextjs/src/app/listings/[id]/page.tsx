@@ -1,10 +1,41 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import { ListingMap } from "~/components/map/listing-map";
+
+// Simple translation stub - replace with actual translations later
+const t = (key: string, params?: any) => {
+  const translations: Record<string, string> = {
+    "common.loading": "Loading...",
+    "common.back": "Back",
+    "common.cancel": "Cancel",
+    "common.confirm": "Confirm",
+    "errors.notFound": "Listing not found",
+    "listing.photos": "No photos",
+    "listing.description": "Description",
+    "listing.pickupAddress": "Pickup Address",
+    "listing.pickupInstructions": "Pickup Instructions",
+    "listing.seller": "Seller",
+    "listing.rating": "Rating",
+    "listing.reviews": "reviews",
+    "listing.pricePerPiece": "per piece",
+    "listing.quantity": "Quantity",
+    "listing.quantityAvailable": "Available",
+    "listing.maxPerBuyer": "Max per buyer",
+    "listing.itemTitle": "Item",
+    "profile.accountType": "Account Type",
+    "profile.memberSince": "Member since",
+    "reservation.reserve": "Reserve Now",
+    "reservation.totalPrice": "Total Price",
+    "reservation.depositAmount": "Deposit (5%)",
+    "reservation.balanceDue": "Balance Due at Pickup",
+    "reservation.confirmReservation": "Confirm Reservation",
+    "reservation.balancePayment": `Pay remaining balance at pickup`,
+  };
+  return translations[key] || key;
+};
 
 export default function ListingDetailPage({
   params,
@@ -12,11 +43,12 @@ export default function ListingDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const t = useTranslations();
   const router = useRouter();
 
   const [quantityToReserve, setQuantityToReserve] = useState(1);
   const [showReserveModal, setShowReserveModal] = useState(false);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
+  const [showLightbox, setShowLightbox] = useState(false);
 
   const { data: listing, isLoading } = api.listing.getById.useQuery({
     id,
@@ -37,6 +69,28 @@ export default function ListingDetailPage({
       trackView.mutate({ listingId: id });
     }
   }, [id, listing]); // Only track once when listing loads
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (!showLightbox || !listing?.photos) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowLightbox(false);
+      } else if (e.key === "ArrowLeft") {
+        setSelectedPhotoIndex((prev) =>
+          prev > 0 ? prev - 1 : listing.photos!.length - 1
+        );
+      } else if (e.key === "ArrowRight") {
+        setSelectedPhotoIndex((prev) =>
+          prev < listing.photos!.length - 1 ? prev + 1 : 0
+        );
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showLightbox, listing?.photos]);
 
   const handleReserve = async () => {
     if (!listing) return;
@@ -96,11 +150,34 @@ export default function ListingDetailPage({
           {/* Main Image */}
           <div className="aspect-video overflow-hidden rounded-lg bg-gray-200">
             {listing.photos && listing.photos.length > 0 ? (
-              <img
-                src={listing.photos[0]}
-                alt={listing.title}
-                className="h-full w-full object-cover"
-              />
+              <button
+                onClick={() => setShowLightbox(true)}
+                className="group relative h-full w-full cursor-zoom-in"
+              >
+                <img
+                  src={listing.photos[selectedPhotoIndex]}
+                  alt={listing.title}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/20">
+                  <div className="flex items-center gap-2 rounded-lg bg-black/60 px-4 py-2 text-white opacity-0 backdrop-blur-sm transition-all duration-300 group-hover:opacity-100">
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium">Click to enlarge</span>
+                  </div>
+                </div>
+              </button>
             ) : (
               <div className="flex h-full items-center justify-center text-gray-400">
                 {t("listing.photos")}
@@ -111,17 +188,22 @@ export default function ListingDetailPage({
           {/* Thumbnail Gallery */}
           {listing.photos && listing.photos.length > 1 && (
             <div className="grid grid-cols-4 gap-2">
-              {listing.photos.slice(1, 5).map((photo, idx) => (
-                <div
+              {listing.photos.map((photo, idx) => (
+                <button
                   key={idx}
-                  className="aspect-square overflow-hidden rounded-lg bg-gray-200"
+                  onClick={() => setSelectedPhotoIndex(idx)}
+                  className={`aspect-square overflow-hidden rounded-lg bg-gray-200 transition-all ${
+                    selectedPhotoIndex === idx
+                      ? "ring-2 ring-green-500 ring-offset-2"
+                      : "hover:opacity-75"
+                  }`}
                 >
                   <img
                     src={photo}
-                    alt={`Photo ${idx + 2}`}
+                    alt={`Photo ${idx + 1}`}
                     className="h-full w-full object-cover"
                   />
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -380,6 +462,134 @@ export default function ListingDetailPage({
                   : t("common.confirm")}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Lightbox */}
+      {showLightbox && listing.photos && listing.photos.length > 0 && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+          onClick={() => setShowLightbox(false)}
+        >
+          <div className="relative h-full w-full max-w-7xl p-4">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowLightbox(false)}
+              className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+              aria-label="Close"
+            >
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            {/* Navigation Arrows */}
+            {listing.photos.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedPhotoIndex((prev) =>
+                      prev > 0 ? prev - 1 : listing.photos!.length - 1
+                    );
+                  }}
+                  className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                  aria-label="Previous image"
+                >
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedPhotoIndex((prev) =>
+                      prev < listing.photos!.length - 1 ? prev + 1 : 0
+                    );
+                  }}
+                  className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                  aria-label="Next image"
+                >
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+              </>
+            )}
+
+            {/* Image Counter */}
+            <div className="absolute left-4 top-4 z-10 rounded-full bg-black/50 px-3 py-1 text-sm text-white backdrop-blur-sm">
+              {selectedPhotoIndex + 1} / {listing.photos.length}
+            </div>
+
+            {/* Main Image */}
+            <div
+              className="flex h-full w-full items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={listing.photos[selectedPhotoIndex]}
+                alt={`${listing.title} - Photo ${selectedPhotoIndex + 1}`}
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
+
+            {/* Thumbnail Strip */}
+            {listing.photos.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 z-10 flex max-w-full -translate-x-1/2 gap-2 overflow-x-auto rounded-lg bg-black/50 p-2 backdrop-blur-sm">
+                {listing.photos.map((photo, idx) => (
+                  <button
+                    key={idx}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedPhotoIndex(idx);
+                    }}
+                    className={`h-16 w-16 flex-shrink-0 overflow-hidden rounded transition-all ${
+                      selectedPhotoIndex === idx
+                        ? "ring-2 ring-white ring-offset-2 ring-offset-black/50"
+                        : "opacity-60 hover:opacity-100"
+                    }`}
+                  >
+                    <img
+                      src={photo}
+                      alt={`Thumbnail ${idx + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

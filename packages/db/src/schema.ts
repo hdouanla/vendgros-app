@@ -117,8 +117,7 @@ export const user = pgTable(
     updatedAt: t
       .timestamp({ mode: "date", withTimezone: true })
       .notNull()
-      .defaultNow()
-      .$onUpdateFn(() => sql`now()`),
+      .defaultNow(),
   }),
   (table) => ({
     emailIdx: index("user_email_idx").on(table.email),
@@ -245,8 +244,7 @@ export const listing = pgTable(
     updatedAt: t
       .timestamp({ mode: "date", withTimezone: true })
       .notNull()
-      .defaultNow()
-      .$onUpdateFn(() => sql`now()`),
+      .defaultNow(),
   }),
   (table) => ({
     sellerIdx: index("listing_seller_idx").on(table.sellerId),
@@ -300,8 +298,7 @@ export const reservation = pgTable(
     updatedAt: t
       .timestamp({ mode: "date", withTimezone: true })
       .notNull()
-      .defaultNow()
-      .$onUpdateFn(() => sql`now()`),
+      .defaultNow(),
   }),
   (table) => ({
     listingIdx: index("reservation_listing_idx").on(table.listingId),
@@ -362,8 +359,7 @@ export const rating = pgTable(
     updatedAt: t
       .timestamp({ mode: "date", withTimezone: true })
       .notNull()
-      .defaultNow()
-      .$onUpdateFn(() => sql`now()`),
+      .defaultNow(),
   }),
   (table) => ({
     reservationRaterIdx: index("rating_reservation_rater_idx").on(
@@ -426,8 +422,7 @@ export const conversation = pgTable(
     updatedAt: t
       .timestamp({ mode: "date", withTimezone: true })
       .notNull()
-      .defaultNow()
-      .$onUpdateFn(() => sql`now()`),
+      .defaultNow(),
   }),
   (table) => ({
     listingIdx: index("conversation_listing_idx").on(table.listingId),
@@ -486,8 +481,7 @@ export const message = pgTable(
     updatedAt: t
       .timestamp({ mode: "date", withTimezone: true })
       .notNull()
-      .defaultNow()
-      .$onUpdateFn(() => sql`now()`),
+      .defaultNow(),
   }),
   (table) => ({
     conversationIdx: index("message_conversation_idx").on(table.conversationId),
@@ -543,8 +537,7 @@ export const bulkImport = pgTable(
     updatedAt: t
       .timestamp({ mode: "date", withTimezone: true })
       .notNull()
-      .defaultNow()
-      .$onUpdateFn(() => sql`now()`),
+      .defaultNow(),
   }),
   (table) => ({
     userIdx: index("bulk_import_user_idx").on(table.userId),

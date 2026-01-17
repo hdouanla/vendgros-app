@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { useTRPC } from "~/trpc/react";
 
 interface ImageUploadProps {
   photos: string[];
@@ -10,15 +8,85 @@ interface ImageUploadProps {
   maxPhotos?: number;
 }
 
+// Compress image to target size (2MB by default)
+async function compressImage(
+  file: File,
+  maxSizeMB: number = 2,
+  maxWidthOrHeight: number = 2048
+): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let { width, height } = img;
+
+        // Resize if image is too large
+        if (width > maxWidthOrHeight || height > maxWidthOrHeight) {
+          if (width > height) {
+            height = (height / width) * maxWidthOrHeight;
+            width = maxWidthOrHeight;
+          } else {
+            width = (width / height) * maxWidthOrHeight;
+            height = maxWidthOrHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Failed to get canvas context"));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Try different quality levels to achieve target size
+        const tryCompress = (quality: number) => {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Failed to compress image"));
+                return;
+              }
+
+              // If still too large and quality can be reduced further, try again
+              if (blob.size > maxSizeMB * 1024 * 1024 && quality > 0.1) {
+                tryCompress(quality - 0.1);
+                return;
+              }
+
+              // Convert blob to file
+              const compressedFile = new File([blob], file.name, {
+                type: file.type === "image/png" ? "image/jpeg" : file.type,
+                lastModified: Date.now(),
+              });
+
+              resolve(compressedFile);
+            },
+            file.type === "image/png" ? "image/jpeg" : file.type,
+            quality
+          );
+        };
+
+        // Start with 0.9 quality
+        tryCompress(0.9);
+      };
+      img.onerror = () => reject(new Error("Failed to load image"));
+    };
+    reader.onerror = () => reject(new Error("Failed to read file"));
+  });
+}
+
 export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadProps) {
-  const trpc = useTRPC();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const getUploadUrl = useMutation(
-    trpc.upload.getUploadUrl.mutationOptions(),
-  );
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -40,30 +108,34 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
           throw new Error(`Invalid file type: ${file.type}`);
         }
 
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
+        // Compress image if needed (target 2MB max)
+        let processedFile = file;
+        if (file.size > 2 * 1024 * 1024) {
+          console.log(`Compressing ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+          processedFile = await compressImage(file, 2);
+          console.log(`Compressed to ${(processedFile.size / 1024 / 1024).toFixed(2)}MB`);
+        }
+
+        // Final validation - should not happen after compression
+        if (processedFile.size > 5 * 1024 * 1024) {
           throw new Error(`File too large: ${file.name} (max 5MB)`);
         }
 
-        // Get pre-signed upload URL
-        const { uploadUrl, publicUrl } = await getUploadUrl.mutateAsync({
-          fileName: file.name,
-          fileType: file.type,
-        });
+        // Upload file via API route (server-side upload)
+        const formData = new FormData();
+        formData.append("file", processedFile);
 
-        // Upload file directly to DigitalOcean Spaces
-        const uploadResponse = await fetch(uploadUrl, {
-          method: "PUT",
-          body: file,
-          headers: {
-            "Content-Type": file.type,
-          },
+        const uploadResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
         });
 
         if (!uploadResponse.ok) {
-          throw new Error(`Upload failed for ${file.name}`);
+          const error = await uploadResponse.json();
+          throw new Error(error.error || `Upload failed for ${file.name}`);
         }
 
+        const { publicUrl } = await uploadResponse.json();
         return publicUrl;
       });
 
@@ -188,7 +260,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
                       d="M12 4v16m8-8H4"
                     />
                   </svg>
-                  Add Photos (Max 5MB each)
+                  Add Photos
                 </>
               )}
             </button>
@@ -202,7 +274,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
 
         {/* Help Text */}
         <p className="mt-2 text-xs text-gray-500">
-          Upload photos of your items. The first photo will be used as the cover photo.
+          Upload photos of your items. Large images will be automatically compressed. The first photo will be used as the cover photo.
         </p>
       </div>
     </div>

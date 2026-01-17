@@ -1,3 +1,25 @@
+// Load environment variables FIRST, before any other imports
+import { config } from "dotenv";
+import { resolve } from "path";
+import { existsSync } from "fs";
+
+// Load environment variables from .env.local first, then .env
+// This ensures local development settings always take precedence
+const rootDir = resolve(__dirname, "../../..");
+const envLocalPath = resolve(rootDir, ".env.local");
+const envPath = resolve(rootDir, ".env");
+
+// Load .env first (base config)
+if (existsSync(envPath)) {
+  config({ path: envPath });
+}
+
+// Load .env.local second (overrides base config)
+if (existsSync(envLocalPath)) {
+  config({ path: envLocalPath, override: true });
+}
+
+// NOW import the database dependencies after env is loaded
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 

@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { useTranslations } from "next-intl";
 
 // Initialize Mapbox access token
 if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_MAPBOX_TOKEN) {
@@ -38,7 +37,6 @@ export function ListingMap({
   height = "400px",
   className = "",
 }: ListingMapProps) {
-  const t = useTranslations();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
@@ -170,7 +168,7 @@ export function ListingMap({
               cursor: pointer;
             "
           >
-            ${t("common.viewDetails") || "View Details"}
+            View Details
           </button>
         </div>
       `;
@@ -211,7 +209,7 @@ export function ListingMap({
         maxZoom: 15,
       });
     }
-  }, [listings, onMarkerClick, t]);
+  }, [listings, onMarkerClick]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -250,7 +248,7 @@ export function ListingMap({
       {listings.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-50 bg-opacity-90">
           <p className="text-sm text-gray-600">
-            {t("listing.noListingsOnMap") || "No listings to display"}
+            No listings to display
           </p>
         </div>
       )}

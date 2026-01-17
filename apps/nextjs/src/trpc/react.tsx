@@ -3,12 +3,8 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import {
-  createTRPCClient,
-  httpBatchStreamLink,
-  loggerLink,
-} from "@trpc/client";
-import { createTRPCContext } from "@trpc/tanstack-react-query";
+import { httpBatchLink, loggerLink } from "@trpc/client";
+import { createTRPCReact } from "@trpc/react-query";
 import SuperJSON from "superjson";
 
 import type { AppRouter } from "@acme/api";
@@ -27,28 +23,24 @@ const getQueryClient = () => {
   }
 };
 
-const trpcContext = createTRPCContext<AppRouter>();
+// Create tRPC React hooks
+export const api = createTRPCReact<AppRouter>();
 
-// Export the hook that provides access to tRPC
-export const useTRPC = trpcContext.useTRPC;
-export const TRPCProvider = trpcContext.TRPCProvider;
+// Export useTRPC for backwards compatibility
+export const useTRPC = () => api;
 
-// Export api for backwards compatibility (even though it won't work as expected)
-// Components importing this will need to be updated
-export const api = trpcContext.useTRPC;
-
-export function TRPCReactProvider(props: { children: React.ReactNode}) {
+export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
 
   const [trpcClient] = useState(() =>
-    createTRPCClient<AppRouter>({
+    api.createClient({
       links: [
         loggerLink({
           enabled: (op) =>
             env.NODE_ENV === "development" ||
             (op.direction === "down" && op.result instanceof Error),
         }),
-        httpBatchStreamLink({
+        httpBatchLink({
           transformer: SuperJSON,
           url: getBaseUrl() + "/api/trpc",
           headers() {
@@ -63,9 +55,9 @@ export function TRPCReactProvider(props: { children: React.ReactNode}) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+      <api.Provider client={trpcClient} queryClient={queryClient}>
         {props.children}
-      </TRPCProvider>
+      </api.Provider>
     </QueryClientProvider>
   );
 }

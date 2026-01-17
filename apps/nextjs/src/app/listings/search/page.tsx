@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { useTRPC } from "~/trpc/react";
+import { api } from "~/trpc/react";
 // import { ListingCard } from "~/components/listings/listing-card";
 // import { ListingMap } from "~/components/map/listing-map";
 
@@ -21,7 +20,6 @@ const CATEGORIES = [
 
 export default function SearchListingsPage() {
   const router = useRouter();
-  const trpc = useTRPC();
 
   const [searchParams, setSearchParams] = useState({
     postalCode: "",
@@ -52,8 +50,8 @@ export default function SearchListingsPage() {
   };
 
   // Search by coordinates
-  const { data: nearbyListings, isLoading: isLoadingNearby } = useQuery(
-    trpc.listing.searchNearby.queryOptions(
+  const { data: nearbyListings, isLoading: isLoadingNearby } =
+    api.listing.searchNearby.useQuery(
       {
         latitude: latitude!,
         longitude: longitude!,
@@ -68,30 +66,22 @@ export default function SearchListingsPage() {
         sortBy: searchParams.sortBy,
       },
       {
-        trpc: {
-          abortOnUnmount: true,
-        },
         enabled: latitude !== null && longitude !== null,
       },
-    ),
-  );
+    );
 
   // Search by postal code
-  const { data: postalListings, isLoading: isLoadingPostal } = useQuery(
-    trpc.listing.searchByPostalCode.queryOptions(
+  const { data: postalListings, isLoading: isLoadingPostal } =
+    api.listing.searchByPostalCode.useQuery(
       {
         postalCode: searchParams.postalCode,
         radiusKm: searchParams.radiusKm,
         category: searchParams.category || undefined,
       },
       {
-        trpc: {
-          abortOnUnmount: true,
-        },
         enabled: searchParams.postalCode.length > 0,
       },
-    ),
-  );
+    );
 
   const listings = searchParams.postalCode ? postalListings : nearbyListings;
   const isLoading = isLoadingNearby || isLoadingPostal;

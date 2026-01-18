@@ -5,6 +5,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { emailOTP, oAuthProxy } from "better-auth/plugins";
 
 import { db } from "@acme/db/client";
+import { user, session, account, verification } from "@acme/db/schema";
 
 import { sendEmailOTP } from "./otp/resend";
 import { sendSmsOTP } from "./otp/twilio";
@@ -30,6 +31,12 @@ export function initAuth<TExtraPlugins extends BetterAuthPlugin[] = []>(options:
   const config = {
     database: drizzleAdapter(db, {
       provider: "pg",
+      schema: {
+        user,
+        session,
+        account,
+        verification,
+      },
     }),
     baseURL: options.baseUrl,
     secret: options.secret,

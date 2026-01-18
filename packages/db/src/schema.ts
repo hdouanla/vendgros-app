@@ -219,12 +219,14 @@ export const listing = pgTable(
 
     pickupAddress: t.text().notNull(),
     pickupInstructions: t.text(),
+    postalCode: t.varchar({ length: 10 }), // Store postal code for prefilling in edit mode
     // PostGIS geometry column for spatial queries
     location: t.text(), // POINT(longitude latitude) - will use PostGIS
     latitude: t.doublePrecision().notNull(),
     longitude: t.doublePrecision().notNull(),
 
     status: listingStatusEnum().notNull().default("DRAFT"),
+    isActive: t.boolean().notNull().default(true), // Seller can deactivate listing
     moderationNotes: t.text(),
     publishedAt: t.timestamp(),
 

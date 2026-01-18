@@ -207,6 +207,24 @@ pnpm tsx scripts/import-postal-codes.ts
 pnpm dev
 ```
 
+### Environment Variables
+
+**Required:**
+- `POSTGRES_URL` - PostgreSQL connection string
+- `AUTH_SECRET` - Random secret for session encryption (generate with `openssl rand -base64 32`)
+
+**Optional (Email Verification):**
+- `RESEND_API_KEY` - API key from [Resend](https://resend.com/api-keys)
+  - If **provided**: Users must verify their email before signing in
+  - If **not provided**: Users can sign up and sign in immediately without email verification
+  - Get your API key at: https://resend.com/api-keys
+
+**Optional (Other Services):**
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` - For SMS OTP
+- `STRIPE_SECRET_KEY` - For payment processing
+- `MAPBOX_ACCESS_TOKEN` - For maps and geocoding
+- `OPENAI_API_KEY` - For AI moderation features
+
 ### Development URLs
 
 - Web App: http://localhost:3000

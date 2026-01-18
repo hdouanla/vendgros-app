@@ -10,6 +10,9 @@ interface ListingFormProps {
   mode?: "create" | "edit";
   initialData?: any;
   listingId?: string;
+  hasReservations?: boolean;
+  onDuplicate?: () => void;
+  onViewAsBuyer?: () => void;
 }
 
 const CATEGORIES = [
@@ -50,6 +53,9 @@ export function ListingForm({
   mode = "create",
   initialData,
   listingId,
+  hasReservations = false,
+  onDuplicate,
+  onViewAsBuyer,
 }: ListingFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -172,6 +178,7 @@ export function ListingForm({
         : undefined,
       pickupAddress: formData.pickupAddress,
       pickupInstructions: formData.pickupInstructions || undefined,
+      postalCode: formData.postalCode,
       photos: formData.photos,
       latitude,
       longitude,
@@ -270,6 +277,96 @@ export function ListingForm({
       setIsGeocoding(false);
     }
   };
+
+  // Show locked message if in edit mode with reservations
+  if (mode === "edit" && hasReservations) {
+    return (
+      <div className="space-y-6">
+        <div className="rounded-lg border-2 border-yellow-200 bg-yellow-50 p-6">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">🔒</span>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-yellow-900">
+                Editing Locked
+              </h3>
+              <p className="mt-2 text-sm text-yellow-800">
+                This listing has active or completed reservations. To maintain
+                commitment to your buyers, you cannot edit the listing details.
+              </p>
+              <div className="mt-4 space-y-2">
+                <p className="text-sm font-medium text-yellow-900">
+                  Your options:
+                </p>
+                <ul className="ml-4 list-disc space-y-1 text-sm text-yellow-800">
+                  <li>
+                    Deactivate this listing to prevent new reservations
+                  </li>
+                  <li>
+                    Contact support if you need to make changes to existing
+                    reservations
+                  </li>
+                  <li>
+                    Create a copy of this listing with updated details
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {(onDuplicate || onViewAsBuyer) && (
+          <div className="flex justify-end gap-3">
+            {onViewAsBuyer && (
+              <button
+                type="button"
+                onClick={onViewAsBuyer}
+                className="rounded-md border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                👁️ View as Buyer
+              </button>
+            )}
+            {onDuplicate && (
+              <button
+                type="button"
+                onClick={onDuplicate}
+                className="rounded-md bg-green-600 px-6 py-3 text-sm font-medium text-white hover:bg-green-700"
+              >
+                📋 Copy This Listing
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Show current listing details in read-only mode */}
+        <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-6">
+          <h3 className="font-semibold text-gray-900">Current Listing Details</h3>
+
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-medium text-gray-700">Title:</span>
+              <p className="text-gray-900">{initialData?.title}</p>
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Category:</span>
+              <p className="text-gray-900">{initialData?.category}</p>
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Price:</span>
+              <p className="text-gray-900">${initialData?.pricePerPiece} CAD</p>
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Quantity:</span>
+              <p className="text-gray-900">{initialData?.quantityTotal} units</p>
+            </div>
+            <div className="col-span-2">
+              <span className="font-medium text-gray-700">Pickup Address:</span>
+              <p className="text-gray-900">{initialData?.pickupAddress}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form className="space-y-6">

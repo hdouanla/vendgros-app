@@ -51,6 +51,8 @@ export default function ListingDetailPage({
   const [showLightbox, setShowLightbox] = useState(false);
   const [reservationError, setReservationError] = useState<string | null>(null);
 
+  const { data: session } = api.auth.getSession.useQuery();
+
   const { data: listing, isLoading } = api.listing.getById.useQuery({
     id,
   });
@@ -321,6 +323,11 @@ export default function ListingDetailPage({
               >
                 {listing.status}
               </span>
+              {!listing.isActive && (
+                <span className="inline-block rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-800">
+                  Inactive
+                </span>
+              )}
             </div>
 
             <div className="mb-6 border-t border-b py-4">
@@ -348,6 +355,31 @@ export default function ListingDetailPage({
                     </span>
                   </div>
                 )}
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mt-4">
+                <div className="mb-1 flex justify-between text-xs text-gray-600">
+                  <span>
+                    {Math.round((listing.quantityAvailable / listing.quantityTotal) * 100)}% remaining
+                  </span>
+                </div>
+                <div className="h-4 w-full overflow-hidden rounded-lg bg-gray-200">
+                  <div
+                    className={`h-full transition-all ${
+                      (listing.quantityAvailable / listing.quantityTotal) * 100 > 70
+                        ? "bg-green-500"
+                        : (listing.quantityAvailable / listing.quantityTotal) * 100 > 30
+                          ? "bg-yellow-500"
+                          : (listing.quantityAvailable / listing.quantityTotal) * 100 > 10
+                            ? "bg-orange-500"
+                            : "bg-red-500"
+                    }`}
+                    style={{
+                      width: `${(listing.quantityAvailable / listing.quantityTotal) * 100}%`,
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -405,25 +437,55 @@ export default function ListingDetailPage({
               </div>
             </div>
 
-            {/* Reserve Button */}
-            <button
-              onClick={() => setShowReserveModal(true)}
-              disabled={
-                listing.status !== "PUBLISHED" ||
-                listing.quantityAvailable === 0
-              }
-              className="w-full rounded-md bg-green-600 px-6 py-3 text-lg font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {listing.quantityAvailable === 0
-                ? "Out of Stock"
-                : t("reservation.reserve")}
-            </button>
+            {/* Reserve Button or Seller Notice */}
+            {session?.user?.id === listing.sellerId ? (
+              <div className="rounded-md bg-blue-50 p-4 text-center">
+                <p className="text-sm font-medium text-blue-900">
+                  This is your listing
+                </p>
+                <p className="mt-1 text-xs text-blue-700">
+                  You cannot reserve your own items
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Inactive Notice */}
+                {!listing.isActive && (
+                  <div className="mb-4 rounded-md bg-orange-50 p-4 text-center">
+                    <p className="text-sm font-medium text-orange-900">
+                      Temporarily Unavailable
+                    </p>
+                    <p className="mt-1 text-xs text-orange-700">
+                      The seller has temporarily deactivated this listing. Check back later.
+                    </p>
+                  </div>
+                )}
 
-            <p className="mt-3 text-center text-xs text-gray-500">
-              {t("reservation.balancePayment", {
-                amount: balanceDue.toFixed(2),
-              })}
-            </p>
+                <button
+                  onClick={() => setShowReserveModal(true)}
+                  disabled={
+                    listing.status !== "PUBLISHED" ||
+                    listing.quantityAvailable === 0 ||
+                    !listing.isActive
+                  }
+                  className="w-full rounded-md bg-green-600 px-6 py-3 text-lg font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {!listing.isActive
+                    ? "Temporarily Unavailable"
+                    : listing.quantityAvailable === 0
+                      ? "Out of Stock"
+                      : t("reservation.reserve")}
+                </button>
+
+                {listing.isActive && (
+                  <p className="mt-3 text-center text-xs text-gray-500">
+                    {t("reservation.balancePayment", {
+                      amount: balanceDue.toFixed(2),
+                    })}
+                  </p>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

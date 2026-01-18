@@ -32,7 +32,11 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv -e ../../.env.local --",
     "setup-sample-data": "bash scripts/setup-sample-data.sh",
-    "import-postal-codes": "pnpm with-env tsx src/scripts/import-postal-codes.ts"
+    "import-postal-codes": "pnpm with-env tsx src/scripts/import-postal-codes.ts",
+    "migrate:add-is-active": "pnpm with-env tsx src/migrations/add-is-active.ts",
+    "migrate:add-postal-code": "pnpm with-env tsx src/migrations/add-postal-code-column.ts",
+    "db:reset": "pnpm with-env tsx src/scripts/reset-database.ts",
+    "db:create-tables": "pnpm with-env tsx src/scripts/create-all-tables.ts"
   },
   "dependencies": {
     "@vercel/postgres": "^0.10.0",

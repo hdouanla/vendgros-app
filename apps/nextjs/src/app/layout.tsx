@@ -7,6 +7,7 @@ import { Toaster } from "@acme/ui/toast";
 
 import { env } from "~/env";
 import { TRPCReactProvider } from "~/trpc/react";
+import { Navbar } from "~/components/layout/navbar";
 
 import "./styles.css";
 
@@ -54,7 +55,10 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         suppressHydrationWarning
       >
         <ThemeProvider>
-          <TRPCReactProvider>{props.children}</TRPCReactProvider>
+          <TRPCReactProvider>
+            <Navbar />
+            <main>{props.children}</main>
+          </TRPCReactProvider>
           <div className="absolute right-4 bottom-4">
             <ThemeToggle />
           </div>

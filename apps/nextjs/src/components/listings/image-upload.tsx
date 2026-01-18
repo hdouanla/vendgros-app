@@ -86,6 +86,8 @@ async function compressImage(
 export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,6 +160,46 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
     onChange(newPhotos);
   };
 
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newPhotos = [...photos];
+    const draggedPhoto = newPhotos[draggedIndex];
+
+    // Remove from old position
+    newPhotos.splice(draggedIndex, 1);
+    // Insert at new position
+    newPhotos.splice(dropIndex, 0, draggedPhoto);
+
+    onChange(newPhotos);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -169,11 +211,26 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
         {photos.length > 0 && (
           <div className="grid grid-cols-2 gap-4 mb-4 sm:grid-cols-3 md:grid-cols-4">
             {photos.map((photo, index) => (
-              <div key={index} className="relative group aspect-square">
+              <div
+                key={index}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`relative group aspect-square cursor-move transition-all ${
+                  draggedIndex === index ? "opacity-50 scale-95" : ""
+                } ${
+                  dragOverIndex === index && draggedIndex !== index
+                    ? "ring-2 ring-green-500 ring-offset-2"
+                    : ""
+                }`}
+              >
                 <img
                   src={photo}
                   alt={`Photo ${index + 1}`}
-                  className="h-full w-full rounded-lg object-cover"
+                  className="h-full w-full rounded-lg object-cover pointer-events-none"
                 />
                 <button
                   type="button"
@@ -194,6 +251,22 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
                     />
                   </svg>
                 </button>
+                {/* Drag handle indicator */}
+                <div className="absolute left-2 top-2 rounded bg-gray-900/50 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 8h16M4 16h16"
+                    />
+                  </svg>
+                </div>
                 {index === 0 && (
                   <div className="absolute bottom-2 left-2 rounded bg-green-600 px-2 py-1 text-xs text-white">
                     Cover Photo
@@ -274,7 +347,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
 
         {/* Help Text */}
         <p className="mt-2 text-xs text-gray-500">
-          Upload photos of your items. Large images will be automatically compressed. The first photo will be used as the cover photo.
+          Upload photos of your items. Large images will be automatically compressed. The first photo will be used as the cover photo. Drag and drop photos to reorder them.
         </p>
       </div>
     </div>

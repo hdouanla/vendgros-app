@@ -1,25 +1,17 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 
 export default function ProfilePage() {
-  const t = useTranslations();
   const router = useRouter();
 
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
-  const { data: userStats } = api.user.getStats.useQuery(
-    undefined,
-    {
-      enabled: !!session,
-    }
-  );
 
   if (sessionLoading) {
     return (
       <div className="py-12 text-center">
-        <p className="text-gray-600">{t("common.loading")}</p>
+        <p className="text-gray-600">Loading...</p>
       </div>
     );
   }
@@ -36,13 +28,13 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">
-          {t("profile.myProfile")}
+          My Profile
         </h1>
         <button
           onClick={() => router.push("/profile/edit")}
           className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
         >
-          {t("profile.editProfile")}
+          Edit Profile
         </button>
       </div>
 
@@ -52,13 +44,20 @@ export default function ProfilePage() {
           {/* Basic Info Card */}
           <div className="rounded-lg bg-white p-6 shadow-md">
             <h2 className="mb-4 text-xl font-semibold">
-              {t("profile.basicInfo")}
+              Basic Information
             </h2>
 
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-gray-600">
-                  {t("profile.email")}
+                  Name
+                </label>
+                <p className="mt-1 text-gray-900">{user.name}</p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-600">
+                  Email
                 </label>
                 <p className="mt-1 text-gray-900">{user.email}</p>
               </div>
@@ -66,7 +65,7 @@ export default function ProfilePage() {
               {user.phone && (
                 <div>
                   <label className="text-sm font-medium text-gray-600">
-                    {t("profile.phone")}
+                    Phone
                   </label>
                   <p className="mt-1 text-gray-900">{user.phone}</p>
                 </div>
@@ -74,33 +73,7 @@ export default function ProfilePage() {
 
               <div>
                 <label className="text-sm font-medium text-gray-600">
-                  {t("profile.accountType")}
-                </label>
-                <div className="mt-1 flex items-center">
-                  <span
-                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                      user.accountType === "BUSINESS"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {t(`profile.accountType.${user.accountType?.toLowerCase() || "individual"}`)}
-                  </span>
-                </div>
-              </div>
-
-              {user.businessName && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">
-                    {t("profile.businessName")}
-                  </label>
-                  <p className="mt-1 text-gray-900">{user.businessName}</p>
-                </div>
-              )}
-
-              <div>
-                <label className="text-sm font-medium text-gray-600">
-                  {t("profile.memberSince")}
+                  Member Since
                 </label>
                 <p className="mt-1 text-gray-900">
                   {new Date(user.createdAt).toLocaleDateString()}
@@ -109,58 +82,34 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Transaction History */}
+          {/* Account Actions */}
           <div className="rounded-lg bg-white p-6 shadow-md">
             <h2 className="mb-4 text-xl font-semibold">
-              {t("profile.transactionHistory")}
+              Account Actions
             </h2>
 
-            {userStats?.recentTransactions && userStats.recentTransactions.length > 0 ? (
-              <div className="space-y-4">
-                {userStats.recentTransactions.map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between border-b pb-4 last:border-b-0"
-                  >
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">
-                        {transaction.listing.title}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {new Date(transaction.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900">
-                        ${transaction.totalPrice.toFixed(2)}
-                      </p>
-                      <span
-                        className={`inline-flex text-xs font-semibold ${
-                          transaction.status === "CONFIRMED"
-                            ? "text-green-600"
-                            : transaction.status === "PENDING"
-                              ? "text-yellow-600"
-                              : "text-gray-600"
-                        }`}
-                      >
-                        {t(`reservation.status.${transaction.status.toLowerCase()}`)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+            <div className="space-y-3">
+              <button
+                onClick={() => router.push("/seller/dashboard")}
+                className="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+              >
+                Go to Seller Dashboard
+              </button>
 
-                <button
-                  onClick={() => router.push("/reservations")}
-                  className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  {t("profile.viewAllTransactions")}
-                </button>
-              </div>
-            ) : (
-              <p className="text-center text-gray-600">
-                {t("profile.noTransactions")}
-              </p>
-            )}
+              <button
+                onClick={() => router.push("/reservations")}
+                className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                View My Reservations
+              </button>
+
+              <button
+                onClick={() => router.push("/profile/settings")}
+                className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Account Settings
+              </button>
+            </div>
           </div>
         </div>
 
@@ -169,7 +118,7 @@ export default function ProfilePage() {
           {/* Rating Card */}
           <div className="rounded-lg bg-white p-6 shadow-md">
             <h2 className="mb-4 text-lg font-semibold">
-              {t("profile.rating")}
+              Rating
             </h2>
 
             <div className="text-center">
@@ -191,90 +140,48 @@ export default function ProfilePage() {
                 ))}
               </div>
               <p className="text-sm text-gray-600">
-                {user.ratingCount} {t("profile.reviews")}
+                {user.ratingCount} {user.ratingCount === 1 ? 'review' : 'reviews'}
               </p>
             </div>
           </div>
 
-          {/* Stats Card */}
+          {/* Account Info */}
           <div className="rounded-lg bg-white p-6 shadow-md">
             <h2 className="mb-4 text-lg font-semibold">
-              {t("profile.statistics")}
+              Account Status
             </h2>
 
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">
-                  {t("profile.totalListings")}
+                  Email Verified
                 </span>
                 <span className="font-semibold text-gray-900">
-                  {userStats?.totalListings ?? 0}
+                  {user.emailVerified ? (
+                    <span className="text-green-600">Yes</span>
+                  ) : (
+                    <span className="text-yellow-600">No</span>
+                  )}
                 </span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">
-                  {t("profile.activeListings")}
+                  Account Type
                 </span>
                 <span className="font-semibold text-gray-900">
-                  {userStats?.activeListings ?? 0}
+                  {user.userType || 'BUYER'}
                 </span>
               </div>
 
               <div className="flex justify-between border-t pt-3">
                 <span className="text-sm text-gray-600">
-                  {t("profile.totalSales")}
+                  Status
                 </span>
-                <span className="font-semibold text-gray-900">
-                  {userStats?.totalSales ?? 0}
-                </span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">
-                  {t("profile.totalPurchases")}
-                </span>
-                <span className="font-semibold text-gray-900">
-                  {userStats?.totalPurchases ?? 0}
+                <span className="font-semibold text-green-600">
+                  {user.accountStatus || 'ACTIVE'}
                 </span>
               </div>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="rounded-lg bg-white p-6 shadow-md">
-            <h2 className="mb-4 text-lg font-semibold">
-              {t("profile.quickActions")}
-            </h2>
-
-            <div className="space-y-2">
-              <button
-                onClick={() => router.push("/listings/new")}
-                className="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
-              >
-                {t("listing.createListing")}
-              </button>
-
-              <button
-                onClick={() => router.push("/listings/my-listings")}
-                className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                {t("listing.myListings")}
-              </button>
-
-              <button
-                onClick={() => router.push("/reservations")}
-                className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                {t("reservation.myReservations")}
-              </button>
-
-              <button
-                onClick={() => router.push("/profile/settings")}
-                className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                {t("profile.settings")}
-              </button>
             </div>
           </div>
         </div>

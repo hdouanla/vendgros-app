@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { randomBytes } from "crypto";
 
 import { listing, rating, reservation } from "@acme/db/schema";
@@ -31,8 +31,13 @@ export const reservationRouter = createTRPCRouter({
         where: (listings, { eq }) => eq(listings.id, input.listingId),
       });
 
-      if (!targetListing || targetListing.status !== "PUBLISHED") {
+      if (!targetListing || targetListing.status !== "PUBLISHED" || !targetListing.isActive) {
         throw new Error("Listing not available");
+      }
+
+      // Prevent sellers from reserving their own listings
+      if (targetListing.sellerId === ctx.session.user.id) {
+        throw new Error("You cannot reserve your own listing");
       }
 
       if (input.quantity > targetListing.quantityAvailable) {
@@ -194,6 +199,80 @@ export const reservationRouter = createTRPCRouter({
     return results;
   }),
 
+  // Get reservations for a specific listing (for sellers to check if listing can be edited)
+  getByListingId: protectedProcedure
+    .input(z.object({ listingId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      // First verify the user owns this listing
+      const targetListing = await ctx.db.query.listing.findFirst({
+        where: (listings, { eq }) => eq(listings.id, input.listingId),
+      });
+
+      if (!targetListing) {
+        throw new Error("Listing not found");
+      }
+
+      if (targetListing.sellerId !== ctx.session.user.id) {
+        throw new Error("Not authorized");
+      }
+
+      // Get all reservations for this listing
+      const results = await ctx.db.query.reservation.findMany({
+        where: (reservations, { eq }) => eq(reservations.listingId, input.listingId),
+        orderBy: (reservations, { desc }) => [desc(reservations.createdAt)],
+      });
+
+      return results;
+    }),
+
+  // Get pending pickups (as seller) - reservations that have been paid and are awaiting pickup
+  getPendingPickups: protectedProcedure.query(async ({ ctx }) => {
+    // Get all seller's listings first
+    const sellerListings = await ctx.db.query.listing.findMany({
+      where: (listings, { eq }) => eq(listings.sellerId, ctx.session.user.id),
+      columns: {
+        id: true,
+      },
+    });
+
+    const listingIds = sellerListings.map((l) => l.id);
+
+    if (listingIds.length === 0) {
+      return [];
+    }
+
+    // Get all reservations for seller's listings that are confirmed (paid deposit)
+    const results = await ctx.db.query.reservation.findMany({
+      where: (reservations, { and, eq, inArray }) =>
+        and(
+          inArray(reservations.listingId, listingIds),
+          eq(reservations.status, "CONFIRMED"),
+        ),
+      with: {
+        listing: {
+          columns: {
+            id: true,
+            title: true,
+            pricePerPiece: true,
+            pickupAddress: true,
+            pickupInstructions: true,
+          },
+        },
+        buyer: {
+          columns: {
+            id: true,
+            email: true,
+            phone: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: (reservations, { asc }) => [asc(reservations.expiresAt)],
+    });
+
+    return results;
+  }),
+
   // Verify QR code (seller scans buyer's QR)
   verifyQR: protectedProcedure
     .input(z.object({ qrCodeHash: z.string() }))
@@ -327,6 +406,70 @@ export const reservationRouter = createTRPCRouter({
       }).catch((err) => console.error("Failed to send notification:", err));
 
       return updated;
+    }),
+
+  // Cancel expired reservations (for cron job)
+  cancelExpiredReservations: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      // Find all PENDING reservations that have expired
+      const now = new Date();
+
+      const expiredReservations = await ctx.db.query.reservation.findMany({
+        where: (reservations, { and, eq, lt }) =>
+          and(
+            eq(reservations.status, "PENDING"),
+            lt(reservations.expiresAt, now)
+          ),
+        with: {
+          listing: true,
+        },
+      });
+
+      if (expiredReservations.length === 0) {
+        return {
+          cancelled: 0,
+          message: "No expired reservations found",
+        };
+      }
+
+      // Cancel each expired reservation and return quantity to listing
+      const results = await Promise.all(
+        expiredReservations.map(async (res) => {
+          try {
+            await ctx.db.transaction(async (tx) => {
+              // Update reservation status to CANCELLED
+              await tx
+                .update(reservation)
+                .set({
+                  status: "CANCELLED",
+                  completedAt: new Date(),
+                })
+                .where(eq(reservation.id, res.id));
+
+              // Return quantity to listing
+              await tx
+                .update(listing)
+                .set({
+                  quantityAvailable:
+                    res.listing.quantityAvailable + res.quantityReserved,
+                })
+                .where(eq(listing.id, res.listingId));
+            });
+            return { id: res.id, success: true };
+          } catch (error) {
+            console.error(`Failed to cancel reservation ${res.id}:`, error);
+            return { id: res.id, success: false };
+          }
+        })
+      );
+
+      const successCount = results.filter((r) => r.success).length;
+
+      return {
+        cancelled: successCount,
+        failed: results.length - successCount,
+        message: `Cancelled ${successCount} expired reservations`,
+      };
     }),
 
   // Report no-show

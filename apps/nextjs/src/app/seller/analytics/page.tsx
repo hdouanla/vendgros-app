@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 
+// Simple translation stub - replace with actual translations later
+const t = (key: string) => {
+  const translations: Record<string, string> = {
+    "common.loading": "Loading...",
+  };
+  return translations[key] || key;
+};
+
 export default function SellerAnalyticsPage() {
-  const t = useTranslations();
   const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d" | "1y" | "all">("30d");
 
   const { data: analytics, isLoading } = api.analytics.getSellerAnalytics.useQuery({

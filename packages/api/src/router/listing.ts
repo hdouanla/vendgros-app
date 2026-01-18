@@ -24,6 +24,7 @@ export const listingRouter = createTRPCRouter({
         maxPerBuyer: true,
         pickupAddress: true,
         pickupInstructions: true,
+        postalCode: true,
         latitude: true,
         longitude: true,
       }),
@@ -102,11 +103,15 @@ export const listingRouter = createTRPCRouter({
             photos: true,
             pricePerPiece: true,
             quantityTotal: true,
+            quantityAvailable: true,
             maxPerBuyer: true,
             pickupAddress: true,
             pickupInstructions: true,
+            postalCode: true,
             latitude: true,
             longitude: true,
+            status: true,
+            isActive: true,
           })
           .partial(),
       }),
@@ -114,6 +119,9 @@ export const listingRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const existingListing = await ctx.db.query.listing.findFirst({
         where: (listings, { eq }) => eq(listings.id, input.listingId),
+        with: {
+          reservations: true,
+        },
       });
 
       if (!existingListing) {
@@ -124,15 +132,42 @@ export const listingRouter = createTRPCRouter({
         throw new Error("Not authorized");
       }
 
-      // Check if critical fields changed (requires re-moderation)
-      const criticalFieldsChanged =
-        input.data.pricePerPiece !== undefined ||
-        input.data.quantityTotal !== undefined ||
-        input.data.description !== undefined;
+      // Check if listing has any reservations
+      const hasReservations = existingListing.reservations.some(
+        (r) => r.status === "CONFIRMED" || r.status === "PENDING" || r.status === "COMPLETED",
+      );
 
-      const newStatus = criticalFieldsChanged
-        ? "PENDING_REVIEW"
-        : existingListing.status;
+      // Prevent editing if there are reservations (extra backend protection)
+      if (hasReservations) {
+        // Allow only status and isActive changes
+        const hasNonStatusChanges = Object.keys(input.data).some(
+          (key) => key !== "status" && key !== "isActive"
+        );
+        if (hasNonStatusChanges) {
+          throw new Error(
+            "Cannot edit listing with reservations. Please create a copy instead."
+          );
+        }
+      }
+
+      // Check if content was changed (requires re-moderation)
+      // Exclude status, quantityAvailable, photos, and isActive from triggering re-review
+      const contentChanged = Object.keys(input.data).some(
+        (key) => key !== "status" && key !== "quantityAvailable" && key !== "photos" && key !== "isActive"
+      );
+
+      // Determine new status
+      let newStatus = existingListing.status;
+
+      // If status is explicitly provided, use it (for workflow transitions)
+      if (input.data.status) {
+        newStatus = input.data.status;
+      } else if (contentChanged && existingListing.status === "PUBLISHED") {
+        // If PUBLISHED listing content changed, needs re-review
+        newStatus = "PENDING_REVIEW";
+      }
+      // DRAFT listings stay DRAFT when edited (until submitted for review)
+      // isActive changes don't affect status at all
 
       await ctx.db
         .update(listing)
@@ -150,7 +185,7 @@ export const listingRouter = createTRPCRouter({
       };
     }),
 
-  // Delete (cancel) listing
+  // Delete listing
   delete: protectedProcedure
     .input(z.object({ listingId: z.string() }))
     .mutation(async ({ ctx, input }) => {
@@ -165,11 +200,27 @@ export const listingRouter = createTRPCRouter({
         throw new Error("Listing not found");
       }
 
-      if (existingListing.sellerId !== ctx.session.user.id) {
-        throw new Error("Not authorized");
+      // Get user to check if admin
+      const user = await ctx.db.query.user.findFirst({
+        where: (users, { eq }) => eq(users.id, ctx.session.user.id),
+      });
+
+      const isAdmin = user?.userType === "ADMIN";
+      const isSeller = existingListing.sellerId === ctx.session.user.id;
+
+      // Check authorization
+      if (!isSeller && !isAdmin) {
+        throw new Error("Not authorized to delete this listing");
       }
 
-      // Check for active reservations
+      // Sellers can only delete DRAFT or PENDING_REVIEW listings
+      if (isSeller && !isAdmin) {
+        if (existingListing.status !== "DRAFT" && existingListing.status !== "PENDING_REVIEW") {
+          throw new Error("Only draft or pending listings can be deleted. Published listings require admin approval.");
+        }
+      }
+
+      // Check for active reservations before deleting
       const hasActiveReservations = existingListing.reservations.some(
         (r) => r.status === "CONFIRMED" || r.status === "PENDING",
       );
@@ -178,14 +229,14 @@ export const listingRouter = createTRPCRouter({
         throw new Error("Cannot delete listing with active reservations");
       }
 
+      // Permanently delete the listing
       await ctx.db
-        .update(listing)
-        .set({ status: "CANCELLED", updatedAt: new Date() })
+        .delete(listing)
         .where(eq(listing.id, input.listingId));
 
       return {
         id: input.listingId,
-        status: "CANCELLED" as const,
+        deleted: true,
         success: true,
       };
     }),
@@ -203,6 +254,7 @@ export const listingRouter = createTRPCRouter({
               userType: true,
               ratingAverage: true,
               ratingCount: true,
+              createdAt: true,
             },
           },
         },
@@ -377,6 +429,60 @@ export const listingRouter = createTRPCRouter({
         province: postal.province,
         latitude: postal.latitude,
         longitude: postal.longitude,
+      };
+    }),
+
+  // Get seller's own listings
+  getMyListings: protectedProcedure.query(async ({ ctx }) => {
+    const listings = await ctx.db.query.listing.findMany({
+      where: (listings, { eq }) => eq(listings.sellerId, ctx.session.user.id),
+      orderBy: (listings, { desc }) => [desc(listings.createdAt)],
+    });
+
+    return listings;
+  }),
+
+  // Duplicate an existing listing (creates a new draft copy)
+  duplicate: protectedProcedure
+    .input(z.object({ listingId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const existingListing = await ctx.db.query.listing.findFirst({
+        where: (listings, { eq }) => eq(listings.id, input.listingId),
+      });
+
+      if (!existingListing) {
+        throw new Error("Listing not found");
+      }
+
+      if (existingListing.sellerId !== ctx.session.user.id) {
+        throw new Error("Not authorized");
+      }
+
+      // Create a copy as DRAFT
+      const [newListing] = await ctx.db
+        .insert(listing)
+        .values({
+          sellerId: ctx.session.user.id,
+          title: `${existingListing.title} (Copy)`,
+          description: existingListing.description,
+          category: existingListing.category,
+          photos: existingListing.photos,
+          pricePerPiece: existingListing.pricePerPiece,
+          quantityTotal: existingListing.quantityTotal,
+          quantityAvailable: existingListing.quantityTotal, // Reset to total
+          maxPerBuyer: existingListing.maxPerBuyer,
+          pickupAddress: existingListing.pickupAddress,
+          pickupInstructions: existingListing.pickupInstructions,
+          latitude: existingListing.latitude,
+          longitude: existingListing.longitude,
+          status: "DRAFT",
+          location: null, // Will be set by PostGIS trigger
+        })
+        .returning({ id: listing.id });
+
+      return {
+        id: newListing.id,
+        success: true,
       };
     }),
 

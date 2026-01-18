@@ -1,0 +1,4 @@
+{
+  "comment": "This file is not used - app is self-hosted on Digital Ocean",
+  "comment2": "See doc/CRON_SETUP.md for cron configuration on your server"
+}

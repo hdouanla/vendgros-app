@@ -1,44 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 
 export default function EditProfilePage() {
-  const t = useTranslations();
   const router = useRouter();
-
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
-
-  const [email, setEmail] = useState(session?.user?.email || "");
-  const [phone, setPhone] = useState(session?.user?.phone || "");
-  const [businessName, setBusinessName] = useState(session?.user?.businessName || "");
-  const [accountType, setAccountType] = useState<"INDIVIDUAL" | "BUSINESS">(
-    session?.user?.accountType || "INDIVIDUAL"
-  );
-
-  const updateProfile = api.user.updateProfile.useMutation({
-    onSuccess: () => {
-      router.push("/profile");
-    },
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    await updateProfile.mutateAsync({
-      email,
-      phone: phone.trim() || undefined,
-      businessName: accountType === "BUSINESS" ? businessName.trim() || undefined : undefined,
-      accountType,
-    });
-  };
 
   if (sessionLoading) {
     return (
       <div className="py-12 text-center">
-        <p className="text-gray-600">{t("common.loading")}</p>
+        <p className="text-gray-600">Loading...</p>
       </div>
     );
   }
@@ -69,138 +41,65 @@ export default function EditProfilePage() {
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          {t("common.back")}
+          Back
         </button>
 
         <h1 className="text-3xl font-bold text-gray-900">
-          {t("profile.editProfile")}
+          Edit Profile
         </h1>
         <p className="mt-2 text-sm text-gray-600">
-          {t("profile.updateInfo")}
+          Profile editing is coming soon
         </p>
       </div>
 
-      {/* Edit Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="rounded-lg bg-white p-6 shadow-md">
-          {/* Account Type */}
-          <div className="mb-6">
-            <label className="mb-2 block text-sm font-semibold text-gray-700">
-              {t("profile.accountType")} *
+      {/* Current Profile Info */}
+      <div className="rounded-lg bg-white p-6 shadow-md">
+        <h2 className="mb-4 text-xl font-semibold">Current Information</h2>
+
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium text-gray-600">
+              Name
             </label>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => setAccountType("INDIVIDUAL")}
-                className={`rounded-md border-2 px-4 py-3 text-sm font-medium transition-colors ${
-                  accountType === "INDIVIDUAL"
-                    ? "border-green-600 bg-green-50 text-green-700"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                {t("profile.accountType.individual")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setAccountType("BUSINESS")}
-                className={`rounded-md border-2 px-4 py-3 text-sm font-medium transition-colors ${
-                  accountType === "BUSINESS"
-                    ? "border-green-600 bg-green-50 text-green-700"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                {t("profile.accountType.business")}
-              </button>
-            </div>
+            <p className="mt-1 text-gray-900">{session.user.name}</p>
           </div>
 
-          {/* Email */}
-          <div className="mb-6">
-            <label htmlFor="email" className="mb-2 block text-sm font-semibold text-gray-700">
-              {t("profile.email")} *
+          <div>
+            <label className="text-sm font-medium text-gray-600">
+              Email
             </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-              placeholder="your@email.com"
-            />
+            <p className="mt-1 text-gray-900">{session.user.email}</p>
           </div>
 
-          {/* Phone */}
-          <div className="mb-6">
-            <label htmlFor="phone" className="mb-2 block text-sm font-semibold text-gray-700">
-              {t("profile.phone")}
-            </label>
-            <input
-              type="tel"
-              id="phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-              placeholder="+1 (555) 123-4567"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              {t("profile.phoneHelp")}
-            </p>
-          </div>
-
-          {/* Business Name (conditional) */}
-          {accountType === "BUSINESS" && (
-            <div className="mb-6">
-              <label htmlFor="businessName" className="mb-2 block text-sm font-semibold text-gray-700">
-                {t("profile.businessName")}
+          {session.user.phone && (
+            <div>
+              <label className="text-sm font-medium text-gray-600">
+                Phone
               </label>
-              <input
-                type="text"
-                id="businessName"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-                placeholder="Your Business Inc."
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                {t("profile.businessNameHelp")}
-              </p>
+              <p className="mt-1 text-gray-900">{session.user.phone}</p>
             </div>
           )}
-
-          {/* Information Notice */}
-          <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-900">
-            <p className="font-medium">ℹ️ {t("profile.emailChangeNotice")}</p>
-            <p className="mt-1 text-xs">{t("profile.emailChangeHelp")}</p>
-          </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-4">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="flex-1 rounded-md border border-gray-300 px-6 py-3 text-lg font-medium text-gray-700 hover:bg-gray-50"
-          >
-            {t("common.cancel")}
-          </button>
-          <button
-            type="submit"
-            disabled={updateProfile.isPending || !email}
-            className="flex-1 rounded-md bg-green-600 px-6 py-3 text-lg font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {updateProfile.isPending
-              ? t("common.loading")
-              : t("profile.saveChanges")}
-          </button>
+        <div className="mt-6 rounded-lg bg-blue-50 p-4 text-sm text-blue-900">
+          <p className="font-medium">ℹ️ Profile Editing Coming Soon</p>
+          <p className="mt-1 text-xs">
+            The ability to edit your profile is currently under development.
+            If you need to update your information, please contact support.
+          </p>
         </div>
+      </div>
 
-        {updateProfile.isError && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
-            {updateProfile.error.message}
-          </div>
-        )}
-      </form>
+      {/* Action Buttons */}
+      <div className="mt-6">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="w-full rounded-md border border-gray-300 px-6 py-3 text-lg font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Back to Profile
+        </button>
+      </div>
     </div>
   );
 }

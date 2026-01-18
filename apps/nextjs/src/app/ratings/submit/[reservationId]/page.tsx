@@ -1,9 +1,29 @@
 "use client";
 
 import { use, useState } from "react";
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
+
+// Simple translation stub
+const t = (key: string, params?: any) => {
+  const translations: Record<string, string> = {
+    "common.loading": "Loading...",
+    "common.back": "Back",
+    "errors.notFound": "Reservation not found",
+    "rating.ratingSubmitted": "Rating Submitted!",
+    "rating.ratingBlind": "Your rating will be visible to the other party only after both of you have submitted ratings",
+    "rating.rateExperience": "Rate Your Experience",
+    "rating.rateTransaction": "Help us build a trusted community by rating your transaction",
+    "listing.itemTitle": "Item",
+    "listing.quantity": "Quantity",
+    "listing.seller": "Seller",
+    "rating.stars": "Your Rating",
+    "rating.comment": "Comment (Optional)",
+    "rating.ratingWindow": `Ratings must be submitted within ${params?.days || 7} days of pickup completion`,
+    "rating.submitRating": "Submit Rating",
+  };
+  return translations[key] || key;
+};
 
 export default function SubmitRatingPage({
   params,
@@ -11,7 +31,6 @@ export default function SubmitRatingPage({
   params: Promise<{ reservationId: string }>;
 }) {
   const { reservationId } = use(params);
-  const t = useTranslations();
   const router = useRouter();
 
   const [score, setScore] = useState(0);

@@ -7,9 +7,15 @@ export async function sendEmailOTP(params: {
 }) {
   const resend = new Resend(params.resendApiKey);
 
+  // Use Resend's onboarding email for development
+  // In production, use your verified domain: noreply@vendgros.ca
+  const fromEmail = process.env.NODE_ENV === "production"
+    ? "Vendgros <noreply@vendgros.ca>"
+    : "Vendgros <onboarding@resend.dev>";
+
   try {
     await resend.emails.send({
-      from: "Vendgros <noreply@vendgros.ca>",
+      from: fromEmail,
       to: params.email,
       subject: "Your Vendgros Verification Code",
       html: `

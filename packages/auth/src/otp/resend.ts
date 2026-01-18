@@ -7,14 +7,12 @@ export async function sendEmailOTP(params: {
 }) {
   const resend = new Resend(params.resendApiKey);
 
-  // Use Resend's onboarding email for development
-  // In production, use your verified domain: noreply@vendgros.ca
-  const fromEmail = process.env.NODE_ENV === "production"
-    ? "Vendgros <noreply@vendgros.ca>"
-    : "Vendgros <onboarding@resend.dev>";
+  // Use verified domain email
+  // Domain must be verified in Resend dashboard: https://resend.com/domains
+  const fromEmail = "Vendgros <noreply@rs.vendgros.ca>";
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: fromEmail,
       to: params.email,
       subject: "Your Vendgros Verification Code",
@@ -60,6 +58,7 @@ export async function sendEmailOTP(params: {
     });
 
     console.log(`✅ Email OTP sent to ${params.email}`);
+    console.log(`📧 Resend response:`, JSON.stringify(result, null, 2));
   } catch (error) {
     console.error("❌ Failed to send email OTP:", error);
     throw new Error("Failed to send verification email");

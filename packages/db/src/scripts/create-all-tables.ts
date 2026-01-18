@@ -38,7 +38,7 @@ async function createAllTables() {
 
     await sql`
       DO $$ BEGIN
-        CREATE TYPE account_status AS ENUM ('UNVERIFIED', 'ACTIVE', 'SUSPENDED', 'BANNED');
+        CREATE TYPE account_status AS ENUM ('ACTIVE', 'SUSPENDED', 'BANNED');
       EXCEPTION
         WHEN duplicate_object THEN null;
       END $$;
@@ -106,14 +106,13 @@ async function createAllTables() {
         password_hash TEXT,
         email_verified BOOLEAN NOT NULL DEFAULT false,
         phone_verified BOOLEAN NOT NULL DEFAULT false,
-        account_status account_status NOT NULL DEFAULT 'UNVERIFIED',
+        account_status account_status NOT NULL DEFAULT 'ACTIVE',
         user_type user_type NOT NULL DEFAULT 'BUYER',
         language_preference VARCHAR(5) NOT NULL DEFAULT 'en',
         rating_average DOUBLE PRECISION DEFAULT 0,
         rating_count INTEGER NOT NULL DEFAULT 0,
         moderation_notes TEXT,
         verification_badge verification_badge NOT NULL DEFAULT 'NONE',
-        verified_at TIMESTAMP,
         identity_verified BOOLEAN NOT NULL DEFAULT false,
         identity_verification_method VARCHAR(50),
         identity_verification_notes TEXT,
@@ -145,7 +144,6 @@ async function createAllTables() {
         category VARCHAR(100) NOT NULL,
         photos TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
         price_per_piece DOUBLE PRECISION NOT NULL,
-        currency VARCHAR(3) NOT NULL DEFAULT 'CAD',
         quantity_total INTEGER NOT NULL,
         quantity_available INTEGER NOT NULL,
         max_per_buyer INTEGER,

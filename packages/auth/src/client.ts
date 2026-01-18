@@ -1,4 +1,5 @@
 import { createAuthClient } from "better-auth/client";
+import { emailOTPClient } from "better-auth/client/plugins";
 
 // Client-side auth utilities - only use in browser context
 const getBaseURL = () => {
@@ -14,6 +15,7 @@ const getBaseURL = () => {
 
 export const authClient = createAuthClient({
   baseURL: getBaseURL(),
+  plugins: [emailOTPClient()],
 });
 
 export const { signIn, signUp, signOut, useSession } = authClient;

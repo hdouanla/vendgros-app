@@ -6,9 +6,14 @@ import { ListingForm } from "~/components/listings/listing-form";
 export default async function CreateListingPage() {
   const session = await getSession();
 
-  // Redirect to signin if not authenticated, with callback to return here
+  // Redirect to signin if not authenticated
   if (!session) {
     redirect("/auth/signin?callbackUrl=" + encodeURIComponent("/listings/create"));
+  }
+
+  // Redirect to verification if email not verified
+  if (!session.user.emailVerified) {
+    redirect("/auth/verify-email");
   }
 
   return (

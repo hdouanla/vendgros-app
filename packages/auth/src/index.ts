@@ -42,7 +42,7 @@ export function initAuth<TExtraPlugins extends BetterAuthPlugin[] = []>(options:
     secret: options.secret,
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: hasEmailConfig,
+      requireEmailVerification: false, // Allow login, but check verification in app
     },
     plugins: [
       oAuthProxy({
@@ -66,6 +66,7 @@ export function initAuth<TExtraPlugins extends BetterAuthPlugin[] = []>(options:
               },
               expiresIn: 600, // 10 minutes expiry
               sendVerificationOnSignUp: true,
+              overrideDefaultEmailVerification: true, // Enable sendVerificationEmail method
             }),
           ]
         : []),

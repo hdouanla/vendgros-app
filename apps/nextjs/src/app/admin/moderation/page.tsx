@@ -1,12 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 
+// Simple translation stub for MVP
+const t = (key: string) => {
+  const translations: Record<string, string> = {
+    "common.loading": "Loading...",
+    "admin.moderation.title": "Admin Moderation",
+    "admin.moderation.pending": "Pending Listings",
+  };
+  return translations[key] || key;
+};
+
 export default function AdminModerationPage() {
-  const t = useTranslations();
   const router = useRouter();
   const [selectedListing, setSelectedListing] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");

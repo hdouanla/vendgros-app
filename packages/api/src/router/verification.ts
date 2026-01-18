@@ -293,7 +293,6 @@ export const verificationRouter = createTRPCRouter({
         .update(user)
         .set({
           verificationBadge: input.targetBadge,
-          verifiedAt: new Date(),
         })
         .where(eq(user.id, userId))
         .returning();
@@ -352,7 +351,6 @@ export const verificationRouter = createTRPCRouter({
         .update(user)
         .set({
           verificationBadge: input.badge,
-          verifiedAt: input.badge !== "NONE" ? new Date() : null,
           moderationNotes: input.notes,
         })
         .where(eq(user.id, input.userId))

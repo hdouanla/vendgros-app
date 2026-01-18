@@ -13,6 +13,8 @@ export function Navbar() {
 
   const { data: session, isLoading } = api.auth.getSession.useQuery();
 
+  const isVerified = session?.user?.emailVerified === true;
+
   const handleSignOut = async () => {
     try {
       await fetch("/api/auth/sign-out", { method: "POST" });
@@ -51,7 +53,7 @@ export function Navbar() {
               Search Listings
             </Link>
 
-            {session?.user && (
+            {session?.user && isVerified && (
               <>
                 <Link
                   href="/listings/create"
@@ -124,37 +126,41 @@ export function Navbar() {
                         </p>
                       </div>
 
-                      <Link
-                        href="/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        Profile
-                      </Link>
+                      {isVerified && (
+                        <>
+                          <Link
+                            href="/profile"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            Profile
+                          </Link>
 
-                      <Link
-                        href="/reservations"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        My Reservations
-                      </Link>
+                          <Link
+                            href="/reservations"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            My Reservations
+                          </Link>
 
-                      <Link
-                        href="/seller"
-                        className="block border-t border-gray-100 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-50"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        📊 Seller Dashboard
-                      </Link>
+                          <Link
+                            href="/seller"
+                            className="block border-t border-gray-100 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-50"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            📊 Seller Dashboard
+                          </Link>
 
-                      <Link
-                        href="/seller/analytics"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        Analytics
-                      </Link>
+                          <Link
+                            href="/seller/analytics"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            Analytics
+                          </Link>
+                        </>
+                      )}
 
                       <button
                         onClick={() => {
@@ -234,7 +240,7 @@ export function Navbar() {
               Search Listings
             </Link>
 
-            {session?.user && (
+            {session?.user && isVerified && (
               <>
                 <Link
                   href="/listings/create"

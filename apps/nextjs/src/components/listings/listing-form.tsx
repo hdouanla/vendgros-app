@@ -78,7 +78,17 @@ export function ListingForm({
   const [coordinates, setCoordinates] = useState<{
     latitude: number;
     longitude: number;
-  } | null>(null);
+  } | null>(
+    // In edit mode, initialize with existing coordinates
+    mode === "edit" && initialData?.latitude && initialData?.longitude
+      ? {
+          latitude: initialData.latitude,
+          longitude: initialData.longitude,
+        }
+      : null
+  );
+  // Track the original postal code to detect changes
+  const [originalPostalCode] = useState(initialData?.postalCode ?? "");
 
   const createListing = api.listing.create.useMutation({
     onSuccess: (data) => {
@@ -211,6 +221,22 @@ export function ListingForm({
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // If postal code changed from original, clear coordinates to require re-verification
+    if (name === "postalCode") {
+      const normalized = value.replace(/\s/g, "").toUpperCase();
+      const originalNormalized = originalPostalCode.replace(/\s/g, "").toUpperCase();
+      if (normalized !== originalNormalized) {
+        setCoordinates(null);
+      } else if (mode === "edit" && initialData?.latitude && initialData?.longitude) {
+        // Postal code reverted to original, restore original coordinates
+        setCoordinates({
+          latitude: initialData.latitude,
+          longitude: initialData.longitude,
+        });
+      }
+    }
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => {
@@ -448,7 +474,7 @@ export function ListingForm({
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div>
           <label htmlFor="pricePerPiece" className="block text-sm font-medium">
-            {t("listing.pricePerPiece")} (CAD) *
+            {t("listing.pricePerPiece")} ({process.env.NEXT_PUBLIC_CURRENCY || "CAD"}) *
           </label>
           <input
             type="number"

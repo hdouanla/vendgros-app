@@ -78,15 +78,27 @@ export const listingRouter = createTRPCRouter({
         throw new Error("Only draft listings can be submitted for review");
       }
 
+      // For MVP testing: auto-publish in development, otherwise require review
+      const isDevelopment = process.env.NODE_ENV === "development";
+      const newStatus = isDevelopment ? "PUBLISHED" : "PENDING_REVIEW";
+      const publishedAt = isDevelopment ? new Date() : null;
+
       await ctx.db
         .update(listing)
-        .set({ status: "PENDING_REVIEW", updatedAt: new Date() })
+        .set({
+          status: newStatus,
+          publishedAt,
+          updatedAt: new Date()
+        })
         .where(eq(listing.id, input.listingId));
 
       return {
         id: input.listingId,
-        status: "PENDING_REVIEW" as const,
-        success: true
+        status: newStatus,
+        success: true,
+        message: isDevelopment
+          ? "Listing published successfully (auto-published in development mode)"
+          : "Listing submitted for review"
       };
     }),
 
@@ -213,14 +225,8 @@ export const listingRouter = createTRPCRouter({
         throw new Error("Not authorized to delete this listing");
       }
 
-      // Sellers can only delete DRAFT or PENDING_REVIEW listings
-      if (isSeller && !isAdmin) {
-        if (existingListing.status !== "DRAFT" && existingListing.status !== "PENDING_REVIEW") {
-          throw new Error("Only draft or pending listings can be deleted. Published listings require admin approval.");
-        }
-      }
-
       // Check for active reservations before deleting
+      // Sellers can delete any listing as long as there are no active reservations
       const hasActiveReservations = existingListing.reservations.some(
         (r) => r.status === "CONFIRMED" || r.status === "PENDING",
       );

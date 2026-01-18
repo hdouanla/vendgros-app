@@ -30,7 +30,6 @@ export const userTypeEnum = pgEnum("user_type", [
 ]);
 
 export const accountStatusEnum = pgEnum("account_status", [
-  "UNVERIFIED",
   "ACTIVE",
   "SUSPENDED",
   "BANNED",
@@ -84,7 +83,7 @@ export const user = pgTable(
 
     emailVerified: t.boolean().notNull().default(false),
     phoneVerified: t.boolean().notNull().default(false),
-    accountStatus: accountStatusEnum().notNull().default("UNVERIFIED"),
+    accountStatus: accountStatusEnum().notNull().default("ACTIVE"),
 
     // Verification level - all users can buy and sell regardless of this value
     // SELLER_INDIVIDUAL and SELLER_MERCHANT provide trust badges
@@ -97,7 +96,6 @@ export const user = pgTable(
 
     // Verification badges
     verificationBadge: verificationBadgeEnum().notNull().default("NONE"),
-    verifiedAt: t.timestamp(),
     identityVerified: t.boolean().notNull().default(false),
     identityVerificationMethod: t.varchar({ length: 50 }), // e.g., "government_id", "business_license"
     identityVerificationNotes: t.text(),
@@ -212,7 +210,6 @@ export const listing = pgTable(
     photos: t.text().array().notNull().default(sql`ARRAY[]::text[]`),
 
     pricePerPiece: t.doublePrecision().notNull(),
-    currency: t.varchar({ length: 3 }).notNull().default("CAD"), // CAD, USD, EUR, GBP, MXN
     quantityTotal: t.integer().notNull(),
     quantityAvailable: t.integer().notNull(),
     maxPerBuyer: t.integer(), // Optional purchase limit
@@ -284,7 +281,6 @@ export const reservation = pgTable(
     quantityReserved: t.integer().notNull(),
     totalPrice: t.doublePrecision().notNull(),
     depositAmount: t.doublePrecision().notNull(), // 5% of total
-    currency: t.varchar({ length: 3 }).notNull().default("CAD"), // Inherited from listing
 
     qrCodeHash: t.text().notNull().unique(),
     verificationCode: t.varchar({ length: 6 }).notNull().unique(), // 6-digit alphanumeric

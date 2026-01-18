@@ -29,13 +29,20 @@ export default function EditListingPage({
   const { data: listing, isLoading: listingLoading } =
     api.listing.getById.useQuery({ id }, { enabled: !!session?.user });
 
-  // Check if listing has reservations
+  // Check if listing has active reservations (CONFIRMED or PENDING)
   const { data: reservationsData } = api.reservation.getByListingId.useQuery(
     { listingId: id },
     { enabled: !!listing }
   );
 
-  const hasReservations = reservationsData && reservationsData.length > 0;
+  const hasActiveReservations = reservationsData
+    ? reservationsData.some(
+        (r) => r.status === "CONFIRMED" || r.status === "PENDING"
+      )
+    : false;
+
+  // Keep old variable for backward compatibility with locked editing
+  const hasReservations = hasActiveReservations;
 
   // Duplicate listing mutation
   const duplicateMutation = api.listing.duplicate.useMutation({
@@ -272,8 +279,8 @@ export default function EditListingPage({
         </div>
       )}
 
-      {/* Delete Listing - Only for DRAFT or PENDING_REVIEW */}
-      {(listing.status === "DRAFT" || listing.status === "PENDING_REVIEW") && !hasReservations && (
+      {/* Delete Listing - Available when there are no reservations */}
+      {!hasReservations && (
         <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-6">
           <h3 className="text-sm font-medium text-red-900">
             Danger Zone

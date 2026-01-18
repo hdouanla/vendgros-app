@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signUp, signIn } from "@acme/auth/client";
+import { api } from "~/trpc/react";
 
 export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
   const router = useRouter();
+  const utils = api.useUtils();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -56,7 +58,12 @@ export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
           email: formData.email,
           password: formData.password,
         });
+
+        // Invalidate the session cache to update navbar immediately
+        await utils.auth.getSession.invalidate();
+
         router.push("/auth/verify-email");
+        router.refresh();
       }
     } catch (err) {
       setError("An unexpected error occurred");

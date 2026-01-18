@@ -78,27 +78,20 @@ export const listingRouter = createTRPCRouter({
         throw new Error("Only draft listings can be submitted for review");
       }
 
-      // For MVP testing: auto-publish in development, otherwise require review
-      const isDevelopment = process.env.NODE_ENV === "development";
-      const newStatus = isDevelopment ? "PUBLISHED" : "PENDING_REVIEW";
-      const publishedAt = isDevelopment ? new Date() : null;
-
+      // Always require manual admin approval
       await ctx.db
         .update(listing)
         .set({
-          status: newStatus,
-          publishedAt,
+          status: "PENDING_REVIEW",
           updatedAt: new Date()
         })
         .where(eq(listing.id, input.listingId));
 
       return {
         id: input.listingId,
-        status: newStatus,
+        status: "PENDING_REVIEW",
         success: true,
-        message: isDevelopment
-          ? "Listing published successfully (auto-published in development mode)"
-          : "Listing submitted for review"
+        message: "Listing submitted for review. An admin will review it shortly."
       };
     }),
 

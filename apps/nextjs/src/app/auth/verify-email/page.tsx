@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "~/auth/server";
-import { VerifyEmailForm } from "../verify-email-form";
+import { VerifyEmailClient } from "./verify-email-client";
 
 // Disable caching to always check fresh session data
 export const dynamic = 'force-dynamic';
@@ -21,7 +21,7 @@ export default async function VerifyEmailPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-green-50 to-white px-4 py-12">
       <div className="w-full max-w-md">
-        <VerifyEmailForm userEmail={session.user.email} />
+        <VerifyEmailClient userEmail={session.user.email} />
       </div>
     </div>
   );

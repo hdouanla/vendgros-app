@@ -93,21 +93,30 @@ export const analyticsRouter = createTRPCRouter({
       ).length;
       const noShowRate = totalReservations > 0 ? noShowCount / totalReservations : 0;
 
-      // Get ratings data
-      const ratings = await ctx.db.query.rating.findMany({
-        where: (ratings, { eq }) => eq(ratings.ratedId, sellerId),
-      });
+      // Get ratings data - handle gracefully if rating table doesn't exist yet
+      let ratings: any[] = [];
+      let timeRangeRatings: any[] = [];
+      let avgRating = 0;
 
-      const timeRangeRatings = ratings.filter(
-        (r) => new Date(r.createdAt) >= startDate,
-      );
+      try {
+        ratings = await ctx.db.query.rating.findMany({
+          where: (ratings, { eq }) => eq(ratings.ratedId, sellerId),
+        });
 
-      // Calculate average rating
-      const avgRating =
-        timeRangeRatings.length > 0
-          ? timeRangeRatings.reduce((sum, r) => sum + r.score, 0) /
-            timeRangeRatings.length
-          : 0;
+        timeRangeRatings = ratings.filter(
+          (r) => new Date(r.createdAt) >= startDate,
+        );
+
+        // Calculate average rating
+        avgRating =
+          timeRangeRatings.length > 0
+            ? timeRangeRatings.reduce((sum, r) => sum + r.score, 0) /
+              timeRangeRatings.length
+            : 0;
+      } catch (error) {
+        // Rating table doesn't exist yet or other DB error - use default values
+        console.warn("Could not fetch ratings data:", error);
+      }
 
       // Get top performing listings
       const listingPerformance = await Promise.all(

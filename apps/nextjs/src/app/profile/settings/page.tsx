@@ -7,6 +7,7 @@ import { signOut } from "@acme/auth/client";
 export default function SettingsPage() {
   const router = useRouter();
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
+  const utils = api.useUtils();
 
   if (sessionLoading) {
     return (
@@ -23,7 +24,10 @@ export default function SettingsPage() {
 
   const handleSignOut = async () => {
     await signOut();
+    // Invalidate the session cache to update navbar immediately
+    await utils.auth.getSession.invalidate();
     router.push("/");
+    router.refresh();
   };
 
   return (

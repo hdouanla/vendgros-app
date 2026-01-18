@@ -91,9 +91,6 @@ export function ListingForm({
   const [originalPostalCode] = useState(initialData?.postalCode ?? "");
 
   const createListing = api.listing.create.useMutation({
-    onSuccess: (data) => {
-      router.push(`/listings/${data.id}`);
-    },
     onError: (error) => {
       console.error("Failed to create listing:", error);
       setErrors({ submit: error.message });
@@ -101,11 +98,6 @@ export function ListingForm({
   });
 
   const updateListing = api.listing.update.useMutation({
-    onSuccess: () => {
-      if (listingId) {
-        router.push(`/listings/${listingId}`);
-      }
-    },
     onError: (error) => {
       console.error("Failed to update listing:", error);
       setErrors({ submit: error.message });
@@ -201,6 +193,9 @@ export function ListingForm({
       if (saveAs === "review" && newListing) {
         await submitForReview.mutateAsync({ listingId: newListing.id });
       }
+
+      // Navigate after all mutations complete
+      router.push(`/listings/${newListing.id}`);
     } else if (listingId) {
       await updateListing.mutateAsync({
         listingId,
@@ -211,6 +206,9 @@ export function ListingForm({
       if (saveAs === "review") {
         await submitForReview.mutateAsync({ listingId });
       }
+
+      // Navigate after all mutations complete
+      router.push(`/listings/${listingId}`);
     }
   };
 

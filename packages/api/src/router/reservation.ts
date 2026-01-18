@@ -1,8 +1,8 @@
 import { z } from "zod/v4";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { randomBytes } from "crypto";
 
-import { listing, rating, reservation } from "@acme/db/schema";
+import { listing, rating, reservation, user } from "@acme/db/schema";
 
 import { notifyReservationCreated, notifyPickupComplete } from "../lib/notifications";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -76,8 +76,12 @@ export const reservationRouter = createTRPCRouter({
         })
         .returning();
 
-      // Send notification to buyer
-      await notifyReservationCreated({
+      if (!newReservation) {
+        throw new Error("Failed to create reservation");
+      }
+
+      // Send notification to buyer (fire-and-forget - don't await)
+      notifyReservationCreated({
         buyerEmail: ctx.session.user.email!,
         buyerPhone: undefined,
         listingTitle: targetListing.title,
@@ -85,10 +89,6 @@ export const reservationRouter = createTRPCRouter({
         verificationCode,
         expiresAt,
       }).catch((err) => console.error("Failed to send notification:", err));
-
-      if (!newReservation) {
-        throw new Error("Failed to create reservation");
-      }
 
       return {
         reservationId: newReservation.id,
@@ -227,48 +227,50 @@ export const reservationRouter = createTRPCRouter({
 
   // Get pending pickups (as seller) - reservations that have been paid and are awaiting pickup
   getPendingPickups: protectedProcedure.query(async ({ ctx }) => {
-    // Get all seller's listings first
-    const sellerListings = await ctx.db.query.listing.findMany({
-      where: (listings, { eq }) => eq(listings.sellerId, ctx.session.user.id),
-      columns: {
-        id: true,
-      },
-    });
-
-    const listingIds = sellerListings.map((l) => l.id);
-
-    if (listingIds.length === 0) {
-      return [];
-    }
-
-    // Get all reservations for seller's listings that are confirmed (paid deposit)
-    const results = await ctx.db.query.reservation.findMany({
-      where: (reservations, { and, eq, inArray }) =>
-        and(
-          inArray(reservations.listingId, listingIds),
-          eq(reservations.status, "CONFIRMED"),
-        ),
-      with: {
+    // Optimized: Use a single query with JOIN and WHERE on seller_id
+    const results = await ctx.db
+      .select({
+        // Reservation fields
+        id: reservation.id,
+        listingId: reservation.listingId,
+        buyerId: reservation.buyerId,
+        quantityReserved: reservation.quantityReserved,
+        totalPrice: reservation.totalPrice,
+        depositAmount: reservation.depositAmount,
+        qrCodeHash: reservation.qrCodeHash,
+        verificationCode: reservation.verificationCode,
+        status: reservation.status,
+        stripePaymentIntentId: reservation.stripePaymentIntentId,
+        expiresAt: reservation.expiresAt,
+        completedAt: reservation.completedAt,
+        createdAt: reservation.createdAt,
+        updatedAt: reservation.updatedAt,
+        // Listing fields (nested)
         listing: {
-          columns: {
-            id: true,
-            title: true,
-            pricePerPiece: true,
-            pickupAddress: true,
-            pickupInstructions: true,
-          },
+          id: listing.id,
+          title: listing.title,
+          pricePerPiece: listing.pricePerPiece,
+          pickupAddress: listing.pickupAddress,
+          pickupInstructions: listing.pickupInstructions,
         },
+        // Buyer fields (nested)
         buyer: {
-          columns: {
-            id: true,
-            email: true,
-            phone: true,
-            name: true,
-          },
+          id: user.id,
+          email: user.email,
+          phone: user.phone,
+          name: user.name,
         },
-      },
-      orderBy: (reservations, { asc }) => [asc(reservations.expiresAt)],
-    });
+      })
+      .from(reservation)
+      .innerJoin(listing, eq(reservation.listingId, listing.id))
+      .innerJoin(user, eq(reservation.buyerId, user.id))
+      .where(
+        and(
+          eq(listing.sellerId, ctx.session.user.id),
+          eq(reservation.status, "CONFIRMED")
+        )
+      )
+      .orderBy(reservation.expiresAt);
 
     return results;
   }),

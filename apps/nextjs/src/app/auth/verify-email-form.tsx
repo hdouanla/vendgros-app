@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@acme/auth/client";
+import { api } from "~/trpc/react";
 
 export function VerifyEmailForm({ userEmail }: { userEmail: string }) {
   const router = useRouter();
+  const utils = api.useUtils();
   const [verificationCode, setVerificationCode] = useState("");
   const [error, setError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -30,6 +32,9 @@ export function VerifyEmailForm({ userEmail }: { userEmail: string }) {
         setError(result.error.message || "Invalid verification code");
       } else {
         // Successfully verified! Better Auth automatically updates email_verified
+        // Invalidate the session cache to update navbar immediately
+        await utils.auth.getSession.invalidate();
+
         // Redirect to home
         router.push("/");
         router.refresh();
@@ -67,7 +72,10 @@ export function VerifyEmailForm({ userEmail }: { userEmail: string }) {
 
   const handleSignOut = async () => {
     await authClient.signOut();
+    // Invalidate the session cache to update navbar immediately
+    await utils.auth.getSession.invalidate();
     router.push("/auth/signin");
+    router.refresh();
   };
 
   return (

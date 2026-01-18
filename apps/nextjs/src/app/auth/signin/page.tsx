@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "~/auth/server";
-import { SignInForm } from "../signin-form";
+import { SignInClient } from "./signin-client";
 
 export default async function SignInPage(props: {
   searchParams: Promise<{ callbackUrl?: string }>;
@@ -41,7 +41,7 @@ export default async function SignInPage(props: {
           </p>
         </div>
 
-        <SignInForm callbackUrl={callbackUrl} />
+        <SignInClient callbackUrl={callbackUrl} />
 
         {/* Footer */}
         <p className="mt-6 text-center text-sm text-gray-600">

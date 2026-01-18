@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn, authClient } from "@acme/auth/client";
+import { api } from "~/trpc/react";
 
 export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
   const router = useRouter();
+  const utils = api.useUtils();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,12 +29,17 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
       if (result.error) {
         setError(result.error.message || "Failed to sign in");
       } else {
+        // Invalidate the session cache to update navbar immediately
+        await utils.auth.getSession.invalidate();
+
         // Check if user needs email verification
         const session = await authClient.getSession();
         if (!session?.user?.emailVerified) {
           router.push("/auth/verify-email");
+          router.refresh();
         } else {
           router.push(callbackUrl);
+          router.refresh();
         }
       }
     } catch (err) {
@@ -51,12 +58,17 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
       });
 
       if (!result.error) {
+        // Invalidate the session cache to update navbar immediately
+        await utils.auth.getSession.invalidate();
+
         // Check verification status after Discord signin
         const session = await authClient.getSession();
         if (!session?.user?.emailVerified) {
           router.push("/auth/verify-email");
+          router.refresh();
         } else {
           router.push(callbackUrl);
+          router.refresh();
         }
       }
     } catch (err) {

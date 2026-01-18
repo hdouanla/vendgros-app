@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "~/auth/server";
-import { SignUpForm } from "../signup-form";
+import { SignUpClient } from "./signup-client";
 
 export default async function SignUpPage(props: {
   searchParams: Promise<{ callbackUrl?: string }>;
@@ -41,7 +41,7 @@ export default async function SignUpPage(props: {
           </p>
         </div>
 
-        <SignUpForm callbackUrl={callbackUrl} />
+        <SignUpClient callbackUrl={callbackUrl} />
 
         {/* Footer */}
         <p className="mt-6 text-center text-sm text-gray-600">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import Link from "next/link";
@@ -11,8 +11,15 @@ export default function SellerDashboardPage() {
 
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
 
+  // Handle redirect to signin if not authenticated
+  useEffect(() => {
+    if (!sessionLoading && !session?.user) {
+      router.push("/auth/signin?callbackUrl=/seller");
+    }
+  }, [sessionLoading, session, router]);
+
   // Fetch seller's listings
-  const { data: listings, isLoading: listingsLoading } = api.listing.getMyListings.useQuery(
+  const { data: listings, isLoading: listingsLoading } = api.listing.myListings.useQuery(
     undefined,
     {
       enabled: !!session?.user,
@@ -25,17 +32,12 @@ export default function SellerDashboardPage() {
       enabled: !!session?.user,
     });
 
-  if (sessionLoading) {
+  if (sessionLoading || !session?.user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p className="text-gray-600">Loading...</p>
       </div>
     );
-  }
-
-  if (!session?.user) {
-    router.push("/auth/signin?callbackUrl=/seller");
-    return null;
   }
 
   const activeListings = listings?.filter((l) => l.status === "ACTIVE") || [];

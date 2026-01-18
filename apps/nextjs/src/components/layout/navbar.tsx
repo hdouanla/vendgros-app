@@ -12,12 +12,15 @@ export function Navbar() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const { data: session, isLoading } = api.auth.getSession.useQuery();
+  const utils = api.useUtils();
 
   const isVerified = session?.user?.emailVerified === true;
 
   const handleSignOut = async () => {
     try {
       await fetch("/api/auth/sign-out", { method: "POST" });
+      // Invalidate the session query cache to immediately update the UI
+      await utils.auth.getSession.invalidate();
       router.push("/");
       router.refresh();
     } catch (error) {

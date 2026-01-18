@@ -279,7 +279,7 @@ export const messagingRouter = createTRPCRouter({
 
       await sendMessageNotification({
         recipientEmail: recipient.email!,
-        recipientPhone: recipient.phone,
+        recipientPhone: recipient.phone ?? undefined,
         senderEmail: ctx.session.user.email!,
         listingTitle: conv.listing.title,
         messagePreview: input.content.substring(0, 50),

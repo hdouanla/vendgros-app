@@ -17,7 +17,7 @@ async function requireAdmin(ctx: any) {
     where: (users: any, { eq }: any) => eq(users.id, ctx.session.user.id),
   });
 
-  if (!currentUser || currentUser.userType !== "ADMIN") {
+  if (!currentUser || !currentUser.isAdmin) {
     throw new Error("Admin access required");
   }
 }
@@ -537,5 +537,5 @@ async function isAdmin(ctx: any, userId: string): Promise<boolean> {
   const user = await ctx.db.query.user.findFirst({
     where: (users: any, { eq }: any) => eq(users.id, userId),
   });
-  return user?.userType === "ADMIN";
+  return user?.isAdmin === true;
 }

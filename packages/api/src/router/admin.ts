@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { and, desc, eq, inArray, or } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, or, sql } from "drizzle-orm";
 
 import { listing, reservation, user } from "@acme/db/schema";
 
@@ -18,7 +18,7 @@ async function requireAdmin(ctx: any) {
     where: (users: any, { eq }: any) => eq(users.id, ctx.session.user.id),
   });
 
-  if (!currentUser || currentUser.userType !== "ADMIN") {
+  if (!currentUser || !currentUser.isAdmin) {
     throw new Error("Admin access required");
   }
 }
@@ -43,8 +43,8 @@ export const adminRouter = createTRPCRouter({
               id: true,
               email: true,
               phone: true,
-              userType: true,
               accountStatus: true,
+              verificationBadge: true,
               ratingAverage: true,
               ratingCount: true,
               createdAt: true,
@@ -56,14 +56,16 @@ export const adminRouter = createTRPCRouter({
         offset: input.offset,
       });
 
-      const total = await ctx.db
-        .select({ count: eq(listing.status, "PENDING_REVIEW") })
-        .from(listing);
+      const totalResult = await ctx.db
+        .select({ count: sql<number>`count(*)` })
+        .from(listing)
+        .where(eq(listing.status, "PENDING_REVIEW"));
+      const total = Number(totalResult[0]?.count ?? 0);
 
       return {
         listings: results,
-        total: total.length,
-        hasMore: input.offset + input.limit < total.length,
+        total,
+        hasMore: input.offset + input.limit < total,
       };
     }),
 
@@ -106,7 +108,7 @@ export const adminRouter = createTRPCRouter({
       // Send approval notification to seller
       await notifyListingApproved({
         sellerEmail: existingListing.seller.email!,
-        sellerPhone: existingListing.seller.phone,
+        sellerPhone: existingListing.seller.phone ?? undefined,
         listingTitle: existingListing.title,
       }).catch((err) => console.error("Failed to send notification:", err));
 
@@ -223,7 +225,7 @@ export const adminRouter = createTRPCRouter({
         throw new Error("User not found");
       }
 
-      if (targetUser.userType === "ADMIN") {
+      if (targetUser.isAdmin) {
         throw new Error("Cannot suspend admin users");
       }
 
@@ -314,7 +316,7 @@ export const adminRouter = createTRPCRouter({
         throw new Error("User not found");
       }
 
-      if (targetUser.userType === "ADMIN") {
+      if (targetUser.isAdmin) {
         throw new Error("Cannot ban admin users");
       }
 
@@ -379,34 +381,173 @@ export const adminRouter = createTRPCRouter({
       return updated;
     }),
 
-  // Get moderation statistics
-  getStatistics: protectedProcedure.query(async ({ ctx }) => {
+  // Get dashboard statistics
+  getDashboardStats: protectedProcedure.query(async ({ ctx }) => {
     await requireAdmin(ctx);
 
-    // Listings by status
-    const listingStats = await ctx.db
-      .select({
-        status: listing.status,
-        count: eq(listing.status, listing.status),
-      })
-      .from(listing);
-
-    // Users by status
-    const userStats = await ctx.db
-      .select({
-        accountStatus: user.accountStatus,
-        count: eq(user.accountStatus, user.accountStatus),
-      })
+    // Total users
+    const totalUsersResult = await ctx.db
+      .select({ count: sql<number>`count(*)` })
       .from(user);
+    const totalUsers = Number(totalUsersResult[0]?.count ?? 0);
 
-    // Recent activity (last 7 days)
+    // Active users
+    const activeUsersResult = await ctx.db
+      .select({ count: sql<number>`count(*)` })
+      .from(user)
+      .where(eq(user.accountStatus, "ACTIVE"));
+    const activeUsers = Number(activeUsersResult[0]?.count ?? 0);
+
+    // Suspended users
+    const suspendedUsersResult = await ctx.db
+      .select({ count: sql<number>`count(*)` })
+      .from(user)
+      .where(eq(user.accountStatus, "SUSPENDED"));
+    const suspendedUsers = Number(suspendedUsersResult[0]?.count ?? 0);
+
+    // Banned users
+    const bannedUsersResult = await ctx.db
+      .select({ count: sql<number>`count(*)` })
+      .from(user)
+      .where(eq(user.accountStatus, "BANNED"));
+    const bannedUsers = Number(bannedUsersResult[0]?.count ?? 0);
+
+    // Total listings
+    const totalListingsResult = await ctx.db
+      .select({ count: sql<number>`count(*)` })
+      .from(listing);
+    const totalListings = Number(totalListingsResult[0]?.count ?? 0);
+
+    // Published listings
+    const publishedListingsResult = await ctx.db
+      .select({ count: sql<number>`count(*)` })
+      .from(listing)
+      .where(eq(listing.status, "PUBLISHED"));
+    const publishedListings = Number(publishedListingsResult[0]?.count ?? 0);
+
+    // Pending review listings
+    const pendingListingsResult = await ctx.db
+      .select({ count: sql<number>`count(*)` })
+      .from(listing)
+      .where(eq(listing.status, "PENDING_REVIEW"));
+    const pendingListings = Number(pendingListingsResult[0]?.count ?? 0);
+
+    // Total reservations
+    const totalReservationsResult = await ctx.db
+      .select({ count: sql<number>`count(*)` })
+      .from(reservation);
+    const totalReservations = Number(totalReservationsResult[0]?.count ?? 0);
+
+    // Completed reservations
+    const completedReservationsResult = await ctx.db
+      .select({ count: sql<number>`count(*)` })
+      .from(reservation)
+      .where(eq(reservation.status, "COMPLETED"));
+    const completedReservations = Number(completedReservationsResult[0]?.count ?? 0);
+
+    // Recent users (last 7 days)
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentUsersResult = await ctx.db
+      .select({ count: sql<number>`count(*)` })
+      .from(user)
+      .where(gte(user.createdAt, sevenDaysAgo));
+    const recentUsers = Number(recentUsersResult[0]?.count ?? 0);
+
+    // Recent listings (last 7 days)
+    const recentListingsResult = await ctx.db
+      .select({ count: sql<number>`count(*)` })
+      .from(listing)
+      .where(gte(listing.createdAt, sevenDaysAgo));
+    const recentListings = Number(recentListingsResult[0]?.count ?? 0);
 
     return {
-      listingStats,
-      userStats,
-      pendingListingsCount: listingStats.find((s) => s.status === "PENDING_REVIEW")
-        ?.count ?? 0,
+      users: {
+        total: totalUsers,
+        active: activeUsers,
+        suspended: suspendedUsers,
+        banned: bannedUsers,
+        recentSignups: recentUsers,
+      },
+      listings: {
+        total: totalListings,
+        published: publishedListings,
+        pendingReview: pendingListings,
+        recentCreated: recentListings,
+      },
+      reservations: {
+        total: totalReservations,
+        completed: completedReservations,
+      },
     };
   }),
+
+  // Get all users for management
+  getAllUsers: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().default(50),
+        offset: z.number().default(0),
+        search: z.string().optional(),
+        status: z.enum(["ALL", "ACTIVE", "SUSPENDED", "BANNED"]).default("ALL"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      await requireAdmin(ctx);
+
+      let whereConditions = [];
+
+      // Filter by status
+      if (input.status !== "ALL") {
+        whereConditions.push(eq(user.accountStatus, input.status));
+      }
+
+      // Search by email
+      if (input.search) {
+        whereConditions.push(sql`${user.email} ILIKE ${"%" + input.search + "%"}`);
+      }
+
+      const users = await ctx.db.query.user.findMany({
+        where: whereConditions.length > 0
+          ? and(...whereConditions)
+          : undefined,
+        columns: {
+          id: true,
+          email: true,
+          name: true,
+          phone: true,
+          accountStatus: true,
+          verificationBadge: true,
+          emailVerified: true,
+          isAdmin: true,
+          ratingAverage: true,
+          ratingCount: true,
+          buyerRatingAverage: true,
+          buyerRatingCount: true,
+          sellerRatingAverage: true,
+          sellerRatingCount: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: (users, { desc }) => [desc(users.createdAt)],
+        limit: input.limit,
+        offset: input.offset,
+      });
+
+      // Get total count
+      const totalResult = whereConditions.length > 0
+        ? await ctx.db
+            .select({ count: sql<number>`count(*)` })
+            .from(user)
+            .where(and(...whereConditions))
+        : await ctx.db
+            .select({ count: sql<number>`count(*)` })
+            .from(user);
+      const total = Number(totalResult[0]?.count ?? 0);
+
+      return {
+        users,
+        total,
+        hasMore: input.offset + input.limit < total,
+      };
+    }),
 });

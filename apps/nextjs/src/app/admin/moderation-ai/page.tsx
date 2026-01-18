@@ -1,18 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
+import { ImageGalleryWithPreview } from "~/components/ui/image-lightbox";
+
+// Notification state type
+type Notification = {
+  type: "success" | "error" | "info";
+  message: string;
+} | null;
 
 export default function AIModerationDashboard() {
-  const t = useTranslations();
   const router = useRouter();
   const [filter, setFilter] = useState<"all" | "ai_approved" | "ai_flagged" | "no_ai">("all");
   const [showStatsModal, setShowStatsModal] = useState(false);
+  const [showBulkApproveModal, setShowBulkApproveModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<string | null>(null);
+  const [selectedListingTitle, setSelectedListingTitle] = useState<string>("");
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [notification, setNotification] = useState<Notification>(null);
 
   const utils = api.useUtils();
 
+  // Auto-dismiss notification after 3 seconds
+  const showNotification = useCallback((type: "success" | "error" | "info", message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 3000);
+  }, []);
+
+  // All hooks must be called before any conditional returns
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
   const { data: moderationQueue, isLoading: queueLoading } =
     api.moderation.getModerationQueue.useQuery({
@@ -30,43 +49,14 @@ export default function AIModerationDashboard() {
     }
   );
 
-  if (sessionLoading || queueLoading) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-gray-600">{t("common.loading")}</p>
-      </div>
-    );
-  }
-
-  if (!session?.user) {
-    router.push("/auth/signin?callbackUrl=" + encodeURIComponent("/admin/moderation-ai"));
-    return null;
-  }
-
-  // Check if user is admin
-  if (session.user.userType !== "ADMIN") {
-    return (
-      <div className="py-12 text-center">
-        <div className="mx-auto max-w-md">
-          <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
-          <p className="mt-4 text-gray-600">
-            You do not have permission to access this page.
-          </p>
-          <button
-            onClick={() => router.push("/")}
-            className="mt-6 rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700"
-          >
-            Go to Homepage
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const runAIModeration = api.moderation.runAIModeration.useMutation({
     onSuccess: () => {
       void utils.moderation.getModerationQueue.invalidate();
       void utils.moderation.getModerationStats.invalidate();
+      showNotification("success", "AI moderation completed");
+    },
+    onError: (error) => {
+      showNotification("error", error.message || "AI moderation failed");
     },
   });
 
@@ -74,40 +64,109 @@ export default function AIModerationDashboard() {
     onSuccess: (data) => {
       void utils.moderation.getModerationQueue.invalidate();
       void utils.moderation.getModerationStats.invalidate();
-      alert(`Auto-approved ${data.approvedCount} listings`);
+      setShowBulkApproveModal(false);
+      showNotification("success", `Auto-approved ${data.approvedCount} listings`);
+    },
+    onError: (error) => {
+      showNotification("error", error.message || "Bulk approval failed");
     },
   });
 
   const approveListing = api.admin.approveListing.useMutation({
     onSuccess: () => {
       void utils.moderation.getModerationQueue.invalidate();
+      setShowApproveModal(false);
+      setSelectedListing(null);
+      setSelectedListingTitle("");
+      showNotification("success", "Listing approved successfully");
+    },
+    onError: (error) => {
+      showNotification("error", error.message || "Failed to approve listing");
     },
   });
+
+  const rejectListing = api.admin.rejectListing.useMutation({
+    onSuccess: () => {
+      void utils.moderation.getModerationQueue.invalidate();
+      setShowRejectModal(false);
+      setRejectionReason("");
+      setSelectedListing(null);
+      setSelectedListingTitle("");
+      showNotification("success", "Listing rejected. Seller has been notified.");
+    },
+    onError: (error) => {
+      showNotification("error", error.message || "Failed to reject listing");
+    },
+  });
+
+  // Now we can have conditional returns after all hooks are called
+  if (sessionLoading || queueLoading) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
+  // Note: Admin check is already done in the admin layout
+  if (!session?.user) {
+    router.push("/auth/signin?callbackUrl=" + encodeURIComponent("/admin/moderation-ai"));
+    return null;
+  }
 
   const handleRunAIModeration = async (listingId: string) => {
     await runAIModeration.mutateAsync({ listingId });
   };
 
   const handleBulkAutoApprove = async () => {
-    if (
-      confirm(
-        "Auto-approve all listings with AI score >= 0.85 and no flags? This action cannot be undone.",
-      )
-    ) {
-      await bulkAutoApprove.mutateAsync({ minScore: 0.85, maxCount: 50 });
-    }
+    await bulkAutoApprove.mutateAsync({ minScore: 0.85, maxCount: 50 });
   };
 
-  if (isLoading) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-gray-600">{t("common.loading")}</p>
-      </div>
-    );
-  }
+  const handleApproveClick = (listingId: string, title: string) => {
+    setSelectedListing(listingId);
+    setSelectedListingTitle(title);
+    setShowApproveModal(true);
+  };
+
+  const handleApproveSubmit = async () => {
+    if (!selectedListing) return;
+    await approveListing.mutateAsync({ listingId: selectedListing });
+  };
+
+  const handleRejectClick = (listingId: string, title: string) => {
+    setSelectedListing(listingId);
+    setSelectedListingTitle(title);
+    setShowRejectModal(true);
+  };
+
+  const handleRejectSubmit = async () => {
+    if (!selectedListing || !rejectionReason.trim()) return;
+    await rejectListing.mutateAsync({
+      listingId: selectedListing,
+      reason: rejectionReason,
+    });
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
+      {/* Notification Toast */}
+      {notification && (
+        <div
+          className={`fixed top-4 right-4 z-50 rounded-lg px-6 py-4 shadow-lg transition-all ${
+            notification.type === "success"
+              ? "bg-green-600 text-white"
+              : notification.type === "error"
+                ? "bg-red-600 text-white"
+                : "bg-blue-600 text-white"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span>{notification.type === "success" ? "✓" : notification.type === "error" ? "✕" : "ℹ"}</span>
+            <span>{notification.message}</span>
+          </div>
+        </div>
+      )}
+
       {/* Header with Stats */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -129,7 +188,7 @@ export default function AIModerationDashboard() {
             </button>
 
             <button
-              onClick={handleBulkAutoApprove}
+              onClick={() => setShowBulkApproveModal(true)}
               disabled={bulkAutoApprove.isPending}
               className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
             >
@@ -300,16 +359,12 @@ export default function AIModerationDashboard() {
                   {/* Photos */}
                   {listing.photos && listing.photos.length > 0 && (
                     <div className="mt-4">
-                      <div className="flex gap-2 overflow-x-auto">
-                        {listing.photos.map((photo, idx) => (
-                          <img
-                            key={idx}
-                            src={photo}
-                            alt={`Photo ${idx + 1}`}
-                            className="h-24 w-24 rounded object-cover"
-                          />
-                        ))}
-                      </div>
+                      <ImageGalleryWithPreview
+                        images={listing.photos}
+                        alt={listing.title}
+                        mainImageAspect="video"
+                        thumbnailColumns={4}
+                      />
                     </div>
                   )}
                 </div>
@@ -341,14 +396,18 @@ export default function AIModerationDashboard() {
                     )}
 
                     <button
-                      onClick={() => approveListing.mutate({ listingId: listing.id })}
+                      onClick={() => handleApproveClick(listing.id, listing.title)}
                       disabled={approveListing.isPending}
                       className="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
                     >
                       ✅ Approve
                     </button>
 
-                    <button className="w-full rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+                    <button
+                      onClick={() => handleRejectClick(listing.id, listing.title)}
+                      disabled={rejectListing.isPending}
+                      className="w-full rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                    >
                       ❌ Reject
                     </button>
                   </div>
@@ -435,6 +494,146 @@ export default function AIModerationDashboard() {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Auto-Approve Modal */}
+      {showBulkApproveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h2 className="mb-4 text-xl font-semibold text-gray-900">
+              Bulk Auto-Approve
+            </h2>
+
+            <p className="mb-4 text-gray-700">
+              This will auto-approve all listings with:
+            </p>
+
+            <ul className="mb-4 list-inside list-disc space-y-1 text-sm text-gray-600">
+              <li>AI moderation score ≥ 85%</li>
+              <li>No AI flags detected</li>
+              <li>Up to 50 listings at a time</li>
+            </ul>
+
+            <p className="mb-6 text-sm text-red-600 font-medium">
+              This action cannot be undone.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowBulkApproveModal(false)}
+                className="flex-1 rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkAutoApprove}
+                disabled={bulkAutoApprove.isPending}
+                className="flex-1 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                {bulkAutoApprove.isPending ? "Processing..." : "Approve All"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approve Confirmation Modal */}
+      {showApproveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h2 className="mb-4 text-xl font-semibold text-gray-900">
+              Approve Listing
+            </h2>
+
+            <p className="mb-2 text-gray-700">
+              Are you sure you want to approve this listing?
+            </p>
+
+            <div className="mb-6 rounded-md bg-gray-50 p-3">
+              <p className="font-medium text-gray-900">{selectedListingTitle}</p>
+            </div>
+
+            <p className="mb-6 text-sm text-gray-500">
+              Once approved, this listing will be visible to all buyers on the marketplace.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowApproveModal(false);
+                  setSelectedListing(null);
+                  setSelectedListingTitle("");
+                }}
+                className="flex-1 rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleApproveSubmit}
+                disabled={approveListing.isPending}
+                className="flex-1 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                {approveListing.isPending ? "Approving..." : "Approve"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rejection Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h2 className="mb-4 text-xl font-semibold text-gray-900">
+              Reject Listing
+            </h2>
+
+            <div className="mb-4 rounded-md bg-gray-50 p-3">
+              <p className="font-medium text-gray-900">{selectedListingTitle}</p>
+            </div>
+
+            <div className="mb-4">
+              <label
+                htmlFor="rejectionReason"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Rejection Reason *
+              </label>
+              <textarea
+                id="rejectionReason"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={4}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-red-500 focus:outline-none focus:ring-red-500"
+                placeholder="Explain why this listing is being rejected..."
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Minimum 10 characters required. This reason will be shown to the seller.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectionReason("");
+                  setSelectedListing(null);
+                  setSelectedListingTitle("");
+                }}
+                className="flex-1 rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRejectSubmit}
+                disabled={rejectListing.isPending || rejectionReason.trim().length < 10}
+                className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {rejectListing.isPending ? "Rejecting..." : "Reject"}
+              </button>
+            </div>
           </div>
         </div>
       )}

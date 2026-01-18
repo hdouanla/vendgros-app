@@ -15,7 +15,7 @@ async function requireAdmin(ctx: any) {
     where: (users: any, { eq }: any) => eq(users.id, ctx.session.user.id),
   });
 
-  if (!currentUser || currentUser.userType !== "ADMIN") {
+  if (!currentUser || !currentUser.isAdmin) {
     throw new Error("Admin access required");
   }
 }
@@ -51,7 +51,7 @@ export const moderationRouter = createTRPCRouter({
       const currentUser = await ctx.db.query.user.findFirst({
         where: (users: any, { eq }: any) => eq(users.id, ctx.session.user.id),
       });
-      const isAdmin = currentUser?.userType === "ADMIN";
+      const isAdmin = currentUser?.isAdmin === true;
 
       if (!isOwner && !isAdmin) {
         throw new Error("Not authorized");

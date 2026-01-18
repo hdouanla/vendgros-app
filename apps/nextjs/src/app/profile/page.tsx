@@ -167,10 +167,10 @@ export default function ProfilePage() {
 
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">
-                  Account Type
+                  Verification
                 </span>
                 <span className="font-semibold text-gray-900">
-                  {user.userType || 'BUYER'}
+                  {user.verificationBadge === "NONE" ? "Standard" : user.verificationBadge}
                 </span>
               </div>
 

@@ -51,6 +51,10 @@ export const listingRouter = createTRPCRouter({
         })
         .returning({ id: listing.id });
 
+      if (!newListing) {
+        throw new Error("Failed to create listing");
+      }
+
       return {
         id: newListing.id,
         status: "DRAFT" as const,
@@ -210,7 +214,7 @@ export const listingRouter = createTRPCRouter({
         where: (users, { eq }) => eq(users.id, ctx.session.user.id),
       });
 
-      const isAdmin = user?.userType === "ADMIN";
+      const isAdmin = user?.isAdmin === true;
       const isSeller = existingListing.sellerId === ctx.session.user.id;
 
       // Check authorization
@@ -250,9 +254,13 @@ export const listingRouter = createTRPCRouter({
           seller: {
             columns: {
               id: true,
-              userType: true,
+              verificationBadge: true,
               ratingAverage: true,
               ratingCount: true,
+              sellerRatingAverage: true,
+              sellerRatingCount: true,
+              buyerRatingAverage: true,
+              buyerRatingCount: true,
               createdAt: true,
             },
           },
@@ -478,6 +486,10 @@ export const listingRouter = createTRPCRouter({
           location: null, // Will be set by PostGIS trigger
         })
         .returning({ id: listing.id });
+
+      if (!newListing) {
+        throw new Error("Failed to copy listing");
+      }
 
       return {
         id: newListing.id,

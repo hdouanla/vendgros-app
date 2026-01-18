@@ -65,6 +65,11 @@ export const ratingRouter = createTRPCRouter({
         ? existingReservation.listing.sellerId
         : existingReservation.buyerId;
 
+      // Determine the rating type based on who is being rated
+      // If buyer is rating, they're rating the seller (AS_SELLER)
+      // If seller is rating, they're rating the buyer (AS_BUYER)
+      const ratingType = isBuyer ? "AS_SELLER" : "AS_BUYER";
+
       // Create rating
       const [newRating] = await ctx.db
         .insert(rating)
@@ -72,6 +77,7 @@ export const ratingRouter = createTRPCRouter({
           reservationId: input.reservationId,
           raterId: ctx.session.user.id,
           ratedId,
+          ratingType,
           score: input.score,
           comment: input.comment ?? null,
         })
@@ -191,6 +197,7 @@ export const ratingRouter = createTRPCRouter({
     .input(
       z.object({
         userId: z.string(),
+        ratingType: z.enum(["AS_BUYER", "AS_SELLER"]).optional(), // Filter by rating type
         limit: z.number().default(20),
         offset: z.number().default(0),
       }),
@@ -221,20 +228,27 @@ export const ratingRouter = createTRPCRouter({
       });
 
       // Filter to only include ratings where both parties rated
-      const visibleRatings = [];
-      for (const rating of allRatings) {
+      let visibleRatings = [];
+      for (const ratingItem of allRatings) {
         const otherRating = await ctx.db.query.rating.findFirst({
           where: (ratings, { and, eq }) =>
             and(
-              eq(ratings.reservationId, rating.reservationId),
+              eq(ratings.reservationId, ratingItem.reservationId),
               eq(ratings.raterId, input.userId),
             ),
         });
 
         // Only show if both rated
         if (otherRating) {
-          visibleRatings.push(rating);
+          visibleRatings.push(ratingItem);
         }
+      }
+
+      // Filter by rating type if specified
+      if (input.ratingType) {
+        visibleRatings = visibleRatings.filter(
+          (r: any) => r.ratingType === input.ratingType
+        );
       }
 
       // Apply pagination
@@ -244,12 +258,12 @@ export const ratingRouter = createTRPCRouter({
       );
 
       return {
-        ratings: paginatedRatings.map((r) => ({
+        ratings: paginatedRatings.map((r: any) => ({
           id: r.id,
           score: r.score,
           comment: r.comment,
           createdAt: r.createdAt,
-          raterType: r.rater.userType,
+          ratingType: r.ratingType, // Include rating type
           listingTitle: r.reservation.listing.title,
         })),
         total: visibleRatings.length,
@@ -310,7 +324,7 @@ export const ratingRouter = createTRPCRouter({
     }),
 });
 
-// Helper function to recalculate user rating average
+// Helper function to recalculate user rating averages (both as buyer and seller)
 async function updateUserRating(db: any, userId: string) {
   // Get all visible ratings for this user (where both parties rated)
   const allRatings = await db.query.rating.findMany({
@@ -319,31 +333,56 @@ async function updateUserRating(db: any, userId: string) {
 
   // Filter to only ratings where both parties have rated
   const visibleRatings = [];
-  for (const rating of allRatings) {
+  for (const ratingItem of allRatings) {
     const otherRating = await db.query.rating.findFirst({
       where: (ratings: any, { and, eq }: any) =>
         and(
-          eq(ratings.reservationId, rating.reservationId),
+          eq(ratings.reservationId, ratingItem.reservationId),
           eq(ratings.raterId, userId),
         ),
     });
 
     if (otherRating) {
-      visibleRatings.push(rating);
+      visibleRatings.push(ratingItem);
     }
   }
 
-  const ratingCount = visibleRatings.length;
-  const ratingAverage =
-    ratingCount > 0
-      ? visibleRatings.reduce((sum, r) => sum + r.score, 0) / ratingCount
+  // Separate ratings by type
+  const buyerRatings = visibleRatings.filter((r: any) => r.ratingType === "AS_BUYER");
+  const sellerRatings = visibleRatings.filter((r: any) => r.ratingType === "AS_SELLER");
+
+  // Calculate buyer ratings
+  const buyerRatingCount = buyerRatings.length;
+  const buyerRatingAverage =
+    buyerRatingCount > 0
+      ? buyerRatings.reduce((sum: number, r: any) => sum + r.score, 0) / buyerRatingCount
+      : 0;
+
+  // Calculate seller ratings
+  const sellerRatingCount = sellerRatings.length;
+  const sellerRatingAverage =
+    sellerRatingCount > 0
+      ? sellerRatings.reduce((sum: number, r: any) => sum + r.score, 0) / sellerRatingCount
+      : 0;
+
+  // Calculate overall ratings (for backward compatibility)
+  const totalRatingCount = visibleRatings.length;
+  const totalRatingAverage =
+    totalRatingCount > 0
+      ? visibleRatings.reduce((sum: number, r: any) => sum + r.score, 0) / totalRatingCount
       : 0;
 
   await db
     .update(user)
     .set({
-      ratingAverage: Math.round(ratingAverage * 100) / 100, // Round to 2 decimals
-      ratingCount,
+      // Overall (backward compatibility)
+      ratingAverage: Math.round(totalRatingAverage * 100) / 100,
+      ratingCount: totalRatingCount,
+      // Separate buyer/seller ratings
+      buyerRatingAverage: Math.round(buyerRatingAverage * 100) / 100,
+      buyerRatingCount,
+      sellerRatingAverage: Math.round(sellerRatingAverage * 100) / 100,
+      sellerRatingCount,
     })
     .where(eq(user.id, userId));
 }

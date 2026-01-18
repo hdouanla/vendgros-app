@@ -40,7 +40,7 @@ export default function SellerDashboardPage() {
     );
   }
 
-  const activeListings = listings?.filter((l) => l.status === "ACTIVE") || [];
+  const activeListings = listings?.filter((l) => l.status === "PUBLISHED") || [];
   const draftListings = listings?.filter((l) => l.status === "DRAFT") || [];
   const pendingReviewListings = listings?.filter((l) => l.status === "PENDING_REVIEW") || [];
 
@@ -203,26 +203,43 @@ export default function SellerDashboardPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                            listing.status === "ACTIVE" || listing.status === "PUBLISHED"
-                              ? "bg-green-100 text-green-800"
-                              : listing.status === "PENDING_REVIEW"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : listing.status === "DRAFT"
-                                  ? "bg-gray-100 text-gray-800"
-                                  : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {listing.status}
-                        </span>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <span
+                            className={`inline-flex w-fit rounded-full px-2 py-1 text-xs font-semibold ${
+                              listing.status === "PUBLISHED"
+                                ? "bg-green-100 text-green-800"
+                                : listing.status === "PENDING_REVIEW"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : listing.status === "DRAFT" && listing.moderationNotes
+                                    ? "bg-red-100 text-red-800"
+                                    : listing.status === "DRAFT"
+                                      ? "bg-gray-100 text-gray-800"
+                                      : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {listing.status === "DRAFT" && listing.moderationNotes
+                              ? "REJECTED"
+                              : listing.status}
+                          </span>
+                          {/* Show rejection reason for DRAFT listings with moderation notes */}
+                          {listing.status === "DRAFT" && listing.moderationNotes && (
+                            <div className="mt-1 max-w-xs">
+                              <p className="text-xs font-medium text-red-600">
+                                Rejection reason:
+                              </p>
+                              <p className="text-xs text-red-600 line-clamp-2">
+                                {listing.moderationNotes}
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                         ${listing.pricePerPiece.toFixed(2)}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                        {listing.quantityAvailable} / {listing.minimumQuantity} min
+                        {listing.quantityAvailable} / {listing.quantityTotal}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                         {listing.viewCount}

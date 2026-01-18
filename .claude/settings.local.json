@@ -46,7 +46,10 @@
       "Bash(pgrep:*)",
       "Bash(redis-cli ping:*)",
       "Bash(kill:*)",
-      "Bash(POSTGRES_URL=\"postgresql://postgres:@127.0.0.1:5433/vendgros-app\" node:*)"
+      "Bash(POSTGRES_URL=\"postgresql://postgres:@127.0.0.1:5433/vendgros-app\" node:*)",
+      "Bash(POSTGRES_URL=\"postgresql://postgres:@127.0.0.1:5433/vendgros-app\" pnpm --filter @acme/db drizzle-kit generate:*)",
+      "Bash(POSTGRES_URL=\"postgresql://postgres:@127.0.0.1:5433/vendgros-app\" tsx:*)",
+      "Bash(xargs ls:*)"
     ]
   }
 }

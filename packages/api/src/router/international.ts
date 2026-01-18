@@ -249,7 +249,7 @@ export const internationalRouter = createTRPCRouter({
       where: (users: any, { eq }: any) => eq(users.id, ctx.session.user.id),
     });
 
-    if (!currentUser || currentUser.userType !== "ADMIN") {
+    if (!currentUser || !currentUser.isAdmin) {
       throw new Error("Admin access required");
     }
 

@@ -81,6 +81,15 @@ async function createAllTables() {
     `;
     console.log("✓ Created verification_badge enum");
 
+    await sql`
+      DO $$ BEGIN
+        CREATE TYPE rating_type AS ENUM ('AS_BUYER', 'AS_SELLER');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
+    `;
+    console.log("✓ Created rating_type enum");
+
     // Create postal_code table
     await sql`
       CREATE TABLE IF NOT EXISTS postal_code (
@@ -108,9 +117,14 @@ async function createAllTables() {
         phone_verified BOOLEAN NOT NULL DEFAULT false,
         account_status account_status NOT NULL DEFAULT 'ACTIVE',
         user_type user_type NOT NULL DEFAULT 'BUYER',
+        is_admin BOOLEAN NOT NULL DEFAULT false,
         language_preference VARCHAR(5) NOT NULL DEFAULT 'en',
         rating_average DOUBLE PRECISION DEFAULT 0,
         rating_count INTEGER NOT NULL DEFAULT 0,
+        buyer_rating_average DOUBLE PRECISION DEFAULT 0,
+        buyer_rating_count INTEGER NOT NULL DEFAULT 0,
+        seller_rating_average DOUBLE PRECISION DEFAULT 0,
+        seller_rating_count INTEGER NOT NULL DEFAULT 0,
         moderation_notes TEXT,
         verification_badge verification_badge NOT NULL DEFAULT 'NONE',
         identity_verified BOOLEAN NOT NULL DEFAULT false,
@@ -209,15 +223,24 @@ async function createAllTables() {
         reservation_id TEXT NOT NULL REFERENCES reservation(id) ON DELETE CASCADE,
         rater_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
         rated_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+        rating_type rating_type NOT NULL,
         score INTEGER NOT NULL CHECK (score >= 1 AND score <= 5),
         comment TEXT,
-        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        is_visible BOOLEAN NOT NULL DEFAULT true,
+        authenticity_score DOUBLE PRECISION,
+        authenticity_flags TEXT[] DEFAULT ARRAY[]::TEXT[],
+        ai_generated BOOLEAN,
+        last_authenticity_check_at TIMESTAMP,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
       );
     `;
     console.log("✓ Created rating table");
 
-    await sql`CREATE INDEX IF NOT EXISTS rating_reservation_idx ON rating(reservation_id);`;
+    await sql`CREATE INDEX IF NOT EXISTS rating_reservation_rater_idx ON rating(reservation_id, rater_id);`;
+    await sql`CREATE INDEX IF NOT EXISTS rating_rater_idx ON rating(rater_id);`;
     await sql`CREATE INDEX IF NOT EXISTS rating_rated_idx ON rating(rated_id);`;
+    await sql`CREATE INDEX IF NOT EXISTS rating_rated_type_idx ON rating(rated_id, rating_type);`;
 
     // Create bulk_import table
     await sql`

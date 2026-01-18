@@ -1,13 +1,85 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
+  const utils = api.useUtils();
 
-  if (sessionLoading) {
+  const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
+  const { data: currentUser, isLoading: userLoading } = api.user.getCurrentUser.useQuery(
+    undefined,
+    { enabled: !!session?.user }
+  );
+
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [languagePreference, setLanguagePreference] = useState<"en" | "fr" | "es">("en");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  // Initialize form with current user data
+  useEffect(() => {
+    if (currentUser) {
+      setName(currentUser.name);
+      setPhone(currentUser.phone ?? "");
+      setLanguagePreference(currentUser.languagePreference as "en" | "fr" | "es");
+    }
+  }, [currentUser]);
+
+  const updateProfile = api.user.updateProfile.useMutation({
+    onSuccess: () => {
+      setSuccess(true);
+      setError(null);
+      void utils.user.getCurrentUser.invalidate();
+      void utils.auth.getSession.invalidate();
+      // Redirect after short delay to show success message
+      setTimeout(() => {
+        router.push("/profile");
+      }, 1500);
+    },
+    onError: (err) => {
+      setError(err.message);
+      setSuccess(false);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(false);
+
+    // Validate
+    if (!name.trim()) {
+      setError("Name is required");
+      return;
+    }
+
+    // Format phone number if provided
+    let formattedPhone: string | null = null;
+    if (phone.trim()) {
+      // Remove all non-digits
+      const digits = phone.replace(/\D/g, "");
+      if (digits.length === 10) {
+        formattedPhone = `+1${digits}`;
+      } else if (digits.length === 11 && digits.startsWith("1")) {
+        formattedPhone = `+${digits}`;
+      } else {
+        setError("Please enter a valid 10-digit phone number");
+        return;
+      }
+    }
+
+    updateProfile.mutate({
+      name: name.trim(),
+      phone: formattedPhone,
+      languagePreference,
+    });
+  };
+
+  if (sessionLoading || userLoading) {
     return (
       <div className="py-12 text-center">
         <p className="text-gray-600">Loading...</p>
@@ -44,62 +116,149 @@ export default function EditProfilePage() {
           Back
         </button>
 
-        <h1 className="text-3xl font-bold text-gray-900">
-          Edit Profile
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900">Edit Profile</h1>
         <p className="mt-2 text-sm text-gray-600">
-          Profile editing is coming soon
+          Update your profile information
         </p>
       </div>
 
-      {/* Current Profile Info */}
-      <div className="rounded-lg bg-white p-6 shadow-md">
-        <h2 className="mb-4 text-xl font-semibold">Current Information</h2>
+      {/* Success Message */}
+      {success && (
+        <div className="mb-6 rounded-lg bg-green-50 p-4 text-green-800">
+          <p className="font-medium">Profile updated successfully!</p>
+          <p className="text-sm">Redirecting to profile...</p>
+        </div>
+      )}
 
-        <div className="space-y-4">
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 rounded-lg bg-red-50 p-4 text-red-800">
+          <p className="font-medium">Error</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
+
+      {/* Edit Form */}
+      <form onSubmit={handleSubmit} className="rounded-lg bg-white p-6 shadow-md">
+        <div className="space-y-6">
+          {/* Name Field */}
           <div>
-            <label className="text-sm font-medium text-gray-600">
-              Name
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              Name <span className="text-red-500">*</span>
             </label>
-            <p className="mt-1 text-gray-900">{session.user.name}</p>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+              placeholder="Your name"
+              required
+            />
           </div>
 
+          {/* Email Field (Read-only) */}
           <div>
-            <label className="text-sm font-medium text-gray-600">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
             </label>
-            <p className="mt-1 text-gray-900">{session.user.email}</p>
+            <input
+              type="email"
+              id="email"
+              value={currentUser?.email ?? ""}
+              disabled
+              className="mt-1 block w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-gray-500 shadow-sm"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Email cannot be changed. Contact support if you need to update it.
+            </p>
           </div>
 
-          {session.user.phone && (
-            <div>
-              <label className="text-sm font-medium text-gray-600">
-                Phone
-              </label>
-              <p className="mt-1 text-gray-900">{session.user.phone}</p>
+          {/* Phone Field */}
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+              placeholder="(555) 555-5555"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Canadian phone number format. Used for SMS notifications.
+            </p>
+          </div>
+
+          {/* Language Preference */}
+          <div>
+            <label htmlFor="language" className="block text-sm font-medium text-gray-700">
+              Language Preference
+            </label>
+            <select
+              id="language"
+              value={languagePreference}
+              onChange={(e) => setLanguagePreference(e.target.value as "en" | "fr" | "es")}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            >
+              <option value="en">English</option>
+              <option value="fr">Fran&ccedil;ais</option>
+              <option value="es">Espa&ntilde;ol</option>
+            </select>
+          </div>
+
+          {/* Account Info (Read-only) */}
+          <div className="border-t pt-6">
+            <h3 className="mb-4 text-sm font-medium text-gray-700">Account Information</h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-gray-500">Email Verified:</span>
+                <span className={`ml-2 font-medium ${currentUser?.emailVerified ? "text-green-600" : "text-yellow-600"}`}>
+                  {currentUser?.emailVerified ? "Yes" : "No"}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">Verification Badge:</span>
+                <span className="ml-2 font-medium text-gray-900">
+                  {currentUser?.verificationBadge === "NONE" ? "Standard" : currentUser?.verificationBadge}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">Account Status:</span>
+                <span className="ml-2 font-medium text-green-600">
+                  {currentUser?.accountStatus}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">Member Since:</span>
+                <span className="ml-2 font-medium text-gray-900">
+                  {currentUser?.createdAt ? new Date(currentUser.createdAt).toLocaleDateString() : "—"}
+                </span>
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
-        <div className="mt-6 rounded-lg bg-blue-50 p-4 text-sm text-blue-900">
-          <p className="font-medium">ℹ️ Profile Editing Coming Soon</p>
-          <p className="mt-1 text-xs">
-            The ability to edit your profile is currently under development.
-            If you need to update your information, please contact support.
-          </p>
+        {/* Action Buttons */}
+        <div className="mt-8 flex gap-4">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex-1 rounded-md border border-gray-300 px-6 py-3 text-lg font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={updateProfile.isPending}
+            className="flex-1 rounded-md bg-green-600 px-6 py-3 text-lg font-medium text-white hover:bg-green-700 disabled:bg-green-400"
+          >
+            {updateProfile.isPending ? "Saving..." : "Save Changes"}
+          </button>
         </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="mt-6">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="w-full rounded-md border border-gray-300 px-6 py-3 text-lg font-medium text-gray-700 hover:bg-gray-50"
-        >
-          Back to Profile
-        </button>
-      </div>
+      </form>
     </div>
   );
 }

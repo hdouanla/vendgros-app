@@ -494,7 +494,7 @@ export const apiIntegrationsRouter = createTRPCRouter({
       where: (users, { eq }) => eq(users.id, ctx.session.user.id),
     });
 
-    if (currentUser?.userType !== "ADMIN") {
+    if (!currentUser?.isAdmin) {
       throw new Error("Admin access required");
     }
 

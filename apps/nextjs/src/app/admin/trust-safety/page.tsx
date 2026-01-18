@@ -1,17 +1,32 @@
 "use client";
 
-// Prevent prerendering for authenticated pages
-export const dynamic = 'force-dynamic';
-
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
+
+// Notification state type
+type Notification = {
+  type: "success" | "error" | "info";
+  message: string;
+} | null;
 
 export default function TrustSafetyDashboard() {
   const router = useRouter();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedRatingId, setSelectedRatingId] = useState<string | null>(null);
+  const [notification, setNotification] = useState<Notification>(null);
+  const [showScanResultModal, setShowScanResultModal] = useState(false);
+  const [scanResult, setScanResult] = useState<{ type: "user" | "review"; message: string; details: string } | null>(null);
 
+  const utils = api.useUtils();
+
+  // Auto-dismiss notification after 3 seconds
+  const showNotification = useCallback((type: "success" | "error" | "info", message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 3000);
+  }, []);
+
+  // All hooks must be called before any conditional returns
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
   const { data: stats, isLoading: statsLoading } = api.trustSafety.getDashboardStats.useQuery(
     undefined,
@@ -32,6 +47,41 @@ export default function TrustSafetyDashboard() {
     enabled: !!session?.user,
   });
 
+  const scanUser = api.trustSafety.scanUserForFraud.useMutation({
+    onSuccess: (data) => {
+      void utils.trustSafety.getHighRiskUsers.invalidate();
+      setScanResult({
+        type: "user",
+        message: `Risk Score: ${(data.fraudResult.riskScore * 100).toFixed(1)}%`,
+        details: data.fraudResult.riskScore >= 0.6
+          ? "This user is flagged as high-risk and should be reviewed."
+          : "This user appears to be low-risk.",
+      });
+      setShowScanResultModal(true);
+    },
+    onError: (error) => {
+      showNotification("error", error.message || "Failed to scan user");
+    },
+  });
+
+  const checkReview = api.trustSafety.checkReviewAuthenticity.useMutation({
+    onSuccess: (data) => {
+      void utils.trustSafety.getSuspiciousReviews.invalidate();
+      setScanResult({
+        type: "review",
+        message: data.authenticityResult.isAuthentic ? "Authentic" : "Suspicious",
+        details: data.authenticityResult.isAuthentic
+          ? "This review appears to be genuine."
+          : "This review shows signs of being fake or manipulated.",
+      });
+      setShowScanResultModal(true);
+    },
+    onError: (error) => {
+      showNotification("error", error.message || "Failed to check review");
+    },
+  });
+
+  // Now we can have conditional returns after all hooks are called
   if (sessionLoading || statsLoading) {
     return (
       <div className="py-12 text-center">
@@ -40,51 +90,32 @@ export default function TrustSafetyDashboard() {
     );
   }
 
+  // Note: Admin check is already done in the admin layout
   if (!session?.user) {
     router.push("/auth/signin?callbackUrl=" + encodeURIComponent("/admin/trust-safety"));
     return null;
   }
 
-  // Check if user is admin
-  if (session.user.userType !== "ADMIN") {
-    return (
-      <div className="py-12 text-center">
-        <div className="mx-auto max-w-md">
-          <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
-          <p className="mt-4 text-gray-600">
-            You do not have permission to access this page.
-          </p>
-          <button
-            onClick={() => router.push("/")}
-            className="mt-6 rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700"
-          >
-            Go to Homepage
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const scanUser = api.trustSafety.scanUserForFraud.useMutation({
-    onSuccess: (data) => {
-      alert(`Fraud scan complete. Risk score: ${(data.fraudResult.riskScore * 100).toFixed(1)}%`);
-      void utils.trustSafety.getHighRiskUsers.invalidate();
-    },
-  });
-
-  const checkReview = api.trustSafety.checkReviewAuthenticity.useMutation({
-    onSuccess: (data) => {
-      alert(
-        `Review authenticity: ${data.authenticityResult.isAuthentic ? "Authentic" : "Suspicious"}`,
-      );
-      void utils.trustSafety.getSuspiciousReviews.invalidate();
-    },
-  });
-
-  const utils = api.useUtils();
-
   return (
     <div className="container mx-auto p-6">
+      {/* Notification Toast */}
+      {notification && (
+        <div
+          className={`fixed top-4 right-4 z-50 rounded-lg px-6 py-4 shadow-lg transition-all ${
+            notification.type === "success"
+              ? "bg-green-600 text-white"
+              : notification.type === "error"
+                ? "bg-red-600 text-white"
+                : "bg-blue-600 text-white"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span>{notification.type === "success" ? "✓" : notification.type === "error" ? "✕" : "ℹ"}</span>
+            <span>{notification.message}</span>
+          </div>
+        </div>
+      )}
+
       <h1 className="mb-6 text-3xl font-bold">Trust & Safety Dashboard</h1>
 
       {/* Stats Overview */}
@@ -355,6 +386,52 @@ export default function TrustSafetyDashboard() {
       <div className="text-center text-sm text-gray-500">
         Last updated: {stats?.lastUpdated ? new Date(stats.lastUpdated).toLocaleString() : "N/A"}
       </div>
+
+      {/* Scan Result Modal */}
+      {showScanResultModal && scanResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h2 className="mb-4 text-xl font-semibold text-gray-900">
+              {scanResult.type === "user" ? "User Fraud Scan Result" : "Review Authenticity Result"}
+            </h2>
+
+            <div className={`mb-4 rounded-md p-4 ${
+              scanResult.type === "user"
+                ? scanResult.message.includes("high")
+                  ? "bg-red-50"
+                  : "bg-green-50"
+                : scanResult.message === "Authentic"
+                  ? "bg-green-50"
+                  : "bg-orange-50"
+            }`}>
+              <p className={`text-lg font-bold ${
+                scanResult.type === "user"
+                  ? scanResult.message.includes("high")
+                    ? "text-red-800"
+                    : "text-green-800"
+                  : scanResult.message === "Authentic"
+                    ? "text-green-800"
+                    : "text-orange-800"
+              }`}>
+                {scanResult.message}
+              </p>
+              <p className="mt-2 text-sm text-gray-700">
+                {scanResult.details}
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowScanResultModal(false);
+                setScanResult(null);
+              }}
+              className="w-full rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -328,14 +328,14 @@ export default function ReservationDetailScreen() {
             <View className="flex-row items-center justify-between">
               <View>
                 <Text className="text-base font-medium text-gray-900">
-                  {reservation.seller.userType.replace("_", " ")}
+                  {reservation.seller.verificationBadge === "NONE" ? "Standard" : reservation.seller.verificationBadge}
                 </Text>
-                {reservation.seller.ratingCount > 0 && (
+                {reservation.seller.sellerRatingCount > 0 && (
                   <View className="mt-1 flex-row items-center">
                     <Ionicons name="star" size={16} color="#fbbf24" />
                     <Text className="ml-1 text-sm text-gray-700">
-                      {reservation.seller.ratingAverage?.toFixed(1)} (
-                      {reservation.seller.ratingCount} reviews)
+                      {reservation.seller.sellerRatingAverage?.toFixed(1)} (
+                      {reservation.seller.sellerRatingCount} seller reviews)
                     </Text>
                   </View>
                 )}

@@ -158,9 +158,9 @@ export const paymentRouter = createTRPCRouter({
       if (buyer && seller) {
         await notifyReservationConfirmed({
           buyerEmail: buyer.email,
-          buyerPhone: buyer.phone,
+          buyerPhone: buyer.phone ?? undefined,
           sellerEmail: seller.email,
-          sellerPhone: seller.phone,
+          sellerPhone: seller.phone ?? undefined,
           listingTitle: existingReservation.listing.title,
           quantity: existingReservation.quantityReserved,
           verificationCode: existingReservation.verificationCode,
@@ -190,7 +190,7 @@ export const paymentRouter = createTRPCRouter({
         where: (users, { eq }) => eq(users.id, ctx.session.user.id),
       });
 
-      if (currentUser?.userType !== "ADMIN") {
+      if (!currentUser?.isAdmin) {
         throw new Error("Admin access required");
       }
 
@@ -314,7 +314,7 @@ export const paymentRouter = createTRPCRouter({
         where: (users, { eq }) => eq(users.id, ctx.session.user.id),
       });
 
-      if (currentUser?.userType !== "ADMIN") {
+      if (!currentUser?.isAdmin) {
         throw new Error("Admin access required");
       }
 
@@ -369,7 +369,7 @@ export const paymentRouter = createTRPCRouter({
       if (buyer) {
         await notifyRefundProcessed({
           buyerEmail: buyer.email,
-          buyerPhone: buyer.phone,
+          buyerPhone: buyer.phone ?? undefined,
           listingTitle: existingReservation.listing.title,
           refundAmount: refund.amount / 100,
         });

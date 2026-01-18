@@ -17,6 +17,7 @@ import { reservationRouter } from "./router/reservation";
 import { scheduledListingsRouter } from "./router/scheduled-listings";
 import { trustSafetyRouter } from "./router/trust-safety";
 import { uploadRouter } from "./router/upload";
+import { userRouter } from "./router/user";
 import { verificationRouter } from "./router/verification";
 import { whiteLabelRouter } from "./router/white-label";
 import { createTRPCRouter } from "./trpc";
@@ -41,6 +42,7 @@ export const appRouter = createTRPCRouter({
   apiIntegrations: apiIntegrationsRouter as typeof apiIntegrationsRouter,
   whiteLabel: whiteLabelRouter as typeof whiteLabelRouter,
   international: internationalRouter as typeof internationalRouter,
+  user: userRouter as typeof userRouter,
 });
 
 // export type definition of API

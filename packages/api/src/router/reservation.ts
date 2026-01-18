@@ -163,7 +163,11 @@ export const reservationRouter = createTRPCRouter({
                   id: true,
                   email: true,
                   phone: true,
+                  verificationBadge: true,
                   ratingAverage: true,
+                  ratingCount: true,
+                  sellerRatingAverage: true,
+                  sellerRatingCount: true,
                 },
               },
             },
@@ -521,6 +525,7 @@ export const reservationRouter = createTRPCRouter({
           reservationId: input.reservationId,
           raterId: ctx.session.user.id, // seller
           ratedId: existingReservation.buyerId,
+          ratingType: "AS_BUYER", // Rating the buyer's behavior
           score: 1,
           comment: "No-show - buyer did not pick up items within 48 hours",
         });

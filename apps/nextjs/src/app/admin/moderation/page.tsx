@@ -1,15 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
+import { ImageGalleryWithPreview } from "~/components/ui/image-lightbox";
+
+// Simple notification state
+type Notification = {
+  type: "success" | "error";
+  message: string;
+} | null;
 
 // Simple translation stub for MVP
 const t = (key: string) => {
   const translations: Record<string, string> = {
     "common.loading": "Loading...",
-    "admin.moderation.title": "Admin Moderation",
-    "admin.moderation.pending": "Pending Listings",
+    "common.cancel": "Cancel",
+    "admin.moderation": "Listing Moderation",
+    "admin.pendingListings": "Pending Listings",
+    "admin.approveListing": "Approve Listing",
+    "admin.rejectListing": "Reject Listing",
+    "admin.rejectionReason": "Rejection Reason",
+    "listing.pricePerPiece": "Price per piece",
+    "listing.quantity": "Quantity",
+    "listing.maxPerBuyer": "Max per buyer",
+    "listing.pickupAddress": "Pickup Address",
+    "listing.pickupInstructions": "Pickup Instructions",
+    "listing.seller": "Seller Information",
+    "listing.rating": "Rating",
+    "listing.reviews": "reviews",
   };
   return translations[key] || key;
 };
@@ -17,11 +36,21 @@ const t = (key: string) => {
 export default function AdminModerationPage() {
   const router = useRouter();
   const [selectedListing, setSelectedListing] = useState<string | null>(null);
+  const [selectedListingTitle, setSelectedListingTitle] = useState<string>("");
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [notification, setNotification] = useState<Notification>(null);
 
   const utils = api.useUtils();
 
+  // Auto-dismiss notification after 3 seconds
+  const showNotification = useCallback((type: "success" | "error", message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 3000);
+  }, []);
+
+  // All hooks must be called before any conditional returns
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
   const { data: pendingListings, isLoading: listingsLoading } =
     api.admin.getPendingListings.useQuery({
@@ -31,42 +60,13 @@ export default function AdminModerationPage() {
       enabled: !!session?.user,
     });
 
-  if (sessionLoading || listingsLoading) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-gray-600">{t("common.loading")}</p>
-      </div>
-    );
-  }
-
-  if (!session?.user) {
-    router.push("/auth/signin?callbackUrl=" + encodeURIComponent("/admin/moderation"));
-    return null;
-  }
-
-  // Check if user is admin
-  if (session.user.userType !== "ADMIN") {
-    return (
-      <div className="py-12 text-center">
-        <div className="mx-auto max-w-md">
-          <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
-          <p className="mt-4 text-gray-600">
-            You do not have permission to access this page.
-          </p>
-          <button
-            onClick={() => router.push("/")}
-            className="mt-6 rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700"
-          >
-            Go to Homepage
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const approveListing = api.admin.approveListing.useMutation({
     onSuccess: () => {
       void utils.admin.getPendingListings.invalidate();
+      showNotification("success", "Listing approved successfully! Seller has been notified.");
+    },
+    onError: (error) => {
+      showNotification("error", error.message || "Failed to approve listing");
     },
   });
 
@@ -76,17 +76,47 @@ export default function AdminModerationPage() {
       setShowRejectModal(false);
       setRejectionReason("");
       setSelectedListing(null);
+      setSelectedListingTitle("");
+      showNotification("success", "Listing rejected. Seller has been notified with the reason.");
+    },
+    onError: (error) => {
+      showNotification("error", error.message || "Failed to reject listing");
     },
   });
 
-  const handleApprove = async (listingId: string) => {
-    if (confirm(t("admin.approveListing") + "?")) {
-      await approveListing.mutateAsync({ listingId });
-    }
+  // Now we can have conditional returns after all hooks are called
+  if (sessionLoading || listingsLoading) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-gray-600">{t("common.loading")}</p>
+      </div>
+    );
+  }
+
+  // Note: Admin check is already done in the admin layout, so we only need to check for session
+  if (!session?.user) {
+    router.push("/auth/signin?callbackUrl=" + encodeURIComponent("/admin/moderation"));
+    return null;
+  }
+
+  const handleApproveClick = (listingId: string, title: string) => {
+    setSelectedListing(listingId);
+    setSelectedListingTitle(title);
+    setShowApproveModal(true);
   };
 
-  const handleRejectClick = (listingId: string) => {
+  const handleApproveSubmit = async () => {
+    if (!selectedListing) return;
+
+    await approveListing.mutateAsync({ listingId: selectedListing });
+    setShowApproveModal(false);
+    setSelectedListing(null);
+    setSelectedListingTitle("");
+  };
+
+  const handleRejectClick = (listingId: string, title: string) => {
     setSelectedListing(listingId);
+    setSelectedListingTitle(title);
     setShowRejectModal(true);
   };
 
@@ -99,16 +129,24 @@ export default function AdminModerationPage() {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-gray-600">{t("common.loading")}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
+      {/* Notification Toast */}
+      {notification && (
+        <div
+          className={`fixed top-4 right-4 z-50 rounded-lg px-6 py-4 shadow-lg transition-all ${
+            notification.type === "success"
+              ? "bg-green-600 text-white"
+              : "bg-red-600 text-white"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span>{notification.type === "success" ? "✓" : "✕"}</span>
+            <span>{notification.message}</span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
@@ -184,16 +222,12 @@ export default function AdminModerationPage() {
                   {/* Photos */}
                   {listing.photos && listing.photos.length > 0 && (
                     <div className="mt-4">
-                      <div className="flex gap-2 overflow-x-auto">
-                        {listing.photos.map((photo, idx) => (
-                          <img
-                            key={idx}
-                            src={photo}
-                            alt={`Photo ${idx + 1}`}
-                            className="h-24 w-24 rounded object-cover"
-                          />
-                        ))}
-                      </div>
+                      <ImageGalleryWithPreview
+                        images={listing.photos}
+                        alt={listing.title}
+                        mainImageAspect="video"
+                        thumbnailColumns={4}
+                      />
                     </div>
                   )}
                 </div>
@@ -211,7 +245,7 @@ export default function AdminModerationPage() {
                       </div>
                       <div>
                         <span className="font-medium">Phone:</span>{" "}
-                        {listing.seller.phone}
+                        {listing.seller.phone ?? "—"}
                       </div>
                       <div>
                         <span className="font-medium">
@@ -221,10 +255,8 @@ export default function AdminModerationPage() {
                         {listing.seller.ratingCount} {t("listing.reviews")})
                       </div>
                       <div>
-                        <span className="font-medium">
-                          {t("profile.accountType")}:
-                        </span>{" "}
-                        {listing.seller.userType}
+                        <span className="font-medium">Status:</span>{" "}
+                        {listing.seller.accountStatus}
                       </div>
                       <div>
                         <span className="font-medium">Member since:</span>{" "}
@@ -236,7 +268,7 @@ export default function AdminModerationPage() {
                   {/* Action Buttons */}
                   <div className="mt-4 space-y-2">
                     <button
-                      onClick={() => handleApprove(listing.id)}
+                      onClick={() => handleApproveClick(listing.id, listing.title)}
                       disabled={approveListing.isPending}
                       className="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
                     >
@@ -246,7 +278,7 @@ export default function AdminModerationPage() {
                     </button>
 
                     <button
-                      onClick={() => handleRejectClick(listing.id)}
+                      onClick={() => handleRejectClick(listing.id, listing.title)}
                       disabled={rejectListing.isPending}
                       className="w-full rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
                     >
@@ -266,18 +298,67 @@ export default function AdminModerationPage() {
         </div>
       )}
 
+      {/* Approve Confirmation Modal */}
+      {showApproveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h2 className="mb-4 text-xl font-semibold text-gray-900">
+              {t("admin.approveListing")}
+            </h2>
+
+            <p className="mb-2 text-gray-700">
+              Are you sure you want to approve this listing?
+            </p>
+
+            <div className="mb-6 rounded-md bg-gray-50 p-3">
+              <p className="font-medium text-gray-900">{selectedListingTitle}</p>
+            </div>
+
+            <p className="mb-6 text-sm text-gray-500">
+              Once approved, this listing will be visible to all buyers on the marketplace.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowApproveModal(false);
+                  setSelectedListing(null);
+                  setSelectedListingTitle("");
+                }}
+                className="flex-1 rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                onClick={handleApproveSubmit}
+                disabled={approveListing.isPending}
+                className="flex-1 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                {approveListing.isPending
+                  ? t("common.loading")
+                  : t("admin.approveListing")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Rejection Modal */}
       {showRejectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <h2 className="mb-4 text-xl font-semibold">
+            <h2 className="mb-4 text-xl font-semibold text-gray-900">
               {t("admin.rejectListing")}
             </h2>
+
+            <div className="mb-4 rounded-md bg-gray-50 p-3">
+              <p className="font-medium text-gray-900">{selectedListingTitle}</p>
+            </div>
 
             <div className="mb-4">
               <label
                 htmlFor="rejectionReason"
-                className="block text-sm font-medium"
+                className="block text-sm font-medium text-gray-700"
               >
                 {t("admin.rejectionReason")} *
               </label>
@@ -290,7 +371,7 @@ export default function AdminModerationPage() {
                 placeholder="Explain why this listing is being rejected..."
               />
               <p className="mt-1 text-xs text-gray-500">
-                Minimum 10 characters required
+                Minimum 10 characters required. This reason will be shown to the seller.
               </p>
             </div>
 
@@ -300,6 +381,7 @@ export default function AdminModerationPage() {
                   setShowRejectModal(false);
                   setRejectionReason("");
                   setSelectedListing(null);
+                  setSelectedListingTitle("");
                 }}
                 className="flex-1 rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
               >

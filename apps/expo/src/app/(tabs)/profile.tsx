@@ -118,11 +118,13 @@ export default function ProfileScreen() {
             {user.phone && (
               <Text className="mt-1 text-sm text-gray-500">{user.phone}</Text>
             )}
-            <View className="mt-3 rounded-full bg-green-100 px-4 py-1">
-              <Text className="text-xs font-medium text-green-700">
-                {user.userType.replace("_", " ")}
-              </Text>
-            </View>
+            {user.verificationBadge && user.verificationBadge !== "NONE" && (
+              <View className="mt-3 rounded-full bg-green-100 px-4 py-1">
+                <Text className="text-xs font-medium text-green-700">
+                  {user.verificationBadge}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -162,19 +164,38 @@ export default function ProfileScreen() {
         )}
 
         {/* Ratings */}
-        {user.ratingCount > 0 && (
+        {(user.buyerRatingCount > 0 || user.sellerRatingCount > 0) && (
           <View className="mx-4 mt-4 rounded-lg bg-white p-4">
             <Text className="mb-3 text-sm font-semibold text-gray-700">
-              Your Rating
+              Your Ratings
             </Text>
-            <View className="flex-row items-center">
-              <Ionicons name="star" size={32} color="#fbbf24" />
-              <Text className="ml-2 text-3xl font-bold text-gray-900">
-                {user.ratingAverage?.toFixed(1) || "0.0"}
-              </Text>
-              <Text className="ml-2 text-sm text-gray-500">
-                ({user.ratingCount} {user.ratingCount === 1 ? "review" : "reviews"})
-              </Text>
+            <View className="flex-row gap-4">
+              {user.buyerRatingCount > 0 && (
+                <View className="flex-1 items-center rounded-lg bg-blue-50 p-3">
+                  <View className="flex-row items-center">
+                    <Ionicons name="star" size={20} color="#fbbf24" />
+                    <Text className="ml-1 text-xl font-bold text-gray-900">
+                      {user.buyerRatingAverage?.toFixed(1) || "0.0"}
+                    </Text>
+                  </View>
+                  <Text className="text-xs text-blue-600">
+                    As Buyer ({user.buyerRatingCount})
+                  </Text>
+                </View>
+              )}
+              {user.sellerRatingCount > 0 && (
+                <View className="flex-1 items-center rounded-lg bg-green-50 p-3">
+                  <View className="flex-row items-center">
+                    <Ionicons name="star" size={20} color="#fbbf24" />
+                    <Text className="ml-1 text-xl font-bold text-gray-900">
+                      {user.sellerRatingAverage?.toFixed(1) || "0.0"}
+                    </Text>
+                  </View>
+                  <Text className="text-xs text-green-600">
+                    As Seller ({user.sellerRatingCount})
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         )}
@@ -186,7 +207,7 @@ export default function ProfileScreen() {
           </Text>
 
           <Pressable
-            onPress={() => Alert.alert("Edit Profile", "Feature coming soon")}
+            onPress={() => router.push("/profile/edit")}
             className="flex-row items-center justify-between border-b border-gray-100 px-4 py-4"
           >
             <View className="flex-row items-center">

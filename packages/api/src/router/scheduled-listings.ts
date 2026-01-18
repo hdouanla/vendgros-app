@@ -120,7 +120,7 @@ export const scheduledListingsRouter = createTRPCRouter({
       where: (users, { eq }) => eq(users.id, ctx.session.user.id),
     });
 
-    if (!currentUser || currentUser.userType !== "ADMIN") {
+    if (!currentUser || !currentUser.isAdmin) {
       throw new Error("Admin access required");
     }
 
@@ -161,7 +161,7 @@ export const scheduledListingsRouter = createTRPCRouter({
           if (seller) {
             await notifyScheduledListingPublished({
               sellerEmail: seller.email,
-              sellerPhone: seller.phone,
+              sellerPhone: seller.phone ?? undefined,
               listingTitle: updated.title,
             });
           }
@@ -190,7 +190,7 @@ export const scheduledListingsRouter = createTRPCRouter({
       where: (users, { eq }) => eq(users.id, ctx.session.user.id),
     });
 
-    if (!currentUser || currentUser.userType !== "ADMIN") {
+    if (!currentUser || !currentUser.isAdmin) {
       throw new Error("Admin access required");
     }
 

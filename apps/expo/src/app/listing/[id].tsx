@@ -206,21 +206,21 @@ export default function ListingDetailScreen() {
             </Text>
             <View className="flex-row items-center justify-between">
               <View>
-                <Text className="text-sm text-gray-600">Account Type</Text>
+                <Text className="text-sm text-gray-600">Verification</Text>
                 <Text className="text-base font-medium text-gray-900">
-                  {listing.seller.userType.replace("_", " ")}
+                  {listing.seller.verificationBadge === "NONE" ? "Standard" : listing.seller.verificationBadge}
                 </Text>
               </View>
-              {listing.seller.ratingCount > 0 && (
+              {listing.seller.sellerRatingCount > 0 && (
                 <View className="items-end">
                   <View className="flex-row items-center">
                     <Ionicons name="star" size={16} color="#fbbf24" />
                     <Text className="ml-1 text-base font-semibold text-gray-900">
-                      {listing.seller.ratingAverage?.toFixed(1)}
+                      {listing.seller.sellerRatingAverage?.toFixed(1)}
                     </Text>
                   </View>
                   <Text className="text-xs text-gray-500">
-                    {listing.seller.ratingCount} reviews
+                    {listing.seller.sellerRatingCount} seller reviews
                   </Text>
                 </View>
               )}

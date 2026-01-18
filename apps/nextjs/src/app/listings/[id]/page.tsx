@@ -4,6 +4,7 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import { ListingMap } from "~/components/map/listing-map";
+import { ImageLightbox } from "~/components/ui/image-lightbox";
 
 // Simple translation stub - replace with actual translations later
 const t = (key: string, params?: any) => {
@@ -80,27 +81,7 @@ export default function ListingDetailPage({
     }
   }, [id, listing]); // Only track once when listing loads
 
-  // Keyboard navigation for lightbox
-  useEffect(() => {
-    if (!showLightbox || !listing?.photos) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setShowLightbox(false);
-      } else if (e.key === "ArrowLeft") {
-        setSelectedPhotoIndex((prev) =>
-          prev > 0 ? prev - 1 : listing.photos!.length - 1
-        );
-      } else if (e.key === "ArrowRight") {
-        setSelectedPhotoIndex((prev) =>
-          prev < listing.photos!.length - 1 ? prev + 1 : 0
-        );
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showLightbox, listing?.photos]);
+  // Keyboard navigation is now handled by the ImageLightbox component
 
   const handleReserve = async () => {
     if (!listing) return;
@@ -282,16 +263,16 @@ export default function ListingDetailPage({
             <div className="space-y-2 text-sm">
               <div>
                 <span className="font-medium text-gray-600">
-                  {t("profile.accountType")}:
+                  Verification:
                 </span>{" "}
-                {listing.seller.userType}
+                {listing.seller.verificationBadge === "NONE" ? "Standard" : listing.seller.verificationBadge}
               </div>
               <div>
                 <span className="font-medium text-gray-600">
                   {t("listing.rating")}:
                 </span>{" "}
-                ⭐ {listing.seller.ratingAverage?.toFixed(1) ?? "—"} (
-                {listing.seller.ratingCount} {t("listing.reviews")})
+                ⭐ {listing.seller.sellerRatingAverage?.toFixed(1) ?? "—"} (
+                {listing.seller.sellerRatingCount} seller {t("listing.reviews")})
               </div>
               <div>
                 <span className="font-medium text-gray-600">
@@ -564,131 +545,15 @@ export default function ListingDetailPage({
       )}
 
       {/* Image Lightbox */}
-      {showLightbox && listing.photos && listing.photos.length > 0 && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
-          onClick={() => setShowLightbox(false)}
-        >
-          <div className="relative h-full w-full max-w-7xl p-4">
-            {/* Close Button */}
-            <button
-              onClick={() => setShowLightbox(false)}
-              className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-              aria-label="Close"
-            >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-
-            {/* Navigation Arrows */}
-            {listing.photos.length > 1 && (
-              <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedPhotoIndex((prev) =>
-                      prev > 0 ? prev - 1 : listing.photos!.length - 1
-                    );
-                  }}
-                  className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-                  aria-label="Previous image"
-                >
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedPhotoIndex((prev) =>
-                      prev < listing.photos!.length - 1 ? prev + 1 : 0
-                    );
-                  }}
-                  className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-                  aria-label="Next image"
-                >
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-              </>
-            )}
-
-            {/* Image Counter */}
-            <div className="absolute left-4 top-4 z-10 rounded-full bg-black/50 px-3 py-1 text-sm text-white backdrop-blur-sm">
-              {selectedPhotoIndex + 1} / {listing.photos.length}
-            </div>
-
-            {/* Main Image */}
-            <div
-              className="flex h-full w-full items-center justify-center"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <img
-                src={listing.photos[selectedPhotoIndex]}
-                alt={`${listing.title} - Photo ${selectedPhotoIndex + 1}`}
-                className="max-h-full max-w-full object-contain"
-              />
-            </div>
-
-            {/* Thumbnail Strip */}
-            {listing.photos.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 z-10 flex max-w-full -translate-x-1/2 gap-2 overflow-x-auto rounded-lg bg-black/50 p-2 backdrop-blur-sm">
-                {listing.photos.map((photo, idx) => (
-                  <button
-                    key={idx}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedPhotoIndex(idx);
-                    }}
-                    className={`h-16 w-16 flex-shrink-0 overflow-hidden rounded transition-all ${
-                      selectedPhotoIndex === idx
-                        ? "ring-2 ring-white ring-offset-2 ring-offset-black/50"
-                        : "opacity-60 hover:opacity-100"
-                    }`}
-                  >
-                    <img
-                      src={photo}
-                      alt={`Thumbnail ${idx + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+      {listing.photos && listing.photos.length > 0 && (
+        <ImageLightbox
+          images={listing.photos}
+          currentIndex={selectedPhotoIndex}
+          isOpen={showLightbox}
+          onClose={() => setShowLightbox(false)}
+          onIndexChange={setSelectedPhotoIndex}
+          alt={listing.title}
+        />
       )}
     </div>
   );

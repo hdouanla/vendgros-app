@@ -17,16 +17,21 @@ import { z } from "zod/v4";
 // ENUMS
 // ============================================================================
 
-// User verification level (NOT an exclusive role - all users can buy AND sell)
-// - BUYER: Standard user (default) - can create listings and make purchases
-// - SELLER_INDIVIDUAL: Verified individual seller - has trust badge
-// - SELLER_MERCHANT: Verified business seller - higher trust level
-// - ADMIN: Administrator privileges
+// DEPRECATED: userType is being phased out
+// - Use `isAdmin` boolean for admin privileges
+// - Use `verificationBadge` for trust levels
+// Keeping for backward compatibility during migration
 export const userTypeEnum = pgEnum("user_type", [
   "BUYER",
   "SELLER_INDIVIDUAL",
   "SELLER_MERCHANT",
   "ADMIN",
+]);
+
+// Rating type - indicates the role the rated user was playing in the transaction
+export const ratingTypeEnum = pgEnum("rating_type", [
+  "AS_BUYER",  // Rating received when user was the buyer
+  "AS_SELLER", // Rating received when user was the seller
 ]);
 
 export const accountStatusEnum = pgEnum("account_status", [
@@ -85,13 +90,24 @@ export const user = pgTable(
     phoneVerified: t.boolean().notNull().default(false),
     accountStatus: accountStatusEnum().notNull().default("ACTIVE"),
 
-    // Verification level - all users can buy and sell regardless of this value
-    // SELLER_INDIVIDUAL and SELLER_MERCHANT provide trust badges
+    // DEPRECATED: Use isAdmin for admin privileges, verificationBadge for trust
     userType: userTypeEnum().notNull().default("BUYER"),
+
+    // Admin privileges - replaces userType === "ADMIN" check
+    isAdmin: t.boolean().notNull().default(false),
+
     languagePreference: t.varchar({ length: 5 }).notNull().default("en"),
 
+    // DEPRECATED: Use separate buyer/seller ratings instead
     ratingAverage: t.doublePrecision().default(0),
     ratingCount: t.integer().notNull().default(0),
+
+    // Separate ratings for buyer and seller roles
+    buyerRatingAverage: t.doublePrecision().default(0),
+    buyerRatingCount: t.integer().notNull().default(0),
+    sellerRatingAverage: t.doublePrecision().default(0),
+    sellerRatingCount: t.integer().notNull().default(0),
+
     moderationNotes: t.text(),
 
     // Verification badges
@@ -343,6 +359,9 @@ export const rating = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
 
+    // Type of rating - was the rated user acting as buyer or seller?
+    ratingType: ratingTypeEnum().notNull(),
+
     score: t.integer().notNull(), // 1-5
     comment: t.text(),
     isVisible: t.boolean().notNull().default(false), // Hidden until both parties rate
@@ -366,6 +385,7 @@ export const rating = pgTable(
     ),
     raterIdx: index("rating_rater_idx").on(table.raterId),
     ratedIdx: index("rating_rated_idx").on(table.ratedId),
+    ratedTypeIdx: index("rating_rated_type_idx").on(table.ratedId, table.ratingType),
   }),
 );
 
@@ -612,6 +632,7 @@ export const selectReservationSchema = createSelectSchema(reservation);
 export const insertRatingSchema = createInsertSchema(rating, {
   score: z.number().int().min(1).max(5),
   comment: z.string().optional(),
+  ratingType: z.enum(["AS_BUYER", "AS_SELLER"]),
 });
 
 export const selectRatingSchema = createSelectSchema(rating);

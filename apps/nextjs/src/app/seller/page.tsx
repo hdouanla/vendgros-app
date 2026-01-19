@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export default function SellerDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"listings" | "reservations">("listings");
+  const [activeTab, setActiveTab] = useState<"listings" | "reservations" | "completed">("listings");
 
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
 
@@ -29,6 +29,12 @@ export default function SellerDashboardPage() {
   // Fetch pending reservations (awaiting pickup)
   const { data: pendingReservations, isLoading: reservationsLoading } =
     api.reservation.getPendingPickups.useQuery(undefined, {
+      enabled: !!session?.user,
+    });
+
+  // Fetch completed reservations (delivered orders)
+  const { data: completedReservations, isLoading: completedLoading } =
+    api.reservation.getCompletedPickups.useQuery(undefined, {
       enabled: !!session?.user,
     });
 
@@ -55,7 +61,7 @@ export default function SellerDashboardPage() {
       </div>
 
       {/* Quick Stats */}
-      <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
         <div className="rounded-lg bg-white p-6 shadow">
           <p className="text-sm text-gray-600">Active Listings</p>
           <p className="mt-2 text-3xl font-bold text-green-600">
@@ -74,6 +80,13 @@ export default function SellerDashboardPage() {
           <p className="text-sm text-gray-600">Awaiting Pickup</p>
           <p className="mt-2 text-3xl font-bold text-blue-600">
             {pendingReservations?.length || 0}
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-white p-6 shadow">
+          <p className="text-sm text-gray-600">Completed</p>
+          <p className="mt-2 text-3xl font-bold text-purple-600">
+            {completedReservations?.length || 0}
           </p>
         </div>
 
@@ -124,17 +137,105 @@ export default function SellerDashboardPage() {
             onClick={() => setActiveTab("reservations")}
             className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium ${
               activeTab === "reservations"
-                ? "border-green-600 text-green-600"
+                ? "border-blue-600 text-blue-600"
                 : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
             }`}
           >
             Pending Pickups ({pendingReservations?.length || 0})
           </button>
+          <button
+            onClick={() => setActiveTab("completed")}
+            className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium ${
+              activeTab === "completed"
+                ? "border-purple-600 text-purple-600"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+            }`}
+          >
+            Completed ({completedReservations?.length || 0})
+          </button>
         </nav>
       </div>
 
       {/* Tab Content */}
-      {activeTab === "listings" ? (
+      {activeTab === "completed" ? (
+        <div className="rounded-lg bg-white shadow">
+          {completedLoading ? (
+            <div className="py-12 text-center">
+              <p className="text-gray-600">Loading completed orders...</p>
+            </div>
+          ) : !completedReservations || completedReservations.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="text-gray-600">No completed orders yet</p>
+              <p className="mt-2 text-sm text-gray-500">
+                Orders will appear here after successful pickup
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Order
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Buyer
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Quantity
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Total
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Completed
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {completedReservations.map((reservation) => (
+                    <tr key={reservation.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {reservation.listing.title}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Code: {reservation.verificationCode}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="text-sm text-gray-900">
+                            {reservation.buyer.name || reservation.buyer.email}
+                          </p>
+                          {reservation.buyer.name && (
+                            <p className="text-xs text-gray-500">
+                              {reservation.buyer.email}
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                        {reservation.quantityReserved} units
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-green-600">
+                        ${reservation.totalPrice.toFixed(2)} CAD
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                        {reservation.completedAt
+                          ? new Date(reservation.completedAt).toLocaleDateString()
+                          : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ) : activeTab === "listings" ? (
         <div className="rounded-lg bg-white shadow">
           {listingsLoading ? (
             <div className="py-12 text-center">

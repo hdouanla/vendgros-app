@@ -66,10 +66,10 @@ export function PaymentForm({ reservationId, amount }: PaymentFormProps) {
 
         setMessage(t("payment.paymentSuccessful"));
 
-        // Redirect to reservation page after short delay
+        // Redirect to reservation page with payment=pending to trigger polling
         setTimeout(() => {
-          router.push(`/reservations/${reservationId}`);
-        }, 1500);
+          router.push(`/reservations/${reservationId}?payment=pending`);
+        }, 1000);
       }
     } catch (err) {
       setMessage(

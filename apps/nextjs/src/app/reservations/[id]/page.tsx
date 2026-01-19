@@ -1,7 +1,7 @@
 "use client";
 
-import { use } from "react";
-import { useRouter } from "next/navigation";
+import { use, useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "~/trpc/react";
 import { QRCode } from "@acme/ui/qr-code";
 
@@ -35,22 +35,58 @@ export default function ReservationDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Check if user is coming back from payment
+  const paymentPending = searchParams.get("payment") === "pending";
+  const [isPolling, setIsPolling] = useState(paymentPending);
+  const [pollCount, setPollCount] = useState(0);
+  const maxPollAttempts = 30; // Poll for up to 30 seconds
 
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
-  const { data: reservation, isLoading: reservationLoading } = api.reservation.getById.useQuery({
+  const { data: reservation, isLoading: reservationLoading, refetch: refetchReservation } = api.reservation.getById.useQuery({
     id,
   }, {
     enabled: !!session?.user,
   });
 
-  const { data: paymentStatus } = api.payment.getPaymentStatus.useQuery(
+  const { data: paymentStatus, refetch: refetchPaymentStatus } = api.payment.getPaymentStatus.useQuery(
     {
       reservationId: id,
     },
     {
       enabled: !!reservation,
+      refetchInterval: isPolling ? 1000 : false, // Poll every second when waiting for payment
     },
   );
+
+  // Handle polling for payment confirmation
+  useEffect(() => {
+    if (!isPolling) return;
+
+    // Stop polling if payment is confirmed
+    if (paymentStatus?.depositPaid) {
+      setIsPolling(false);
+      // Remove the payment=pending param from URL
+      router.replace(`/reservations/${id}`);
+      // Refetch reservation to get updated status
+      void refetchReservation();
+      return;
+    }
+
+    // Stop polling after max attempts
+    if (pollCount >= maxPollAttempts) {
+      setIsPolling(false);
+      return;
+    }
+
+    // Increment poll count
+    const timer = setTimeout(() => {
+      setPollCount((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [isPolling, paymentStatus, pollCount, id, router, refetchReservation]);
 
   if (sessionLoading || reservationLoading) {
     return (
@@ -77,6 +113,64 @@ export default function ReservationDetailPage({
   const isBuyer = true; // TODO: Check actual user session
   const depositPaid = paymentStatus?.depositPaid ?? false;
 
+  // Show processing overlay while polling for payment
+  if (isPolling) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <div className="flex min-h-[60vh] flex-col items-center justify-center">
+          {/* Animated Spinner */}
+          <div className="relative mb-8">
+            <div className="h-24 w-24 rounded-full border-4 border-gray-200"></div>
+            <div className="absolute left-0 top-0 h-24 w-24 animate-spin rounded-full border-4 border-green-600 border-t-transparent"></div>
+          </div>
+
+          {/* Processing Text */}
+          <h2 className="mb-2 text-2xl font-bold text-gray-900">
+            Processing Payment
+          </h2>
+          <p className="mb-6 text-center text-gray-600">
+            Please wait while we confirm your payment...
+          </p>
+
+          {/* Progress Indicator */}
+          <div className="mb-4 w-64">
+            <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+              <div
+                className="h-full bg-green-600 transition-all duration-1000"
+                style={{ width: `${Math.min((pollCount / maxPollAttempts) * 100, 100)}%` }}
+              />
+            </div>
+          </div>
+
+          <p className="text-sm text-gray-500">
+            This usually takes a few seconds
+          </p>
+
+          {/* Show timeout message after 20 seconds */}
+          {pollCount >= 20 && (
+            <div className="mt-6 rounded-lg bg-yellow-50 p-4 text-sm text-yellow-800">
+              <p className="font-medium">Taking longer than expected?</p>
+              <p className="mt-1">
+                Your payment may still be processing. The page will update automatically,
+                or you can{" "}
+                <button
+                  onClick={() => {
+                    void refetchPaymentStatus();
+                    void refetchReservation();
+                  }}
+                  className="font-medium underline"
+                >
+                  refresh manually
+                </button>
+                .
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       {/* Header */}
@@ -92,7 +186,7 @@ export default function ReservationDetailPage({
       {/* Status Banner */}
       <div
         className={`mb-6 rounded-lg p-4 ${
-          reservation.status === "CONFIRMED"
+          reservation.status === "CONFIRMED" || depositPaid
             ? "bg-green-50 text-green-800"
             : reservation.status === "PENDING"
               ? "bg-yellow-50 text-yellow-800"
@@ -100,7 +194,9 @@ export default function ReservationDetailPage({
         }`}
       >
         <p className="font-medium">
-          {t(`reservation.status.${reservation.status.toLowerCase()}`)}
+          {depositPaid && reservation.status === "PENDING"
+            ? t("reservation.status.confirmed")
+            : t(`reservation.status.${reservation.status.toLowerCase()}`)}
         </p>
         {isExpired && (
           <p className="mt-1 text-sm">

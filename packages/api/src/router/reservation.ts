@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { randomBytes } from "crypto";
 
 import { listing, rating, reservation, user } from "@acme/db/schema";
@@ -275,6 +275,49 @@ export const reservationRouter = createTRPCRouter({
         )
       )
       .orderBy(reservation.expiresAt);
+
+    return results;
+  }),
+
+  // Get completed reservations for seller (delivered orders)
+  getCompletedPickups: protectedProcedure.query(async ({ ctx }) => {
+    const results = await ctx.db
+      .select({
+        // Reservation fields
+        id: reservation.id,
+        listingId: reservation.listingId,
+        buyerId: reservation.buyerId,
+        quantityReserved: reservation.quantityReserved,
+        totalPrice: reservation.totalPrice,
+        depositAmount: reservation.depositAmount,
+        verificationCode: reservation.verificationCode,
+        status: reservation.status,
+        completedAt: reservation.completedAt,
+        createdAt: reservation.createdAt,
+        // Listing fields (nested)
+        listing: {
+          id: listing.id,
+          title: listing.title,
+          pricePerPiece: listing.pricePerPiece,
+        },
+        // Buyer fields (nested)
+        buyer: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+      })
+      .from(reservation)
+      .innerJoin(listing, eq(reservation.listingId, listing.id))
+      .innerJoin(user, eq(reservation.buyerId, user.id))
+      .where(
+        and(
+          eq(listing.sellerId, ctx.session.user.id),
+          eq(reservation.status, "COMPLETED")
+        )
+      )
+      .orderBy(desc(reservation.completedAt))
+      .limit(50);
 
     return results;
   }),

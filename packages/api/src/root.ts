@@ -10,6 +10,7 @@ import { listingRouter } from "./router/listing";
 import { messagingRouter } from "./router/messaging";
 import { moderationRouter } from "./router/moderation";
 import { paymentRouter } from "./router/payment";
+import { phoneVerificationRouter } from "./router/phone-verification";
 import { pricingRouter } from "./router/pricing";
 import { postRouter } from "./router/post";
 import { ratingRouter } from "./router/rating";
@@ -30,6 +31,7 @@ export const appRouter = createTRPCRouter({
   rating: ratingRouter as typeof ratingRouter,
   admin: adminRouter as typeof adminRouter,
   payment: paymentRouter as typeof paymentRouter,
+  phoneVerification: phoneVerificationRouter as typeof phoneVerificationRouter,
   upload: uploadRouter as typeof uploadRouter,
   moderation: moderationRouter as typeof moderationRouter,
   messaging: messagingRouter as typeof messagingRouter,

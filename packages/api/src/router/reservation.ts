@@ -1,6 +1,7 @@
 import { z } from "zod/v4";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { randomBytes } from "crypto";
+import { TRPCError } from "@trpc/server";
 
 import { listing, rating, reservation, user } from "@acme/db/schema";
 
@@ -38,6 +39,19 @@ export const reservationRouter = createTRPCRouter({
       // Prevent sellers from reserving their own listings
       if (targetListing.sellerId === ctx.session.user.id) {
         throw new Error("You cannot reserve your own listing");
+      }
+
+      // Check buyer's phone verification
+      const buyer = await ctx.db.query.user.findFirst({
+        where: (u, { eq }) => eq(u.id, ctx.session.user.id),
+        columns: { phoneVerified: true },
+      });
+
+      if (!buyer?.phoneVerified) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Phone verification required to make reservations",
+        });
       }
 
       if (input.quantity > targetListing.quantityAvailable) {

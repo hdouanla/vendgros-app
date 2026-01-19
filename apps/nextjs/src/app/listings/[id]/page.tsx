@@ -53,6 +53,10 @@ export default function ListingDetailPage({
   const [reservationError, setReservationError] = useState<string | null>(null);
 
   const { data: session } = api.auth.getSession.useQuery();
+  const { data: phoneStatus } = api.phoneVerification.getStatus.useQuery(
+    undefined,
+    { enabled: !!session?.user }
+  );
 
   const { data: listing, isLoading } = api.listing.getById.useQuery({
     id,
@@ -87,6 +91,25 @@ export default function ListingDetailPage({
     if (!listing) return;
 
     setReservationError(null); // Clear any previous errors
+
+    // Check if user is logged in
+    if (!session?.user) {
+      const callbackUrl = encodeURIComponent(`/listings/${id}`);
+      router.push(`/auth/signin?callbackUrl=${callbackUrl}`);
+      return;
+    }
+
+    // Check phone verification
+    if (!phoneStatus?.phoneVerified) {
+      if (!phoneStatus?.hasPhone) {
+        // No phone number - redirect to profile edit first
+        router.push(`/profile/edit?redirect=${encodeURIComponent(`/auth/verify-phone?redirect=/listings/${id}`)}`);
+      } else {
+        // Has phone but not verified - redirect to verify
+        router.push(`/auth/verify-phone?redirect=${encodeURIComponent(`/listings/${id}`)}`);
+      }
+      return;
+    }
 
     try {
       await createReservation.mutateAsync({

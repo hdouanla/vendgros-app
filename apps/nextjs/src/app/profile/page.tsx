@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 
@@ -7,8 +8,12 @@ export default function ProfilePage() {
   const router = useRouter();
 
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
+  const { data: currentUser, isLoading: userLoading } = api.user.getCurrentUser.useQuery(
+    undefined,
+    { enabled: !!session?.user }
+  );
 
-  if (sessionLoading) {
+  if (sessionLoading || userLoading) {
     return (
       <div className="py-12 text-center">
         <p className="text-gray-600">Loading...</p>
@@ -21,7 +26,7 @@ export default function ProfilePage() {
     return null;
   }
 
-  const user = session.user;
+  const user = currentUser ?? session.user;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -62,14 +67,58 @@ export default function ProfilePage() {
                 <p className="mt-1 text-gray-900">{user.email}</p>
               </div>
 
-              {user.phone && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">
-                    Phone
-                  </label>
-                  <p className="mt-1 text-gray-900">{user.phone}</p>
-                </div>
-              )}
+              <div>
+                <label className="text-sm font-medium text-gray-600">
+                  Phone
+                </label>
+                {user.phone ? (
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-gray-900">
+                      {user.phone.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, "($1) $2-$3")}
+                    </span>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                        user.phoneVerified
+                          ? "bg-green-100 text-green-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {user.phoneVerified ? (
+                        <>
+                          <svg className="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          Verified
+                        </>
+                      ) : (
+                        "Not Verified"
+                      )}
+                    </span>
+                    {!user.phoneVerified && (
+                      <Link
+                        href="/auth/verify-phone"
+                        className="text-sm font-medium text-green-600 hover:text-green-500"
+                      >
+                        Verify
+                      </Link>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-gray-500 italic">Not set</span>
+                    <Link
+                      href="/profile/edit"
+                      className="text-sm font-medium text-green-600 hover:text-green-500"
+                    >
+                      Add phone
+                    </Link>
+                  </div>
+                )}
+              </div>
 
               <div>
                 <label className="text-sm font-medium text-gray-600">
@@ -158,6 +207,19 @@ export default function ProfilePage() {
                 </span>
                 <span className="font-semibold text-gray-900">
                   {user.emailVerified ? (
+                    <span className="text-green-600">Yes</span>
+                  ) : (
+                    <span className="text-yellow-600">No</span>
+                  )}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">
+                  Phone Verified
+                </span>
+                <span className="font-semibold text-gray-900">
+                  {user.phoneVerified ? (
                     <span className="text-green-600">Yes</span>
                   ) : (
                     <span className="text-yellow-600">No</span>

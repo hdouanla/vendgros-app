@@ -1,5 +1,6 @@
 import { z } from "zod/v4";
 import { and, desc, eq, sql } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 
 import {
   insertListingSchema,
@@ -36,7 +37,18 @@ export const listingRouter = createTRPCRouter({
       });
 
       if (user?.accountStatus !== "ACTIVE") {
-        throw new Error("Account must be verified to create listings");
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Account must be verified to create listings",
+        });
+      }
+
+      // Check phone verification
+      if (!user?.phoneVerified) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Phone verification required to create listings",
+        });
       }
 
       // Create listing with DRAFT status

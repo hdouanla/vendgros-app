@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getSession } from "~/auth/server";
+import { db } from "@acme/db/client";
 import { ListingForm } from "~/components/listings/listing-form";
 
 export default async function CreateListingPage() {
@@ -14,6 +15,21 @@ export default async function CreateListingPage() {
   // Redirect to verification if email not verified
   if (!session.user.emailVerified) {
     redirect("/auth/verify-email");
+  }
+
+  // Get user's phone verification status
+  const currentUser = await db.query.user.findFirst({
+    where: (u, { eq }) => eq(u.id, session.user.id),
+    columns: { phone: true, phoneVerified: true },
+  });
+
+  // Redirect to phone verification if not verified
+  if (!currentUser?.phoneVerified) {
+    // If no phone number, redirect to profile edit first
+    if (!currentUser?.phone) {
+      redirect("/profile/edit?redirect=" + encodeURIComponent("/auth/verify-phone?redirect=/listings/create"));
+    }
+    redirect("/auth/verify-phone?redirect=" + encodeURIComponent("/listings/create"));
   }
 
   return (

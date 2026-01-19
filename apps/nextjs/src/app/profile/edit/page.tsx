@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { api } from "~/trpc/react";
 
 export default function EditProfilePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const utils = api.useUtils();
+
+  const redirectUrl = searchParams.get("redirect");
 
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
   const { data: currentUser, isLoading: userLoading } = api.user.getCurrentUser.useQuery(
@@ -16,6 +20,7 @@ export default function EditProfilePage() {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [originalPhone, setOriginalPhone] = useState("");
   const [languagePreference, setLanguagePreference] = useState<"en" | "fr" | "es">("en");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -25,9 +30,13 @@ export default function EditProfilePage() {
     if (currentUser) {
       setName(currentUser.name);
       setPhone(currentUser.phone ?? "");
+      setOriginalPhone(currentUser.phone ?? "");
       setLanguagePreference(currentUser.languagePreference as "en" | "fr" | "es");
     }
   }, [currentUser]);
+
+  // Check if phone has changed (for warning display)
+  const phoneHasChanged = phone !== originalPhone && originalPhone !== "";
 
   const updateProfile = api.user.updateProfile.useMutation({
     onSuccess: () => {
@@ -35,9 +44,10 @@ export default function EditProfilePage() {
       setError(null);
       void utils.user.getCurrentUser.invalidate();
       void utils.auth.getSession.invalidate();
+      void utils.phoneVerification.getStatus.invalidate();
       // Redirect after short delay to show success message
       setTimeout(() => {
-        router.push("/profile");
+        router.push(redirectUrl ?? "/profile");
       }, 1500);
     },
     onError: (err) => {
@@ -176,9 +186,35 @@ export default function EditProfilePage() {
 
           {/* Phone Field */}
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-              Phone Number
-            </label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                Phone Number
+              </label>
+              {currentUser?.phone && (
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    currentUser.phoneVerified
+                      ? "bg-green-100 text-green-800"
+                      : "bg-yellow-100 text-yellow-800"
+                  }`}
+                >
+                  {currentUser.phoneVerified ? (
+                    <>
+                      <svg className="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Verified
+                    </>
+                  ) : (
+                    "Not Verified"
+                  )}
+                </span>
+              )}
+            </div>
             <input
               type="tel"
               id="phone"
@@ -190,6 +226,44 @@ export default function EditProfilePage() {
             <p className="mt-1 text-xs text-gray-500">
               Canadian phone number format. Used for SMS notifications.
             </p>
+
+            {/* Phone change warning */}
+            {phoneHasChanged && (
+              <div className="mt-2 rounded-md bg-yellow-50 p-3">
+                <div className="flex">
+                  <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <div className="ml-3">
+                    <p className="text-sm text-yellow-700">
+                      Changing your phone number will require re-verification.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Verify Now link */}
+            {currentUser?.phone && !currentUser.phoneVerified && !phoneHasChanged && (
+              <Link
+                href={`/auth/verify-phone${redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`}
+                className="mt-2 inline-flex items-center text-sm font-medium text-green-600 hover:text-green-500"
+              >
+                Verify Now
+                <svg className="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </Link>
+            )}
           </div>
 
           {/* Language Preference */}
@@ -217,6 +291,12 @@ export default function EditProfilePage() {
                 <span className="text-gray-500">Email Verified:</span>
                 <span className={`ml-2 font-medium ${currentUser?.emailVerified ? "text-green-600" : "text-yellow-600"}`}>
                   {currentUser?.emailVerified ? "Yes" : "No"}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">Phone Verified:</span>
+                <span className={`ml-2 font-medium ${currentUser?.phoneVerified ? "text-green-600" : "text-yellow-600"}`}>
+                  {currentUser?.phoneVerified ? "Yes" : "No"}
                 </span>
               </div>
               <div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import Link from "next/link";
+import { ReservationCard } from "~/components/seller/reservation-card";
 
 export default function SellerDashboardPage() {
   const router = useRouter();
@@ -171,67 +172,14 @@ export default function SellerDashboardPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Order
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Buyer
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Quantity
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Total
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Completed
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {completedReservations.map((reservation) => (
-                    <tr key={reservation.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {reservation.listing.title}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Code: {reservation.verificationCode}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="text-sm text-gray-900">
-                            {reservation.buyer.name || reservation.buyer.email}
-                          </p>
-                          {reservation.buyer.name && (
-                            <p className="text-xs text-gray-500">
-                              {reservation.buyer.email}
-                            </p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                        {reservation.quantityReserved} units
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-green-600">
-                        ${reservation.totalPrice.toFixed(2)} CAD
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                        {reservation.completedAt
-                          ? new Date(reservation.completedAt).toLocaleDateString()
-                          : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="divide-y divide-gray-200">
+              {completedReservations.map((reservation) => (
+                <ReservationCard
+                  key={reservation.id}
+                  reservation={reservation}
+                  variant="completed"
+                />
+              ))}
             </div>
           )}
         </div>
@@ -383,70 +331,11 @@ export default function SellerDashboardPage() {
           ) : (
             <div className="divide-y divide-gray-200">
               {pendingReservations.map((reservation) => (
-                <div
+                <ReservationCard
                   key={reservation.id}
-                  className="p-6 hover:bg-gray-50"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {reservation.listing.title}
-                      </h3>
-                      <div className="mt-2 space-y-1 text-sm text-gray-600">
-                        <p>
-                          <span className="font-medium">Buyer:</span>{" "}
-                          {reservation.buyer.email}
-                        </p>
-                        <p>
-                          <span className="font-medium">Quantity:</span>{" "}
-                          {reservation.quantityReserved} units
-                        </p>
-                        <p>
-                          <span className="font-medium">Total Price:</span>{" "}
-                          ${reservation.totalPrice.toFixed(2)} CAD
-                        </p>
-                        <p>
-                          <span className="font-medium">Deposit Paid:</span>{" "}
-                          ${reservation.depositAmount.toFixed(2)} CAD
-                        </p>
-                        <p>
-                          <span className="font-medium">Balance Due:</span>{" "}
-                          <span className="text-lg font-bold text-green-600">
-                            $
-                            {(
-                              reservation.totalPrice - reservation.depositAmount
-                            ).toFixed(2)}{" "}
-                            CAD
-                          </span>
-                        </p>
-                        <p>
-                          <span className="font-medium">Pickup Deadline:</span>{" "}
-                          {new Date(reservation.expiresAt).toLocaleString()}
-                        </p>
-                        <p>
-                          <span className="font-medium">Code:</span>{" "}
-                          <span className="font-mono text-lg font-bold text-gray-900">
-                            {reservation.verificationCode}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                    <div className="ml-6 flex flex-col gap-2">
-                      <Link
-                        href={`/seller/scanner?code=${reservation.verificationCode}`}
-                        className="whitespace-nowrap rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                      >
-                        Scan QR Code
-                      </Link>
-                      <Link
-                        href={`/reservations/${reservation.id}`}
-                        className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                      >
-                        View Details
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+                  reservation={reservation}
+                  variant="pending"
+                />
               ))}
             </div>
           )}

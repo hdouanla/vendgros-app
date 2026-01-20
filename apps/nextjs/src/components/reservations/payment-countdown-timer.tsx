@@ -104,64 +104,63 @@ export function PaymentCountdownTimer({
 
   return (
     <div className={`rounded-lg border-2 p-6 ${getBgColor()}`}>
-      <div className="text-center">
-        <p className="mb-2 text-sm font-medium text-gray-600">
-          Time remaining to complete payment
-        </p>
+      <p className="mb-4 text-center text-sm font-medium text-gray-600">
+        Time remaining to complete payment
+      </p>
 
-        {/* Circular Progress Timer */}
-        <div className="relative mx-auto mb-4 h-44 w-44">
-          {/* Background circle */}
-          <svg className="h-44 w-44 -rotate-90 transform">
+      {/* Progress ring and countdown side by side */}
+      <div className="flex items-center justify-center gap-6">
+        {/* Circular Progress Ring */}
+        <div className="relative h-24 w-24 flex-shrink-0">
+          <svg className="h-24 w-24 -rotate-90 transform">
             <circle
-              cx="88"
-              cy="88"
-              r="78"
+              cx="48"
+              cy="48"
+              r="42"
               stroke="currentColor"
-              strokeWidth="10"
+              strokeWidth="8"
               fill="none"
               className="text-gray-200"
             />
-            {/* Progress circle */}
             <circle
-              cx="88"
-              cy="88"
-              r="78"
-              strokeWidth="10"
+              cx="48"
+              cy="48"
+              r="42"
+              strokeWidth="8"
               fill="none"
               strokeLinecap="round"
               className={getProgressColor()}
-              strokeDasharray={`${2 * Math.PI * 78}`}
-              strokeDashoffset={`${2 * Math.PI * 78 * (1 - progressPercent / 100)}`}
+              strokeDasharray={`${2 * Math.PI * 42}`}
+              strokeDashoffset={`${2 * Math.PI * 42 * (1 - progressPercent / 100)}`}
               style={{ transition: "stroke-dashoffset 1s linear" }}
             />
           </svg>
-
-          {/* Timer text in center */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className={`text-4xl font-bold tabular-nums ${getUrgencyColor()}`}>
-              {String(timeLeft.hours).padStart(2, "0")}:
-              {String(timeLeft.minutes).padStart(2, "0")}:
-              {String(timeLeft.seconds).padStart(2, "0")}
-            </span>
-          </div>
         </div>
 
-        {/* Warning message */}
-        {remainingSeconds <= 180 && !timeLeft.expired && (
-          <div className="rounded-md bg-yellow-100 p-3">
-            <p className="text-sm font-medium text-yellow-800">
-              {remainingSeconds <= 60
-                ? "Less than 1 minute left! Complete payment now."
-                : "Hurry! Less than 3 minutes remaining."}
-            </p>
-          </div>
-        )}
-
-        <p className="mt-4 text-xs text-gray-500">
-          Reservation will be automatically cancelled if payment is not completed in time.
-        </p>
+        {/* Countdown numbers */}
+        <div className="flex-shrink-0">
+          <span className={`text-5xl font-bold tabular-nums ${getUrgencyColor()}`}>
+            {String(timeLeft.hours).padStart(2, "0")}:
+            {String(timeLeft.minutes).padStart(2, "0")}:
+            {String(timeLeft.seconds).padStart(2, "0")}
+          </span>
+        </div>
       </div>
+
+      {/* Warning message */}
+      {remainingSeconds <= 180 && !timeLeft.expired && (
+        <div className="mt-4 rounded-md bg-yellow-100 p-3">
+          <p className="text-center text-sm font-medium text-yellow-800">
+            {remainingSeconds <= 60
+              ? "Less than 1 minute left! Complete payment now."
+              : "Hurry! Less than 3 minutes remaining."}
+          </p>
+        </div>
+      )}
+
+      <p className="mt-4 text-center text-xs text-gray-500">
+        Reservation will be automatically cancelled if payment is not completed in time.
+      </p>
     </div>
   );
 }

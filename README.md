@@ -18,6 +18,7 @@
 - [Tech Stack](#tech-stack)
 - [Documentation](#documentation)
 - [Quick Start](#quick-start)
+  - [SMS Notification Configuration](#sms-notification-configuration)
 - [Project Structure](#project-structure)
 - [Testing](#testing)
 - [Deployment](#deployment)
@@ -230,6 +231,34 @@ pnpm dev
 - Web App: http://localhost:3000
 - API: http://localhost:3000/api/trpc
 - Mobile (Expo): Use Expo Go app
+
+### SMS Notification Configuration
+
+SMS notifications can be individually enabled/disabled by modifying the config object in `packages/api/src/lib/notifications.ts`:
+
+```typescript
+export const SMS_NOTIFICATIONS_CONFIG = {
+  // Reservation notifications
+  reservationCreated: false,        // SMS when a reservation is created (to buyer)
+  reservationConfirmedBuyer: false, // SMS when reservation is confirmed (to buyer)
+  reservationConfirmedSeller: false,// SMS when reservation is confirmed (to seller)
+
+  // Listing notifications
+  listingApproved: false,           // SMS when listing is approved (to seller)
+  scheduledListingPublished: false, // SMS when scheduled listing goes live (to seller)
+
+  // Communication notifications
+  newMessage: false,                // SMS when a new chat message is received
+
+  // Payment notifications
+  refundProcessed: false,           // SMS when refund is processed (to buyer)
+
+  // Phone verification (should usually stay enabled)
+  phoneVerification: true,          // SMS for phone number verification codes
+};
+```
+
+**Default**: All SMS notifications are **disabled** except for phone verification OTPs. Set any value to `true` to enable that notification type.
 
 ---
 

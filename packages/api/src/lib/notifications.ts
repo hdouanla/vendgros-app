@@ -3,6 +3,31 @@ import twilio from "twilio";
 import { Expo, ExpoPushMessage, ExpoPushTicket } from "expo-server-sdk";
 
 // ============================================================================
+// SMS Notification Configuration
+// Set each notification type to true/false to enable/disable SMS
+// ============================================================================
+
+export const SMS_NOTIFICATIONS_CONFIG = {
+  // Reservation notifications
+  reservationCreated: false,        // SMS when a reservation is created (to buyer)
+  reservationConfirmedBuyer: false, // SMS when reservation is confirmed (to buyer)
+  reservationConfirmedSeller: false,// SMS when reservation is confirmed (to seller)
+
+  // Listing notifications
+  listingApproved: false,           // SMS when listing is approved (to seller)
+  scheduledListingPublished: false, // SMS when scheduled listing goes live (to seller)
+
+  // Communication notifications
+  newMessage: false,                // SMS when a new chat message is received
+
+  // Payment notifications
+  refundProcessed: false,           // SMS when refund is processed (to buyer)
+
+  // Phone verification (should usually stay enabled)
+  phoneVerification: true,          // SMS for phone number verification codes
+} as const;
+
+// ============================================================================
 // Types
 // ============================================================================
 
@@ -259,8 +284,8 @@ export async function notifyReservationCreated(params: {
     `,
   });
 
-  // SMS notification (optional)
-  if (buyerPhone) {
+  // SMS notification (optional, controlled by config)
+  if (buyerPhone && SMS_NOTIFICATIONS_CONFIG.reservationCreated) {
     await sendSms({
       to: buyerPhone,
       message: `Vendgros: Reservation created for "${listingTitle}". Deposit: $${depositAmount.toFixed(2)}. Verification: ${verificationCode}. Complete payment to confirm.`,
@@ -304,7 +329,7 @@ export async function notifyReservationConfirmed(params: {
     `,
   });
 
-  if (buyerPhone) {
+  if (buyerPhone && SMS_NOTIFICATIONS_CONFIG.reservationConfirmedBuyer) {
     await sendSms({
       to: buyerPhone,
       message: `Vendgros: Reservation confirmed for "${listingTitle}". Code: ${verificationCode}. Balance: $${balanceDue.toFixed(2)}. Address: ${pickupAddress}`,
@@ -330,7 +355,7 @@ export async function notifyReservationConfirmed(params: {
     `,
   });
 
-  if (sellerPhone) {
+  if (sellerPhone && SMS_NOTIFICATIONS_CONFIG.reservationConfirmedSeller) {
     await sendSms({
       to: sellerPhone,
       message: `Vendgros: New reservation for "${listingTitle}" (Qty: ${quantity}). Code: ${verificationCode}`,
@@ -402,7 +427,7 @@ export async function notifyListingApproved(params: {
     `,
   });
 
-  if (sellerPhone) {
+  if (sellerPhone && SMS_NOTIFICATIONS_CONFIG.listingApproved) {
     await sendSms({
       to: sellerPhone,
       message: `Vendgros: Your listing "${listingTitle}" has been approved and is now live!`,
@@ -507,8 +532,8 @@ export async function sendMessageNotification(params: {
     `,
   });
 
-  // SMS notification (optional)
-  if (recipientPhone) {
+  // SMS notification (optional, controlled by config)
+  if (recipientPhone && SMS_NOTIFICATIONS_CONFIG.newMessage) {
     await sendSms({
       to: recipientPhone,
       message: `Vendgros: New message about "${listingTitle}". Log in to read and reply.`,
@@ -540,7 +565,7 @@ export async function notifyRefundProcessed(params: {
     `,
   });
 
-  if (buyerPhone) {
+  if (buyerPhone && SMS_NOTIFICATIONS_CONFIG.refundProcessed) {
     await sendSms({
       to: buyerPhone,
       message: `Vendgros: Your deposit of $${refundAmount.toFixed(2)} for "${listingTitle}" has been refunded.`,
@@ -615,7 +640,7 @@ export async function notifyScheduledListingPublished(params: {
     `,
   });
 
-  if (sellerPhone) {
+  if (sellerPhone && SMS_NOTIFICATIONS_CONFIG.scheduledListingPublished) {
     await sendSms({
       to: sellerPhone,
       message: `Vendgros: Your scheduled listing "${listingTitle}" is now live!`,

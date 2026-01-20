@@ -21,6 +21,22 @@ const config = {
 
   /** We already do linting and typechecking as separate tasks in CI */
   typescript: { ignoreBuildErrors: true },
+
+  /** Configure external image domains */
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "repotz-master.tor1.digitaloceanspaces.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.digitaloceanspaces.com",
+        pathname: "/**",
+      },
+    ],
+  },
 };
 
 export default withNextIntl(config);

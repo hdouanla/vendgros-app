@@ -6,6 +6,7 @@ import { user, verification } from "@acme/db/schema";
 import { sendSmsOTP } from "@acme/auth/otp/twilio";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { SMS_NOTIFICATIONS_CONFIG } from "../lib/notifications";
 
 // Helper to generate 6-digit numeric OTP
 function generateOTP(): string {
@@ -83,6 +84,15 @@ export const phoneVerificationRouter = createTRPCRouter({
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+
+    // Check if phone verification SMS is enabled
+    if (!SMS_NOTIFICATIONS_CONFIG.phoneVerification) {
+      console.log(`[SMS DISABLED] Phone verification OTP for ${userRecord.phone}: ${otp}`);
+      return {
+        success: true,
+        message: "Verification code sent to your phone.",
+      };
+    }
 
     // Send SMS via Twilio
     const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;

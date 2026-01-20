@@ -4,6 +4,7 @@ import { use, useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "~/trpc/react";
 import { QRCode } from "@acme/ui/qr-code";
+import { PaymentCountdownTimer } from "~/components/reservations/payment-countdown-timer";
 
 // Simple translation stub - replace with actual translations later
 const t = (key: string) => {
@@ -250,8 +251,94 @@ export default function ReservationDetailPage({
                 </span>
               </div>
             </div>
+          </div>
 
-            {!depositPaid && isBuyer && (
+          {/* Pickup Details - Only show after payment */}
+          {depositPaid && (
+            <div className="rounded-lg bg-white p-6 shadow-md">
+              <h3 className="mb-4 text-lg font-semibold">Pickup Details</h3>
+
+              <div className="space-y-3 text-sm">
+                <div>
+                  <span className="font-medium text-gray-600">Address:</span>
+                  <p className="mt-1">{reservation.listing.pickupAddress}</p>
+                </div>
+
+                {reservation.listing.pickupInstructions && (
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      Instructions:
+                    </span>
+                    <p className="mt-1">
+                      {reservation.listing.pickupInstructions}
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <span className="font-medium text-gray-600">
+                    Pickup Deadline:
+                  </span>
+                  <p className="mt-1">
+                    {new Date(reservation.expiresAt).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Seller Info - Only show after payment */}
+          {depositPaid && (
+            <div className="rounded-lg bg-white p-6 shadow-md">
+              <h3 className="mb-4 text-lg font-semibold">
+                {t("listing.seller")}
+              </h3>
+
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="font-medium text-gray-600">Contact:</span>
+                  <p className="mt-1">{reservation.listing.seller.email}</p>
+                  <p>{reservation.listing.seller.phone}</p>
+                </div>
+
+                <div>
+                  <span className="font-medium text-gray-600">Rating:</span>
+                  <p className="mt-1">
+                    ⭐{" "}
+                    {reservation.listing.seller.ratingAverage?.toFixed(1) ?? "—"}{" "}
+                    ({reservation.listing.seller.ratingCount} reviews)
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column - Timer (when unpaid) or QR Code (when paid) */}
+        {!depositPaid && reservation.status === "PENDING" ? (
+          <div className="space-y-6">
+            {/* Payment Timer */}
+            <PaymentCountdownTimer
+              reservationCreatedAt={reservation.createdAt}
+              reservationId={id}
+              onExpired={() => {
+                // Refetch to get updated status
+                void refetchReservation();
+                void refetchPaymentStatus();
+              }}
+            />
+
+            {/* Payment Instructions */}
+            <div className="rounded-lg bg-white p-6 shadow-md">
+              <h3 className="mb-4 text-lg font-semibold">Complete Your Reservation</h3>
+
+              <ol className="list-inside list-decimal space-y-2 text-sm text-gray-700">
+                <li>Pay the deposit of ${reservation.depositAmount.toFixed(2)} CAD</li>
+                <li>Receive your pickup QR code</li>
+                <li>Pick up your items before the deadline</li>
+                <li>Pay the remaining balance at pickup</li>
+              </ol>
+
               <button
                 className="mt-6 w-full rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white hover:bg-green-700"
                 onClick={() => {
@@ -260,68 +347,9 @@ export default function ReservationDetailPage({
               >
                 {t("reservation.payDeposit")}
               </button>
-            )}
-          </div>
-
-          {/* Pickup Details */}
-          <div className="rounded-lg bg-white p-6 shadow-md">
-            <h3 className="mb-4 text-lg font-semibold">Pickup Details</h3>
-
-            <div className="space-y-3 text-sm">
-              <div>
-                <span className="font-medium text-gray-600">Address:</span>
-                <p className="mt-1">{reservation.listing.pickupAddress}</p>
-              </div>
-
-              {reservation.listing.pickupInstructions && (
-                <div>
-                  <span className="font-medium text-gray-600">
-                    Instructions:
-                  </span>
-                  <p className="mt-1">
-                    {reservation.listing.pickupInstructions}
-                  </p>
-                </div>
-              )}
-
-              <div>
-                <span className="font-medium text-gray-600">
-                  Pickup Deadline:
-                </span>
-                <p className="mt-1">
-                  {new Date(reservation.expiresAt).toLocaleString()}
-                </p>
-              </div>
             </div>
           </div>
-
-          {/* Seller Info */}
-          <div className="rounded-lg bg-white p-6 shadow-md">
-            <h3 className="mb-4 text-lg font-semibold">
-              {t("listing.seller")}
-            </h3>
-
-            <div className="space-y-2 text-sm">
-              <div>
-                <span className="font-medium text-gray-600">Contact:</span>
-                <p className="mt-1">{reservation.listing.seller.email}</p>
-                <p>{reservation.listing.seller.phone}</p>
-              </div>
-
-              <div>
-                <span className="font-medium text-gray-600">Rating:</span>
-                <p className="mt-1">
-                  ⭐{" "}
-                  {reservation.listing.seller.ratingAverage?.toFixed(1) ?? "—"}{" "}
-                  ({reservation.listing.seller.ratingCount} reviews)
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column - QR Code */}
-        {depositPaid && (
+        ) : depositPaid ? (
           <div className="space-y-6">
             <div className="rounded-lg bg-white p-6 shadow-md">
               <h3 className="mb-4 text-lg font-semibold text-center">
@@ -368,7 +396,7 @@ export default function ReservationDetailPage({
               </ol>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { api } from "~/trpc/react";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { PaymentForm } from "~/components/payment/payment-form";
+import { PaymentCountdownTimer } from "~/components/reservations/payment-countdown-timer";
 
 // Simple translation stub - replace with actual translations later
 const t = (key: string, params?: any) => {
@@ -174,6 +175,18 @@ export default function PaymentPage({
             })}
           </p>
         </div>
+      </div>
+
+      {/* Payment Timer */}
+      <div className="mb-8">
+        <PaymentCountdownTimer
+          reservationCreatedAt={reservation.createdAt}
+          reservationId={reservationId}
+          onExpired={() => {
+            // Redirect to reservations page when expired
+            router.push(`/reservations/${reservationId}`);
+          }}
+        />
       </div>
 
       {/* Payment Form */}

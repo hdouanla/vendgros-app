@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { api } from "~/trpc/react";
 import { QRCode } from "@acme/ui/qr-code";
 import { PaymentCountdownTimer } from "~/components/reservations/payment-countdown-timer";
@@ -24,6 +25,7 @@ const t = (key: string) => {
     "reservation.balanceDue": "Balance Due at Pickup",
     "reservation.payDeposit": "Pay Deposit Now",
     "listing.seller": "Seller Information",
+    "listing.buyer": "Buyer Information",
     "reservation.qrCode": "Pickup QR Code",
     "reservation.pickupInstructions": "Show this QR code to the seller during pickup",
   };
@@ -124,7 +126,9 @@ export default function ReservationDetailPage({
   }
 
   const isExpired = new Date(reservation.expiresAt) < new Date();
-  const isBuyer = true; // TODO: Check actual user session
+  const viewerRole = reservation.viewerRole; // "buyer" | "seller" | "both"
+  const isBuyer = viewerRole === "buyer" || viewerRole === "both";
+  const isSeller = viewerRole === "seller" || viewerRole === "both";
   const depositPaid = paymentStatus?.depositPaid ?? false;
 
   // Show processing overlay while polling for payment
@@ -300,8 +304,60 @@ export default function ReservationDetailPage({
             </div>
           )}
 
-          {/* Seller Info - Only show after payment */}
-          {depositPaid && (
+          {/* Buyer Info - Show to seller after payment */}
+          {depositPaid && isSeller && reservation.buyer && (
+            <div className="rounded-lg bg-white p-6 shadow-md">
+              <h3 className="mb-4 text-lg font-semibold">
+                {t("listing.buyer")}
+              </h3>
+
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="font-medium text-gray-600">Name:</span>
+                  <p className="mt-1">{reservation.buyer.name}</p>
+                </div>
+
+                <div>
+                  <span className="font-medium text-gray-600">Contact:</span>
+                  <p className="mt-1">{reservation.buyer.email}</p>
+                  {reservation.buyer.phone && <p>{reservation.buyer.phone}</p>}
+                </div>
+
+                <div>
+                  <span className="font-medium text-gray-600">Buyer Rating:</span>
+                  <p className="mt-1">
+                    ⭐{" "}
+                    {reservation.buyer.buyerRatingAverage?.toFixed(1) ?? "—"}{" "}
+                    ({reservation.buyer.buyerRatingCount ?? 0} reviews)
+                  </p>
+                </div>
+              </div>
+
+              {/* Chat with Buyer Button */}
+              <Link
+                href={`/chat/${id}`}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+                Chat with Buyer
+              </Link>
+            </div>
+          )}
+
+          {/* Seller Info - Show to buyer after payment */}
+          {depositPaid && isBuyer && (
             <div className="rounded-lg bg-white p-6 shadow-md">
               <h3 className="mb-4 text-lg font-semibold">
                 {t("listing.seller")}
@@ -309,26 +365,52 @@ export default function ReservationDetailPage({
 
               <div className="space-y-2 text-sm">
                 <div>
-                  <span className="font-medium text-gray-600">Contact:</span>
-                  <p className="mt-1">{reservation.listing.seller.email}</p>
-                  <p>{reservation.listing.seller.phone}</p>
+                  <span className="font-medium text-gray-600">Name:</span>
+                  <p className="mt-1">{reservation.listing.seller.name}</p>
                 </div>
 
                 <div>
-                  <span className="font-medium text-gray-600">Rating:</span>
+                  <span className="font-medium text-gray-600">Contact:</span>
+                  <p className="mt-1">{reservation.listing.seller.email}</p>
+                  {reservation.listing.seller.phone && <p>{reservation.listing.seller.phone}</p>}
+                </div>
+
+                <div>
+                  <span className="font-medium text-gray-600">Seller Rating:</span>
                   <p className="mt-1">
                     ⭐{" "}
-                    {reservation.listing.seller.ratingAverage?.toFixed(1) ?? "—"}{" "}
-                    ({reservation.listing.seller.ratingCount} reviews)
+                    {reservation.listing.seller.sellerRatingAverage?.toFixed(1) ?? "—"}{" "}
+                    ({reservation.listing.seller.sellerRatingCount ?? 0} reviews)
                   </p>
                 </div>
               </div>
+
+              {/* Chat with Seller Button */}
+              <Link
+                href={`/chat/${id}`}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+                Chat with Seller
+              </Link>
             </div>
           )}
         </div>
 
-        {/* Right Column - Timer (when unpaid) or QR Code (when paid) */}
-        {!depositPaid && reservation.status === "PENDING" ? (
+        {/* Right Column - Timer (when unpaid) or QR Code/Verification (when paid) */}
+        {!depositPaid && reservation.status === "PENDING" && isBuyer ? (
           <div className="space-y-6">
             {/* Payment Timer */}
             <PaymentCountdownTimer
@@ -370,8 +452,20 @@ export default function ReservationDetailPage({
               </button>
             </div>
           </div>
-        ) : depositPaid ? (
+        ) : !depositPaid && reservation.status === "PENDING" && isSeller ? (
           <div className="space-y-6">
+            {/* Waiting for Payment - Seller View */}
+            <div className="rounded-lg border-2 border-yellow-200 bg-yellow-50 p-6">
+              <h3 className="mb-4 text-lg font-semibold text-yellow-800">Awaiting Payment</h3>
+              <p className="text-sm text-yellow-700">
+                The buyer has not yet paid the deposit for this reservation.
+                You will be notified once payment is complete.
+              </p>
+            </div>
+          </div>
+        ) : depositPaid && isBuyer ? (
+          <div className="space-y-6">
+            {/* QR Code - Buyer View */}
             <div className="rounded-lg bg-white p-6 shadow-md">
               <h3 className="mb-4 text-lg font-semibold text-center">
                 {t("reservation.qrCode")}
@@ -414,6 +508,46 @@ export default function ReservationDetailPage({
                 </li>
                 <li>Collect your items</li>
                 <li>Rate your experience after pickup</li>
+              </ol>
+            </div>
+          </div>
+        ) : depositPaid && isSeller ? (
+          <div className="space-y-6">
+            {/* Verification Info - Seller View */}
+            <div className="rounded-lg bg-white p-6 shadow-md">
+              <h3 className="mb-4 text-lg font-semibold text-center">
+                Verification Code
+              </h3>
+
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600">
+                  Ask the buyer for this code to verify pickup:
+                </p>
+                <p className="mt-4 text-4xl font-bold tracking-widest text-gray-900">
+                  {reservation.verificationCode}
+                </p>
+              </div>
+
+              <div className="mt-6 rounded-lg bg-green-50 p-4">
+                <p className="text-center text-sm text-green-800">
+                  Verify this code matches what the buyer shows you before handing over items
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-white p-6 shadow-md">
+              <h3 className="mb-4 text-lg font-semibold">Pickup Instructions</h3>
+
+              <ol className="list-inside list-decimal space-y-2 text-sm text-gray-700">
+                <li>
+                  Ask the buyer for their verification code or scan their QR code
+                </li>
+                <li>
+                  Collect the balance of ${(reservation.totalPrice - reservation.depositAmount).toFixed(2)}{" "}
+                  CAD from the buyer
+                </li>
+                <li>Hand over the items</li>
+                <li>Rate your experience with the buyer</li>
               </ol>
             </div>
           </div>

@@ -3,7 +3,7 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { randomBytes } from "crypto";
 import { TRPCError } from "@trpc/server";
 
-import { listing, rating, reservation, user } from "@acme/db/schema";
+import { conversation, listing, rating, reservation, user } from "@acme/db/schema";
 
 import { notifyReservationCreated, notifyPickupComplete } from "../lib/notifications";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -159,6 +159,17 @@ export const reservationRouter = createTRPCRouter({
               existingReservation.quantityReserved,
           })
           .where(eq(listing.id, existingReservation.listingId));
+
+        // Create conversation for buyer-seller chat
+        await tx
+          .insert(conversation)
+          .values({
+            listingId: existingReservation.listingId,
+            buyerId: existingReservation.buyerId,
+            sellerId: existingReservation.listing.sellerId,
+            reservationId: input.reservationId,
+          })
+          .onConflictDoNothing(); // In case conversation already exists
       });
 
       return { success: true };
@@ -176,6 +187,7 @@ export const reservationRouter = createTRPCRouter({
               seller: {
                 columns: {
                   id: true,
+                  name: true,
                   email: true,
                   phone: true,
                   verificationBadge: true,
@@ -185,6 +197,19 @@ export const reservationRouter = createTRPCRouter({
                   sellerRatingCount: true,
                 },
               },
+            },
+          },
+          buyer: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              verificationBadge: true,
+              ratingAverage: true,
+              ratingCount: true,
+              buyerRatingAverage: true,
+              buyerRatingCount: true,
             },
           },
         },
@@ -202,7 +227,14 @@ export const reservationRouter = createTRPCRouter({
         throw new Error("Not authorized");
       }
 
-      return result;
+      // Determine viewer role
+      const isBuyer = result.buyerId === ctx.session.user.id;
+      const isSeller = result.listing.sellerId === ctx.session.user.id;
+
+      return {
+        ...result,
+        viewerRole: isBuyer && isSeller ? "both" : isBuyer ? "buyer" : "seller",
+      };
     }),
 
   // Get my reservations (as buyer)

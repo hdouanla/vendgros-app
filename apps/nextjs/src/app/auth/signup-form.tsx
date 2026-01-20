@@ -15,6 +15,7 @@ export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
     password: "",
     confirmPassword: "",
   });
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -30,6 +31,11 @@ export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
     setError("");
 
     // Validation
+    if (!acceptedTerms) {
+      setError("You must accept the Terms of Service and Privacy Policy");
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -175,6 +181,40 @@ export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
             placeholder="••••••••"
           />
+        </div>
+
+        {/* Terms and Privacy Policy Checkbox */}
+        <div className="flex items-start">
+          <div className="flex h-5 items-center">
+            <input
+              id="acceptTerms"
+              name="acceptTerms"
+              type="checkbox"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+            />
+          </div>
+          <div className="ml-3 text-sm">
+            <label htmlFor="acceptTerms" className="text-gray-700">
+              I agree to the{" "}
+              <Link
+                href="/terms-of-service"
+                target="_blank"
+                className="font-medium text-green-600 hover:text-green-500"
+              >
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy-policy"
+                target="_blank"
+                className="font-medium text-green-600 hover:text-green-500"
+              >
+                Privacy Policy
+              </Link>
+            </label>
+          </div>
         </div>
 
         <button

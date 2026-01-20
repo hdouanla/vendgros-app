@@ -45,12 +45,11 @@ export default async function SignInPage(props: {
 
         {/* Footer */}
         <p className="mt-6 text-center text-sm text-gray-600">
-          By signing in, you agree to our{" "}
-          <Link href="/terms" className="font-medium text-green-600 hover:text-green-500">
+          <Link href="/terms-of-service" className="font-medium text-green-600 hover:text-green-500">
             Terms of Service
           </Link>{" "}
-          and{" "}
-          <Link href="/privacy" className="font-medium text-green-600 hover:text-green-500">
+          &bull;{" "}
+          <Link href="/privacy-policy" className="font-medium text-green-600 hover:text-green-500">
             Privacy Policy
           </Link>
         </p>

@@ -86,32 +86,53 @@ export function ReservationCard({ reservation, variant }: ReservationCardProps) 
           </div>
         </div>
 
-        {/* Actions - only show for pending reservations */}
-        {isPending && (
-          <div className="ml-6 flex flex-col gap-2">
-            <Link
-              href={`/seller/scanner?code=${reservation.verificationCode}`}
-              className="whitespace-nowrap rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
-              Scan QR Code
-            </Link>
-            <Link
-              href={`/reservations/${reservation.id}`}
-              className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              View Details
-            </Link>
-          </div>
-        )}
+        {/* Actions */}
+        <div className="ml-6 flex flex-col gap-2">
+          {isPending && (
+            <>
+              <Link
+                href={`/seller/scanner?code=${reservation.verificationCode}`}
+                className="whitespace-nowrap rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Scan QR Code
+              </Link>
+              <Link
+                href={`/reservations/${reservation.id}`}
+                className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                View Details
+              </Link>
+            </>
+          )}
 
-        {/* Completed badge for completed reservations */}
-        {!isPending && (
-          <div className="ml-6">
-            <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
+          {/* Chat with Buyer button - available for both pending and completed */}
+          <Link
+            href={`/chat/${reservation.id}`}
+            className="flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-green-600 bg-white px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-50"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+            Chat
+          </Link>
+
+          {/* Completed badge for completed reservations */}
+          {!isPending && (
+            <span className="inline-flex items-center justify-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
               ✓ Delivered
             </span>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

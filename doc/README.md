@@ -12,6 +12,7 @@ This folder contains all project documentation organized for easy navigation.
 ├── PRODUCTION_READINESS.md        # Production deployment checklist
 ├── DEPLOYMENT_GUIDE.md            # Step-by-step deployment instructions
 ├── MOBILE_DEPLOYMENT.md           # Mobile app deployment guide
+├── PUBLIC_WEBSITE_DESIGN.md       # ⭐ NEW: Public website design specification
 ├── credentials.md                 # Important credentials and access info
 ├── Vendgros_SRS_v1.0.pdf         # Original Software Requirements Specification
 │
@@ -39,6 +40,14 @@ This folder contains all project documentation organized for easy navigation.
 - **Project overview:** [PROJECT_PLAN.md](./PROJECT_PLAN.md) - Full feature list and specifications
 - **Current status:** [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md) - What's complete and what's pending
 - **API reference:** [reference/API_REFERENCE.md](./reference/API_REFERENCE.md) - All API endpoints
+
+### For Website Redesign
+- **⭐ Design spec:** [PUBLIC_WEBSITE_DESIGN.md](./PUBLIC_WEBSITE_DESIGN.md) - Complete public website design (3,400+ lines)
+  - Executive summary for stakeholders
+  - Home page with 5 sections (Hero Slider, Search, Featured, Categories, Latest)
+  - Ready-to-use React component code
+  - Design tokens, measurements, and responsive breakpoints
+  - Performance budgets and pre-launch checklist
 
 ### For Business/Stakeholders
 - **Quick overview:** [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md) - Executive summary at top
@@ -98,7 +107,7 @@ All session summaries and development logs are preserved in `/archive` for refer
 
 ---
 
-**Last Updated:** January 15, 2026
+**Last Updated:** January 20, 2026
 **Platform Version:** 1.0.0
-**Total Commits:** 77
-**Development Sessions:** 6
+**Total Commits:** 77+
+**Development Sessions:** 7 (including website redesign)

@@ -335,6 +335,7 @@ export const reservationRelations = relations(reservation, ({ one, many }) => ({
     references: [user.id],
   }),
   ratings: many(rating),
+  conversation: one(conversation),
 }));
 
 // ============================================================================
@@ -426,6 +427,10 @@ export const conversation = pgTable(
       .text()
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    reservationId: t
+      .text()
+      .unique() // 1:1 relationship
+      .references(() => reservation.id, { onDelete: "cascade" }),
 
     // Last message metadata (for list view)
     lastMessageAt: t.timestamp(),
@@ -451,6 +456,7 @@ export const conversation = pgTable(
       table.sellerId,
       table.listingId,
     ),
+    reservationIdx: index("conversation_reservation_idx").on(table.reservationId),
   }),
 );
 
@@ -468,6 +474,10 @@ export const conversationRelations = relations(conversation, ({ one, many }) => 
     fields: [conversation.sellerId],
     references: [user.id],
     relationName: "sellerConversations",
+  }),
+  reservation: one(reservation, {
+    fields: [conversation.reservationId],
+    references: [reservation.id],
   }),
   messages: many(message),
 }));

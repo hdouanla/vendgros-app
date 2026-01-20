@@ -42,18 +42,6 @@ export default async function SignUpPage(props: {
         </div>
 
         <SignUpClient callbackUrl={callbackUrl} />
-
-        {/* Footer */}
-        <p className="mt-6 text-center text-sm text-gray-600">
-          By creating an account, you agree to our{" "}
-          <Link href="/terms" className="font-medium text-green-600 hover:text-green-500">
-            Terms of Service
-          </Link>{" "}
-          and{" "}
-          <Link href="/privacy" className="font-medium text-green-600 hover:text-green-500">
-            Privacy Policy
-          </Link>
-        </p>
       </div>
     </div>
   );

@@ -16,6 +16,12 @@ export function Navbar() {
 
   const isVerified = session?.user?.emailVerified === true;
 
+  // Get unread chat count
+  const { data: unreadCount } = api.chat.getTotalUnreadCount.useQuery(undefined, {
+    enabled: !!session?.user && isVerified,
+    refetchInterval: 60000, // Refresh every minute
+  });
+
   const handleSignOut = async () => {
     try {
       await fetch("/api/auth/sign-out", { method: "POST" });
@@ -79,6 +85,22 @@ export function Navbar() {
                 >
                   <span>📊</span>
                   <span>Seller Dashboard</span>
+                </Link>
+
+                <Link
+                  href="/chat"
+                  className={`relative flex items-center text-sm font-medium transition-colors ${
+                    isActive("/chat")
+                      ? "text-green-600"
+                      : "text-gray-700 hover:text-green-600"
+                  }`}
+                >
+                  <span>Chats</span>
+                  {unreadCount && unreadCount > 0 && (
+                    <span className="ml-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-green-600 px-1.5 text-xs font-bold text-white">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
                 </Link>
               </>
             )}
@@ -145,6 +167,19 @@ export function Navbar() {
                             onClick={() => setShowUserMenu(false)}
                           >
                             My Reservations
+                          </Link>
+
+                          <Link
+                            href="/chat"
+                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            <span>Chats</span>
+                            {unreadCount && unreadCount > 0 && (
+                              <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-green-600 px-1.5 text-xs font-bold text-white">
+                                {unreadCount > 99 ? "99+" : unreadCount}
+                              </span>
+                            )}
                           </Link>
 
                           <Link
@@ -283,6 +318,19 @@ export function Navbar() {
                   onClick={() => setShowMobileMenu(false)}
                 >
                   My Reservations
+                </Link>
+
+                <Link
+                  href="/chat"
+                  className="flex items-center justify-between rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  onClick={() => setShowMobileMenu(false)}
+                >
+                  <span>Chats</span>
+                  {unreadCount && unreadCount > 0 && (
+                    <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-green-600 px-1.5 text-xs font-bold text-white">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
                 </Link>
               </>
             )}

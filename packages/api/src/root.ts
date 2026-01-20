@@ -5,6 +5,7 @@ import { analyticsRouter } from "./router/analytics";
 import { apiIntegrationsRouter } from "./router/api-integrations";
 import { authRouter } from "./router/auth";
 import { bulkImportRouter } from "./router/bulk-import";
+import { chatRouter } from "./router/chat";
 import { internationalRouter } from "./router/international";
 import { listingRouter } from "./router/listing";
 import { messagingRouter } from "./router/messaging";
@@ -31,6 +32,7 @@ export const appRouter = createTRPCRouter({
   rating: ratingRouter as typeof ratingRouter,
   admin: adminRouter as typeof adminRouter,
   payment: paymentRouter as typeof paymentRouter,
+  chat: chatRouter as typeof chatRouter,
   phoneVerification: phoneVerificationRouter as typeof phoneVerificationRouter,
   upload: uploadRouter as typeof uploadRouter,
   moderation: moderationRouter as typeof moderationRouter,

@@ -86,6 +86,7 @@ export const reservationRouter = createTRPCRouter({
           verificationCode,
           status: "PENDING",
           expiresAt,
+          createdAt: new Date(), // Explicitly set to ensure correct timezone
           stripePaymentIntentId: null, // Will be set after Stripe integration
         })
         .returning();

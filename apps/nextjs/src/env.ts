@@ -17,7 +17,6 @@ export const env = createEnv({
    */
   server: {
     POSTGRES_URL: z.url(),
-    RESERVATION_PAYMENT_TIMEOUT_MINUTES: z.coerce.number().default(10),
   },
 
   /**

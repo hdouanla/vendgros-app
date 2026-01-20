@@ -1,10 +1,11 @@
 "use client";
 
-import { use, useState, useEffect, useCallback } from "react";
+import { use, useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "~/trpc/react";
 import { QRCode } from "@acme/ui/qr-code";
 import { PaymentCountdownTimer } from "~/components/reservations/payment-countdown-timer";
+import { env } from "~/env";
 
 // Simple translation stub - replace with actual translations later
 const t = (key: string) => {
@@ -43,6 +44,7 @@ export default function ReservationDetailPage({
   const [isPolling, setIsPolling] = useState(paymentPending);
   const [pollCount, setPollCount] = useState(0);
   const maxPollAttempts = 30; // Poll for up to 30 seconds
+  const [timerExpired, setTimerExpired] = useState(true); // Default to expired, will be set correctly when reservation loads
 
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
   const { data: reservation, isLoading: reservationLoading, refetch: refetchReservation } = api.reservation.getById.useQuery({
@@ -60,6 +62,17 @@ export default function ReservationDetailPage({
       refetchInterval: isPolling ? 1000 : false, // Poll every second when waiting for payment
     },
   );
+
+  // Calculate if timer is expired when reservation loads
+  useEffect(() => {
+    if (reservation) {
+      const timeoutMinutes = env.NEXT_PUBLIC_RESERVATION_PAYMENT_TIMEOUT_MINUTES;
+      const createdAt = new Date(reservation.createdAt).getTime();
+      const deadline = createdAt + timeoutMinutes * 60 * 1000;
+      const now = Date.now();
+      setTimerExpired(now >= deadline);
+    }
+  }, [reservation]);
 
   // Handle polling for payment confirmation
   useEffect(() => {
@@ -322,6 +335,7 @@ export default function ReservationDetailPage({
               reservationCreatedAt={reservation.createdAt}
               reservationId={id}
               onExpired={() => {
+                setTimerExpired(true);
                 // Refetch to get updated status
                 void refetchReservation();
                 void refetchPaymentStatus();
@@ -340,12 +354,19 @@ export default function ReservationDetailPage({
               </ol>
 
               <button
-                className="mt-6 w-full rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white hover:bg-green-700"
+                className={`mt-6 w-full rounded-md px-4 py-3 text-sm font-medium ${
+                  timerExpired
+                    ? "cursor-not-allowed bg-gray-400 text-gray-200"
+                    : "bg-green-600 text-white hover:bg-green-700"
+                }`}
+                disabled={timerExpired}
                 onClick={() => {
-                  router.push(`/payment/${id}`);
+                  if (!timerExpired) {
+                    router.push(`/payment/${id}`);
+                  }
                 }}
               >
-                {t("reservation.payDeposit")}
+                {timerExpired ? "Payment Time Expired" : t("reservation.payDeposit")}
               </button>
             </div>
           </div>

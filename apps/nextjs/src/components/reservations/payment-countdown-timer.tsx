@@ -25,13 +25,14 @@ export function PaymentCountdownTimer({
     const diff = deadline - now;
 
     if (diff <= 0) {
-      return { minutes: 0, seconds: 0, expired: true };
+      return { hours: 0, minutes: 0, seconds: 0, expired: true };
     }
 
-    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    return { minutes, seconds, expired: false };
+    return { hours, minutes, seconds, expired: false };
   }, [reservationCreatedAt, timeoutMinutes]);
 
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft);
@@ -52,7 +53,7 @@ export function PaymentCountdownTimer({
 
   // Calculate progress percentage (for progress ring)
   const totalSeconds = timeoutMinutes * 60;
-  const remainingSeconds = timeLeft.minutes * 60 + timeLeft.seconds;
+  const remainingSeconds = timeLeft.hours * 3600 + timeLeft.minutes * 60 + timeLeft.seconds;
   const progressPercent = (remainingSeconds / totalSeconds) * 100;
 
   // Determine urgency colors
@@ -80,20 +81,10 @@ export function PaymentCountdownTimer({
   if (timeLeft.expired) {
     return (
       <div className="rounded-lg border-2 border-red-300 bg-red-50 p-6 text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-          <svg
-            className="h-8 w-8 text-red-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+        <div className="mb-4">
+          <span className="text-5xl font-bold tabular-nums text-red-600">
+            00:00:00
+          </span>
         </div>
         <h3 className="text-lg font-semibold text-red-800">
           Payment Time Expired
@@ -119,36 +110,37 @@ export function PaymentCountdownTimer({
         </p>
 
         {/* Circular Progress Timer */}
-        <div className="relative mx-auto mb-4 h-32 w-32">
+        <div className="relative mx-auto mb-4 h-44 w-44">
           {/* Background circle */}
-          <svg className="h-32 w-32 -rotate-90 transform">
+          <svg className="h-44 w-44 -rotate-90 transform">
             <circle
-              cx="64"
-              cy="64"
-              r="56"
+              cx="88"
+              cy="88"
+              r="78"
               stroke="currentColor"
-              strokeWidth="8"
+              strokeWidth="10"
               fill="none"
               className="text-gray-200"
             />
             {/* Progress circle */}
             <circle
-              cx="64"
-              cy="64"
-              r="56"
-              strokeWidth="8"
+              cx="88"
+              cy="88"
+              r="78"
+              strokeWidth="10"
               fill="none"
               strokeLinecap="round"
               className={getProgressColor()}
-              strokeDasharray={`${2 * Math.PI * 56}`}
-              strokeDashoffset={`${2 * Math.PI * 56 * (1 - progressPercent / 100)}`}
+              strokeDasharray={`${2 * Math.PI * 78}`}
+              strokeDashoffset={`${2 * Math.PI * 78 * (1 - progressPercent / 100)}`}
               style={{ transition: "stroke-dashoffset 1s linear" }}
             />
           </svg>
 
           {/* Timer text in center */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className={`text-3xl font-bold tabular-nums ${getUrgencyColor()}`}>
+            <span className={`text-4xl font-bold tabular-nums ${getUrgencyColor()}`}>
+              {String(timeLeft.hours).padStart(2, "0")}:
               {String(timeLeft.minutes).padStart(2, "0")}:
               {String(timeLeft.seconds).padStart(2, "0")}
             </span>

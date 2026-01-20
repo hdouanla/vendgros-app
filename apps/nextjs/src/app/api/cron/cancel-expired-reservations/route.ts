@@ -4,7 +4,7 @@ import { listing, reservation } from "@acme/db/schema";
 import { and, eq, lt, or, isNull } from "drizzle-orm";
 
 // Payment timeout in minutes (default 10)
-const PAYMENT_TIMEOUT_MINUTES = Number(process.env.RESERVATION_PAYMENT_TIMEOUT_MINUTES) || 10;
+const PAYMENT_TIMEOUT_MINUTES = Number(process.env.NEXT_PUBLIC_RESERVATION_PAYMENT_TIMEOUT_MINUTES) || 10;
 
 // This endpoint should be called by a cron service (e.g., Vercel Cron)
 // POST /api/cron/cancel-expired-reservations

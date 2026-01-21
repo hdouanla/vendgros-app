@@ -1,0 +1,13 @@
+"use client";
+
+import { SearchFilters } from "~/components/search";
+
+export function SearchBox() {
+  return (
+    <section className="relative z-10 -mt-8 px-4">
+      <div className="mx-auto max-w-content">
+        <SearchFilters redirectOnSearch={true} />
+      </div>
+    </section>
+  );
+}

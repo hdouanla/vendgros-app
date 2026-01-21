@@ -524,4 +524,74 @@ export const listingRouter = createTRPCRouter({
 
       return { success: true };
     }),
+
+  // Get featured listings (sorted by view count, for homepage)
+  getFeatured: publicProcedure
+    .input(z.object({ limit: z.number().default(8) }))
+    .query(async ({ ctx, input }) => {
+      const results = await ctx.db.query.listing.findMany({
+        where: (listings, { eq }) => eq(listings.status, "PUBLISHED"),
+        orderBy: (listings, { desc }) => [desc(listings.viewCount)],
+        limit: input.limit,
+        with: {
+          seller: {
+            columns: {
+              id: true,
+              name: true,
+              verificationBadge: true,
+              sellerRatingAverage: true,
+              sellerRatingCount: true,
+            },
+          },
+        },
+      });
+
+      return results;
+    }),
+
+  // Get latest listings (sorted by creation date, for homepage)
+  getLatest: publicProcedure
+    .input(z.object({ limit: z.number().default(8) }))
+    .query(async ({ ctx, input }) => {
+      const results = await ctx.db.query.listing.findMany({
+        where: (listings, { eq }) => eq(listings.status, "PUBLISHED"),
+        orderBy: (listings, { desc }) => [desc(listings.createdAt)],
+        limit: input.limit,
+        with: {
+          seller: {
+            columns: {
+              id: true,
+              name: true,
+              verificationBadge: true,
+              sellerRatingAverage: true,
+              sellerRatingCount: true,
+            },
+          },
+        },
+      });
+
+      return results;
+    }),
+
+  // Get category counts (for homepage category grid)
+  getCategoryCounts: publicProcedure.query(async ({ ctx }) => {
+    const results = await ctx.db
+      .select({
+        category: listing.category,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(listing)
+      .where(eq(listing.status, "PUBLISHED"))
+      .groupBy(listing.category);
+
+    // Convert to a map for easy lookup
+    const countsMap: Record<string, number> = {};
+    for (const row of results) {
+      if (row.category) {
+        countsMap[row.category] = row.count;
+      }
+    }
+
+    return countsMap;
+  }),
 });

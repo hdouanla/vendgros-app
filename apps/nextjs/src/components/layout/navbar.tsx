@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { api } from "~/trpc/react";
 
@@ -40,12 +41,18 @@ export function Navbar() {
 
   return (
     <nav className="border-b border-gray-200 bg-white shadow-sm">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-content px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <span className="text-2xl font-bold text-green-600">VendGros</span>
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/vendgros-logo-light.png"
+                alt="VendGros"
+                width={140}
+                height={40}
+                priority
+              />
             </Link>
           </div>
 
@@ -59,50 +66,45 @@ export function Navbar() {
                   : "text-gray-700 hover:text-green-600"
               }`}
             >
-              Search Listings
+              Browse
             </Link>
 
-            {session?.user && isVerified && (
-              <>
-                <Link
-                  href="/listings/create"
-                  className={`text-sm font-medium transition-colors ${
-                    isActive("/listings/create")
-                      ? "text-green-600"
-                      : "text-gray-700 hover:text-green-600"
-                  }`}
-                >
-                  + Create Listing
-                </Link>
+            <Link
+              href="/listings/create"
+              className={`text-sm font-medium transition-colors ${
+                isActive("/listings/create")
+                  ? "text-green-600"
+                  : "text-gray-700 hover:text-green-600"
+              }`}
+            >
+              Sell
+            </Link>
 
-                <Link
-                  href="/seller"
-                  className={`flex items-center space-x-1 text-sm font-medium transition-colors ${
-                    isActive("/seller")
-                      ? "text-green-600"
-                      : "text-gray-700 hover:text-green-600"
-                  }`}
-                >
-                  <span>📊</span>
-                  <span>Seller Dashboard</span>
-                </Link>
+            <Link
+              href="/how-it-works"
+              className={`text-sm font-medium transition-colors ${
+                isActive("/how-it-works")
+                  ? "text-green-600"
+                  : "text-gray-700 hover:text-green-600"
+              }`}
+            >
+              How it works
+            </Link>
 
-                <Link
-                  href="/chat"
-                  className={`relative flex items-center text-sm font-medium transition-colors ${
-                    isActive("/chat")
-                      ? "text-green-600"
-                      : "text-gray-700 hover:text-green-600"
-                  }`}
-                >
-                  <span>Chats</span>
-                  {unreadCount && unreadCount > 0 && (
-                    <span className="ml-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-green-600 px-1.5 text-xs font-bold text-white">
-                      {unreadCount > 99 ? "99+" : unreadCount}
-                    </span>
-                  )}
-                </Link>
-              </>
+            {session?.user && isVerified && unreadCount && unreadCount > 0 && (
+              <Link
+                href="/chat"
+                className={`relative flex items-center text-sm font-medium transition-colors ${
+                  isActive("/chat")
+                    ? "text-green-600"
+                    : "text-gray-700 hover:text-green-600"
+                }`}
+              >
+                <span>Chats</span>
+                <span className="ml-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-green-600 px-1.5 text-xs font-bold text-white">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              </Link>
             )}
           </div>
 
@@ -275,23 +277,35 @@ export function Navbar() {
               }`}
               onClick={() => setShowMobileMenu(false)}
             >
-              Search Listings
+              Browse
+            </Link>
+
+            <Link
+              href="/listings/create"
+              className={`block rounded-md px-3 py-2 text-base font-medium ${
+                isActive("/listings/create")
+                  ? "bg-green-50 text-green-600"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+              onClick={() => setShowMobileMenu(false)}
+            >
+              Sell
+            </Link>
+
+            <Link
+              href="/how-it-works"
+              className={`block rounded-md px-3 py-2 text-base font-medium ${
+                isActive("/how-it-works")
+                  ? "bg-green-50 text-green-600"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+              onClick={() => setShowMobileMenu(false)}
+            >
+              How it works
             </Link>
 
             {session?.user && isVerified && (
               <>
-                <Link
-                  href="/listings/create"
-                  className={`block rounded-md px-3 py-2 text-base font-medium ${
-                    isActive("/listings/create")
-                      ? "bg-green-50 text-green-600"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                  onClick={() => setShowMobileMenu(false)}
-                >
-                  + Create Listing
-                </Link>
-
                 <Link
                   href="/seller"
                   className={`block rounded-md px-3 py-2 text-base font-medium ${
@@ -301,7 +315,7 @@ export function Navbar() {
                   }`}
                   onClick={() => setShowMobileMenu(false)}
                 >
-                  📊 Seller Dashboard
+                  Seller Dashboard
                 </Link>
 
                 <Link
@@ -320,18 +334,18 @@ export function Navbar() {
                   My Reservations
                 </Link>
 
-                <Link
-                  href="/chat"
-                  className="flex items-center justify-between rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
-                  onClick={() => setShowMobileMenu(false)}
-                >
-                  <span>Chats</span>
-                  {unreadCount && unreadCount > 0 && (
+                {unreadCount && unreadCount > 0 && (
+                  <Link
+                    href="/chat"
+                    className="flex items-center justify-between rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
+                    onClick={() => setShowMobileMenu(false)}
+                  >
+                    <span>Chats</span>
                     <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-green-600 px-1.5 text-xs font-bold text-white">
                       {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
-                  )}
-                </Link>
+                  </Link>
+                )}
               </>
             )}
           </div>

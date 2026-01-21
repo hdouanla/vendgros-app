@@ -1,38 +1,55 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "~/trpc/react";
 import { ListingMap } from "~/components/map/listing-map";
-
-const CATEGORIES = [
-  "ALL",
-  "GROCERIES",
-  "CLOTHING",
-  "ELECTRONICS",
-  "HOME_GOODS",
-  "TOYS",
-  "SPORTS",
-  "BOOKS",
-  "OTHER",
-];
+import { SearchFilters, type SearchFiltersValues } from "~/components/search";
 
 export default function SearchListingsPage() {
   const router = useRouter();
+  const urlSearchParams = useSearchParams();
+
+  // Parse URL params
+  const urlPostalCode = urlSearchParams.get("postalCode") || "";
+  const urlLat = urlSearchParams.get("lat");
+  const urlLng = urlSearchParams.get("lng");
+  const urlRadius = urlSearchParams.get("radius") || "10";
+  const urlCategory = urlSearchParams.get("category") || "";
+  const urlSortBy = urlSearchParams.get("sortBy") || "distance";
+  const urlMinPrice = urlSearchParams.get("minPrice") || "";
+  const urlMaxPrice = urlSearchParams.get("maxPrice") || "";
 
   const [searchParams, setSearchParams] = useState({
-    postalCode: "",
-    radiusKm: 10,
-    category: "",
-    minPrice: "",
-    maxPrice: "",
-    sortBy: "distance" as "distance" | "price" | "date" | "rating",
+    postalCode: urlPostalCode,
+    radiusKm: parseInt(urlRadius) || 10,
+    category: urlCategory,
+    minPrice: urlMinPrice,
+    maxPrice: urlMaxPrice,
+    sortBy: urlSortBy as "distance" | "price" | "date" | "rating",
   });
 
-  const [latitude, setLatitude] = useState<number | null>(null);
-  const [longitude, setLongitude] = useState<number | null>(null);
+  const [latitude, setLatitude] = useState<number | null>(urlLat ? parseFloat(urlLat) : null);
+  const [longitude, setLongitude] = useState<number | null>(urlLng ? parseFloat(urlLng) : null);
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
-  const [activePostalCode, setActivePostalCode] = useState<string>("");
+  const [activePostalCode, setActivePostalCode] = useState<string>(urlPostalCode);
+
+  // Update state when URL params change
+  useEffect(() => {
+    setSearchParams({
+      postalCode: urlPostalCode,
+      radiusKm: parseInt(urlRadius) || 10,
+      category: urlCategory,
+      minPrice: urlMinPrice,
+      maxPrice: urlMaxPrice,
+      sortBy: urlSortBy as "distance" | "price" | "date" | "rating",
+    });
+    setActivePostalCode(urlPostalCode);
+    if (urlLat && urlLng) {
+      setLatitude(parseFloat(urlLat));
+      setLongitude(parseFloat(urlLng));
+    }
+  }, [urlPostalCode, urlLat, urlLng, urlRadius, urlCategory, urlSortBy, urlMinPrice, urlMaxPrice]);
 
   // Get user location
   const getUserLocation = () => {
@@ -50,38 +67,33 @@ export default function SearchListingsPage() {
     }
   };
 
-  // Format postal code as user types
-  const formatPostalCode = (value: string) => {
-    // Remove all non-alphanumeric characters
-    const cleaned = value.replace(/[^A-Z0-9]/gi, "").toUpperCase();
-
-    // Limit to 6 characters
-    const limited = cleaned.slice(0, 6);
-
-    // Add space after 3rd character if we have more than 3 characters
-    if (limited.length > 3) {
-      return `${limited.slice(0, 3)} ${limited.slice(3)}`;
-    }
-
-    return limited;
-  };
-
-  // Handle postal code input change
-  const handlePostalCodeChange = (value: string) => {
-    const formatted = formatPostalCode(value);
-    setSearchParams((prev) => ({
-      ...prev,
-      postalCode: formatted,
-    }));
-  };
-
-  // Handle postal code search
-  const handlePostalCodeSearch = () => {
-    if (searchParams.postalCode.trim()) {
-      setActivePostalCode(searchParams.postalCode);
-      setLatitude(null); // Clear location when using postal code
+  // Handle search from SearchFilters component
+  const handleSearch = (values: SearchFiltersValues) => {
+    if (values.postalCode.trim()) {
+      setActivePostalCode(values.postalCode.replace(/\s/g, ""));
+      setLatitude(null);
       setLongitude(null);
     }
+    setSearchParams({
+      postalCode: values.postalCode,
+      radiusKm: parseInt(values.radius) || 10,
+      category: values.category === "ALL" ? "" : values.category,
+      minPrice: values.minPrice,
+      maxPrice: values.maxPrice,
+      sortBy: values.sortBy as "distance" | "price" | "date" | "rating",
+    });
+  };
+
+  // Handle filter value changes
+  const handleFilterChange = (values: SearchFiltersValues) => {
+    setSearchParams({
+      postalCode: values.postalCode,
+      radiusKm: parseInt(values.radius) || 10,
+      category: values.category === "ALL" ? "" : values.category,
+      minPrice: values.minPrice,
+      maxPrice: values.maxPrice,
+      sortBy: values.sortBy as "distance" | "price" | "date" | "rating",
+    });
   };
 
   // Search by coordinates
@@ -122,7 +134,7 @@ export default function SearchListingsPage() {
   const isLoading = isLoadingNearby || isLoadingPostal;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
+    <div className="mx-auto max-w-content px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
@@ -134,158 +146,22 @@ export default function SearchListingsPage() {
       </div>
 
       {/* Search and Filters */}
-      <div className="mb-8 rounded-lg bg-white p-6 shadow-md">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {/* Postal Code Search */}
-          <div className="lg:col-span-2">
-            <label htmlFor="postalCode" className="block text-sm font-medium">
-              Search by Postal Code
-            </label>
-            <div className="mt-1 flex gap-2">
-              <input
-                type="text"
-                id="postalCode"
-                value={searchParams.postalCode}
-                onChange={(e) => handlePostalCodeChange(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handlePostalCodeSearch();
-                  }
-                }}
-                placeholder="A1A 1A1"
-                maxLength={7}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-              />
-              <button
-                type="button"
-                onClick={handlePostalCodeSearch}
-                disabled={!searchParams.postalCode.trim()}
-                className="whitespace-nowrap rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Search
-              </button>
-              <button
-                type="button"
-                onClick={getUserLocation}
-                className="whitespace-nowrap rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
-              >
-                Use My Location
-              </button>
-            </div>
-          </div>
-
-          {/* Radius */}
-          <div>
-            <label htmlFor="radius" className="block text-sm font-medium">
-              Radius
-            </label>
-            <select
-              id="radius"
-              value={searchParams.radiusKm}
-              onChange={(e) =>
-                setSearchParams((prev) => ({
-                  ...prev,
-                  radiusKm: parseInt(e.target.value),
-                }))
-              }
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-            >
-              <option value={5}>5 km</option>
-              <option value={10}>10 km</option>
-              <option value={25}>25 km</option>
-              <option value={50}>50 km</option>
-              <option value={100}>100 km</option>
-            </select>
-          </div>
-
-          {/* Sort By */}
-          <div>
-            <label htmlFor="sortBy" className="block text-sm font-medium">
-              Sort By
-            </label>
-            <select
-              id="sortBy"
-              value={searchParams.sortBy}
-              onChange={(e) =>
-                setSearchParams((prev) => ({
-                  ...prev,
-                  sortBy: e.target.value as any,
-                }))
-              }
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-            >
-              <option value="distance">Distance</option>
-              <option value="price">Price</option>
-              <option value="date">Newest</option>
-              <option value="rating">Rating</option>
-            </select>
-          </div>
-
-          {/* Category Filter */}
-          <div>
-            <label htmlFor="category" className="block text-sm font-medium">
-              Category
-            </label>
-            <select
-              id="category"
-              value={searchParams.category}
-              onChange={(e) =>
-                setSearchParams((prev) => ({
-                  ...prev,
-                  category: e.target.value,
-                }))
-              }
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-            >
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat === "ALL" ? "" : cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Price Range */}
-          <div>
-            <label htmlFor="minPrice" className="block text-sm font-medium">
-              Min Price (CAD)
-            </label>
-            <input
-              type="number"
-              id="minPrice"
-              value={searchParams.minPrice}
-              onChange={(e) =>
-                setSearchParams((prev) => ({
-                  ...prev,
-                  minPrice: e.target.value,
-                }))
-              }
-              step="0.01"
-              min="0"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="maxPrice" className="block text-sm font-medium">
-              Max Price (CAD)
-            </label>
-            <input
-              type="number"
-              id="maxPrice"
-              value={searchParams.maxPrice}
-              onChange={(e) =>
-                setSearchParams((prev) => ({
-                  ...prev,
-                  maxPrice: e.target.value,
-                }))
-              }
-              step="0.01"
-              min="0"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-            />
-          </div>
-        </div>
+      <div className="mb-8">
+        <SearchFilters
+          key={`${urlPostalCode}-${urlLat}-${urlLng}-${urlRadius}-${urlCategory}-${urlSortBy}`}
+          redirectOnSearch={false}
+          onSearch={handleSearch}
+          onChange={handleFilterChange}
+          onUseLocation={getUserLocation}
+          initialValues={{
+            postalCode: searchParams.postalCode,
+            radius: searchParams.radiusKm.toString(),
+            category: searchParams.category || "ALL",
+            sortBy: searchParams.sortBy,
+            minPrice: searchParams.minPrice,
+            maxPrice: searchParams.maxPrice,
+          }}
+        />
       </div>
 
       {/* Results */}

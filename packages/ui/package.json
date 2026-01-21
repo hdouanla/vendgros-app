@@ -10,6 +10,7 @@
     "./input": "./src/input.tsx",
     "./label": "./src/label.tsx",
     "./qr-code": "./src/qr-code.tsx",
+    "./select": "./src/select.tsx",
     "./separator": "./src/separator.tsx",
     "./theme": "./src/theme.tsx",
     "./toast": "./src/toast.tsx"

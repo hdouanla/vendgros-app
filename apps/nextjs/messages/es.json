@@ -199,8 +199,10 @@
     "emailChangeNotice": "Importante",
     "emailChangeHelp": "Cambiar tu correo electrónico requerirá re-verificación",
     "saveChanges": "Guardar cambios",
-    "accountType.individual": "Individual",
-    "accountType.business": "Negocio",
+    "accountTypeOptions": {
+      "individual": "Individual",
+      "business": "Negocio"
+    },
     "profile": "Perfil",
     "editProfile": "Editar perfil",
     "accountSettings": "Configuración de cuenta",

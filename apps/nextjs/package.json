@@ -35,6 +35,7 @@
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
     "better-auth": "catalog:",
+    "lucide-react": "^0.562.0",
     "mapbox-gl": "^3.10.0",
     "next": "^16.0.9",
     "next-intl": "^3.26.5",

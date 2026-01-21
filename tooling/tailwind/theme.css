@@ -32,6 +32,7 @@
   --sidebar-border: oklch(0.9155 0.0235 310.6964);
   --sidebar-ring: oklch(0.5605 0.1911 350.0331);
   --radius: 0.75rem;
+  --max-width-content: 1320px;
   --shadow-2xs: 0px 2px 10px 0px hsl(0 0% 0% / 0.03);
   --shadow-xs: 0px 2px 10px 0px hsl(0 0% 0% / 0.03);
   --shadow-sm:
@@ -155,4 +156,6 @@
   --tracking-wide: calc(var(--tracking-normal) + 0.025em);
   --tracking-wider: calc(var(--tracking-normal) + 0.05em);
   --tracking-widest: calc(var(--tracking-normal) + 0.1em);
+
+  --max-width-content: var(--max-width-content);
 }

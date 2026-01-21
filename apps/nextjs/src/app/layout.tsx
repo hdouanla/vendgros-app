@@ -21,6 +21,22 @@ export const metadata: Metadata = {
   ),
   title: "VendGros - Buy and Sell Bulk Items Locally",
   description: "Community marketplace for bulk deals with geospatial search",
+  manifest: "/site.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "VendGros",
+  },
   openGraph: {
     title: "VendGros",
     description: "Buy and sell bulk items locally",
@@ -31,8 +47,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "white" },
-    { media: "(prefers-color-scheme: dark)", color: "black" },
+    { media: "(prefers-color-scheme: light)", color: "#0DAE09" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B9507" },
   ],
 };
 

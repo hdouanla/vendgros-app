@@ -34,7 +34,8 @@
     "setup-sample-data": "bash scripts/setup-sample-data.sh",
     "import-postal-codes": "pnpm with-env tsx src/scripts/import-postal-codes.ts",
     "db:reset": "pnpm with-env tsx src/scripts/reset-database.ts",
-    "db:create-tables": "pnpm with-env tsx src/scripts/create-all-tables.ts"
+    "db:create-tables": "pnpm with-env tsx src/scripts/create-all-tables.ts",
+    "db:seed": "pnpm with-env tsx src/scripts/seed-homepage-data.ts"
   },
   "dependencies": {
     "@vercel/postgres": "^0.10.0",

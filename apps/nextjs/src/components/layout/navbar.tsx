@@ -42,15 +42,15 @@ export function Navbar() {
   return (
     <nav className="border-b border-gray-200 bg-white shadow-sm">
       <div className="mx-auto max-w-content px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-20 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
               <Image
                 src="/vendgros-logo-light.png"
                 alt="VendGros"
-                width={140}
-                height={40}
+                width={250}
+                height={71}
                 priority
               />
             </Link>

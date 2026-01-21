@@ -361,21 +361,39 @@ export const listingRouter = createTRPCRouter({
   searchByPostalCode: publicProcedure
     .input(
       z.object({
-        postalCode: z.string().regex(/^[A-Z]\d[A-Z] \d[A-Z]\d$/),
-        radiusKm: z.number().default(10),
+        postalCode: z.string().min(1),
+        radiusKm: z.number().default(50),
         category: z.string().optional(),
         limit: z.number().default(50),
       }),
     )
     .query(async ({ ctx, input }) => {
+      // Normalize postal code: remove spaces, uppercase
+      const normalizedPostalCode = input.postalCode.replace(/\s/g, "").toUpperCase();
+
+      // Validate Canadian postal code format (A1A1A1 or A1A 1A1)
+      const postalCodeRegex = /^[A-Z]\d[A-Z]\d[A-Z]\d$/;
+      if (!postalCodeRegex.test(normalizedPostalCode)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid postal code format. Please enter a valid Canadian postal code (e.g., A1A 1A1).",
+        });
+      }
+
+      // Format with space for database lookup
+      const formattedPostalCode = `${normalizedPostalCode.slice(0, 3)} ${normalizedPostalCode.slice(3)}`;
+
       // Get coordinates from postal code
       const postal = await ctx.db.query.postalCode.findFirst({
         where: (postalCodes, { eq }) =>
-          eq(postalCodes.code, input.postalCode.toUpperCase()),
+          eq(postalCodes.code, formattedPostalCode),
       });
 
       if (!postal) {
-        return [];
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Postal code not found. Please enter a valid Canadian postal code.",
+        });
       }
 
       // Use PostGIS ST_Distance for proximity search

@@ -6,7 +6,7 @@ export function SearchBox() {
   return (
     <section className="relative z-10 -mt-8 px-4">
       <div className="mx-auto max-w-content">
-        <SearchFilters redirectOnSearch={true} />
+        <SearchFilters redirectOnSearch={true} compact={true} />
       </div>
     </section>
   );

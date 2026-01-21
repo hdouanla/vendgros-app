@@ -8,7 +8,7 @@ import { Toaster } from "@acme/ui/toast";
 import { env } from "~/env";
 import { TRPCReactProvider } from "~/trpc/react";
 import { Navbar } from "~/components/layout/navbar";
-import { TopBar } from "~/components/layout/top-bar";
+import { UserNav } from "~/components/layout/user-nav";
 import { FooterWrapper } from "~/components/layout/footer-wrapper";
 
 import "./styles.css";
@@ -58,8 +58,8 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       >
         <ThemeProvider>
           <TRPCReactProvider>
-            <TopBar />
             <Navbar />
+            <UserNav />
             <main>{props.children}</main>
             <FooterWrapper />
           </TRPCReactProvider>

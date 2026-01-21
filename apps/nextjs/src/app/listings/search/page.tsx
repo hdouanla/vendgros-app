@@ -14,7 +14,7 @@ export default function SearchListingsPage() {
   const urlPostalCode = urlSearchParams.get("postalCode") || "";
   const urlLat = urlSearchParams.get("lat");
   const urlLng = urlSearchParams.get("lng");
-  const urlRadius = urlSearchParams.get("radius") || "10";
+  const urlRadius = urlSearchParams.get("radius") || "50";
   const urlCategory = urlSearchParams.get("category") || "";
   const urlSortBy = urlSearchParams.get("sortBy") || "distance";
   const urlMinPrice = urlSearchParams.get("minPrice") || "";
@@ -22,7 +22,7 @@ export default function SearchListingsPage() {
 
   const [searchParams, setSearchParams] = useState({
     postalCode: urlPostalCode,
-    radiusKm: parseInt(urlRadius) || 10,
+    radiusKm: parseInt(urlRadius) || 50,
     category: urlCategory,
     minPrice: urlMinPrice,
     maxPrice: urlMaxPrice,
@@ -38,7 +38,7 @@ export default function SearchListingsPage() {
   useEffect(() => {
     setSearchParams({
       postalCode: urlPostalCode,
-      radiusKm: parseInt(urlRadius) || 10,
+      radiusKm: parseInt(urlRadius) || 50,
       category: urlCategory,
       minPrice: urlMinPrice,
       maxPrice: urlMaxPrice,
@@ -76,7 +76,7 @@ export default function SearchListingsPage() {
     }
     setSearchParams({
       postalCode: values.postalCode,
-      radiusKm: parseInt(values.radius) || 10,
+      radiusKm: parseInt(values.radius) || 50,
       category: values.category === "ALL" ? "" : values.category,
       minPrice: values.minPrice,
       maxPrice: values.maxPrice,
@@ -88,7 +88,7 @@ export default function SearchListingsPage() {
   const handleFilterChange = (values: SearchFiltersValues) => {
     setSearchParams({
       postalCode: values.postalCode,
-      radiusKm: parseInt(values.radius) || 10,
+      radiusKm: parseInt(values.radius) || 50,
       category: values.category === "ALL" ? "" : values.category,
       minPrice: values.minPrice,
       maxPrice: values.maxPrice,
@@ -118,20 +118,25 @@ export default function SearchListingsPage() {
     );
 
   // Search by postal code
-  const { data: postalListings, isLoading: isLoadingPostal } =
-    api.listing.searchByPostalCode.useQuery(
-      {
-        postalCode: activePostalCode,
-        radiusKm: searchParams.radiusKm,
-        category: searchParams.category || undefined,
-      },
-      {
-        enabled: activePostalCode.length > 0,
-      },
-    );
+  const {
+    data: postalListings,
+    isLoading: isLoadingPostal,
+    error: postalError,
+  } = api.listing.searchByPostalCode.useQuery(
+    {
+      postalCode: activePostalCode,
+      radiusKm: searchParams.radiusKm,
+      category: searchParams.category || undefined,
+    },
+    {
+      enabled: activePostalCode.length > 0,
+      retry: false,
+    },
+  );
 
   const listings = activePostalCode ? postalListings : nearbyListings;
   const isLoading = isLoadingNearby || isLoadingPostal;
+  const postalCodeError = postalError?.message;
 
   return (
     <div className="mx-auto max-w-content px-4 py-8">
@@ -153,6 +158,7 @@ export default function SearchListingsPage() {
           onSearch={handleSearch}
           onChange={handleFilterChange}
           onUseLocation={getUserLocation}
+          compact={true}
           initialValues={{
             postalCode: searchParams.postalCode,
             radius: searchParams.radiusKm.toString(),
@@ -169,6 +175,18 @@ export default function SearchListingsPage() {
         {isLoading ? (
           <div className="py-12 text-center">
             <p className="text-gray-600">Loading...</p>
+          </div>
+        ) : postalCodeError ? (
+          <div className="rounded-lg bg-red-50 border border-red-200 p-8 text-center">
+            <div className="mb-2 text-red-600">
+              <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <p className="text-red-700 font-medium">{postalCodeError}</p>
+            <p className="mt-2 text-sm text-red-600">
+              Try a different postal code or use "Use My Location" instead.
+            </p>
           </div>
         ) : !latitude && !longitude && !activePostalCode ? (
           <div className="rounded-lg bg-blue-50 p-8 text-center">

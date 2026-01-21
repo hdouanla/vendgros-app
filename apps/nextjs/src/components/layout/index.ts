@@ -1,2 +1,2 @@
 export { Navbar } from "./navbar";
-export { TopBar } from "./top-bar";
+export { UserNav } from "./user-nav";

@@ -5,23 +5,43 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { api } from "~/trpc/react";
+import { locales, localeNames, type Locale } from "~/i18n";
 
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+
+  // Get current locale from pathname or default to 'en'
+  const currentLocale = (locales.find((l) => pathname?.startsWith(`/${l}`)) ||
+    "en") as Locale;
+
+  const handleLanguageChange = (newLocale: Locale) => {
+    setShowLanguageMenu(false);
+
+    // Update the URL with the new locale
+    let newPath = pathname || "/";
+
+    // Check if the current path has a locale prefix
+    const hasLocalePrefix = locales.some((l) => pathname?.startsWith(`/${l}`));
+
+    if (hasLocalePrefix) {
+      // Replace existing locale
+      newPath = pathname?.replace(/^\/[a-z]{2}/, `/${newLocale}`) || `/${newLocale}`;
+    } else {
+      // Add locale prefix
+      newPath = `/${newLocale}${pathname}`;
+    }
+
+    router.push(newPath);
+  };
 
   const { data: session, isLoading } = api.auth.getSession.useQuery();
   const utils = api.useUtils();
 
   const isVerified = session?.user?.emailVerified === true;
-
-  // Get unread chat count
-  const { data: unreadCount } = api.chat.getTotalUnreadCount.useQuery(undefined, {
-    enabled: !!session?.user && isVerified,
-    refetchInterval: 60000, // Refresh every minute
-  });
 
   const handleSignOut = async () => {
     try {
@@ -60,7 +80,7 @@ export function Navbar() {
           <div className="hidden md:flex md:items-center md:space-x-8">
             <Link
               href="/listings/search"
-              className={`text-sm font-medium transition-colors ${
+              className={`text-md uppercase font-medium transition-colors ${
                 isActive("/listings/search")
                   ? "text-green-600"
                   : "text-gray-700 hover:text-green-600"
@@ -71,7 +91,7 @@ export function Navbar() {
 
             <Link
               href="/listings/create"
-              className={`text-sm font-medium transition-colors ${
+              className={`text-md uppercase font-medium transition-colors ${
                 isActive("/listings/create")
                   ? "text-green-600"
                   : "text-gray-700 hover:text-green-600"
@@ -79,37 +99,71 @@ export function Navbar() {
             >
               Sell
             </Link>
-
-            <Link
-              href="/how-it-works"
-              className={`text-sm font-medium transition-colors ${
-                isActive("/how-it-works")
-                  ? "text-green-600"
-                  : "text-gray-700 hover:text-green-600"
-              }`}
-            >
-              How it works
-            </Link>
-
-            {session?.user && isVerified && unreadCount && unreadCount > 0 && (
-              <Link
-                href="/chat"
-                className={`relative flex items-center text-sm font-medium transition-colors ${
-                  isActive("/chat")
-                    ? "text-green-600"
-                    : "text-gray-700 hover:text-green-600"
-                }`}
-              >
-                <span>Chats</span>
-                <span className="ml-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-green-600 px-1.5 text-xs font-bold text-white">
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              </Link>
-            )}
           </div>
 
-          {/* Right side - User Menu */}
+          {/* Right side - Language & User Menu */}
           <div className="flex items-center space-x-4">
+            {/* Language Switcher */}
+            <div className="relative hidden sm:block">
+              <button
+                onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+                className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+              >
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                  />
+                </svg>
+                <span>{localeNames[currentLocale]}</span>
+                <svg
+                  className={`h-3 w-3 transition-transform ${showLanguageMenu ? "rotate-180" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+
+              {/* Language Dropdown */}
+              {showLanguageMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowLanguageMenu(false)}
+                  />
+                  <div className="absolute right-0 z-20 mt-2 w-36 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
+                    {locales.map((locale) => (
+                      <button
+                        key={locale}
+                        onClick={() => handleLanguageChange(locale)}
+                        className={`block w-full px-4 py-2 text-left text-sm ${
+                          locale === currentLocale
+                            ? "bg-green-50 font-medium text-green-600"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {localeNames[locale]}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
             {isLoading ? (
               <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200"></div>
             ) : session?.user ? (
@@ -154,52 +208,13 @@ export function Navbar() {
                       </div>
 
                       {isVerified && (
-                        <>
-                          <Link
-                            href="/profile"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => setShowUserMenu(false)}
-                          >
-                            Profile
-                          </Link>
-
-                          <Link
-                            href="/reservations"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => setShowUserMenu(false)}
-                          >
-                            My Reservations
-                          </Link>
-
-                          <Link
-                            href="/chat"
-                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => setShowUserMenu(false)}
-                          >
-                            <span>Chats</span>
-                            {unreadCount && unreadCount > 0 && (
-                              <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-green-600 px-1.5 text-xs font-bold text-white">
-                                {unreadCount > 99 ? "99+" : unreadCount}
-                              </span>
-                            )}
-                          </Link>
-
-                          <Link
-                            href="/seller"
-                            className="block border-t border-gray-100 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-50"
-                            onClick={() => setShowUserMenu(false)}
-                          >
-                            📊 Seller Dashboard
-                          </Link>
-
-                          <Link
-                            href="/seller/analytics"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => setShowUserMenu(false)}
-                          >
-                            Analytics
-                          </Link>
-                        </>
+                        <Link
+                          href="/profile"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          Profile
+                        </Link>
                       )}
 
                       <button
@@ -305,49 +320,39 @@ export function Navbar() {
             </Link>
 
             {session?.user && isVerified && (
-              <>
-                <Link
-                  href="/seller"
-                  className={`block rounded-md px-3 py-2 text-base font-medium ${
-                    isActive("/seller")
-                      ? "bg-green-50 text-green-600"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                  onClick={() => setShowMobileMenu(false)}
-                >
-                  Seller Dashboard
-                </Link>
-
-                <Link
-                  href="/profile"
-                  className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
-                  onClick={() => setShowMobileMenu(false)}
-                >
-                  Profile
-                </Link>
-
-                <Link
-                  href="/reservations"
-                  className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
-                  onClick={() => setShowMobileMenu(false)}
-                >
-                  My Reservations
-                </Link>
-
-                {unreadCount && unreadCount > 0 && (
-                  <Link
-                    href="/chat"
-                    className="flex items-center justify-between rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
-                    onClick={() => setShowMobileMenu(false)}
-                  >
-                    <span>Chats</span>
-                    <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-green-600 px-1.5 text-xs font-bold text-white">
-                      {unreadCount > 99 ? "99+" : unreadCount}
-                    </span>
-                  </Link>
-                )}
-              </>
+              <Link
+                href="/profile"
+                className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
+                onClick={() => setShowMobileMenu(false)}
+              >
+                Profile
+              </Link>
             )}
+
+            {/* Mobile Language Switcher */}
+            <div className="border-t border-gray-200 pt-2">
+              <p className="px-3 py-1 text-xs font-medium uppercase tracking-wider text-gray-500">
+                Language
+              </p>
+              <div className="flex flex-wrap gap-2 px-3 py-2">
+                {locales.map((locale) => (
+                  <button
+                    key={locale}
+                    onClick={() => {
+                      handleLanguageChange(locale);
+                      setShowMobileMenu(false);
+                    }}
+                    className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+                      locale === currentLocale
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    {localeNames[locale]}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 
 export default function EditProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const utils = api.useUtils();
+  const t = useTranslations("profile");
 
   const redirectUrl = searchParams.get("redirect");
 
@@ -131,6 +133,46 @@ export default function EditProfilePage() {
           Update your profile information
         </p>
       </div>
+
+      {/* Phone Verification Alert */}
+      {currentUser && !currentUser.phoneVerified && (
+        <div className="mb-8 rounded-xl border-2 border-amber-400 bg-amber-50 p-6 shadow-md">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 rounded-full bg-amber-100 p-3">
+              <svg className="h-8 w-8 text-amber-600" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-amber-800">
+                {t("phoneVerificationRequired")}
+              </h3>
+              <p className="mt-2 text-base text-amber-700">
+                {t("phoneVerificationAlertMessage")}
+              </p>
+              {currentUser.phone ? (
+                <Link
+                  href={`/auth/verify-phone${redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`}
+                  className="mt-4 inline-flex items-center rounded-lg bg-amber-600 px-5 py-2.5 text-base font-semibold text-white shadow-sm transition-colors hover:bg-amber-700"
+                >
+                  {t("verifyNow")}
+                  <svg className="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              ) : (
+                <p className="mt-3 text-base font-medium text-amber-800">
+                  {t("addPhoneFirst")}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Success Message */}
       {success && (

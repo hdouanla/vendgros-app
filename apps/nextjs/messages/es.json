@@ -403,7 +403,11 @@
     "verification": "Verificación",
     "standard": "Estándar",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "phoneVerificationRequired": "Verificación de teléfono requerida",
+    "phoneVerificationAlertMessage": "Debes verificar tu número de teléfono antes de poder crear anuncios en VendGros.",
+    "verifyNow": "Verificar ahora",
+    "addPhoneFirst": "Por favor, agrega tu número de teléfono abajo y guarda, luego verifícalo."
   },
   "settings": {
     "settings": "Configuración",

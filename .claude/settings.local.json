@@ -55,7 +55,8 @@
       "WebFetch(domain:next-intl.dev)",
       "Bash(dotenv -e ../../.env.local -- next dev:*)",
       "WebSearch",
-      "Bash(npm view:*)"
+      "Bash(npm view:*)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

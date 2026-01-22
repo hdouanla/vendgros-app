@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin, SlidersHorizontal, ChevronUp } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@acme/ui/button";
 import { Input } from "@acme/ui/input";
@@ -14,31 +15,12 @@ import {
   SelectValue,
 } from "@acme/ui/select";
 
-const categories = [
-  { value: "ALL", label: "All Categories" },
-  { value: "GROCERIES", label: "Groceries" },
-  { value: "CLOTHING", label: "Clothing" },
-  { value: "ELECTRONICS", label: "Electronics" },
-  { value: "HOME_GOODS", label: "Home & Living" },
-  { value: "TOYS", label: "Toys & Games" },
-  { value: "SPORTS", label: "Sports" },
-  { value: "BOOKS", label: "Books" },
-  { value: "OTHER", label: "Other" },
-];
-
 const radiusOptions = [
   { value: "5", label: "5 km" },
   { value: "10", label: "10 km" },
   { value: "25", label: "25 km" },
   { value: "50", label: "50 km" },
   { value: "100", label: "100 km" },
-];
-
-const sortOptions = [
-  { value: "distance", label: "Distance" },
-  { value: "price", label: "Price" },
-  { value: "date", label: "Newest" },
-  { value: "rating", label: "Rating" },
 ];
 
 export interface SearchFiltersValues {
@@ -80,9 +62,29 @@ export function SearchFilters({
   compact = false,
 }: SearchFiltersProps) {
   const router = useRouter();
+  const t = useTranslations("search");
   const [isLocating, setIsLocating] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [postalCodeError, setPostalCodeError] = useState<string | null>(null);
+
+  const categories = [
+    { value: "ALL", label: t("allCategories") },
+    { value: "GROCERIES", label: t("groceries") },
+    { value: "CLOTHING", label: t("clothing") },
+    { value: "ELECTRONICS", label: t("electronics") },
+    { value: "HOME_GOODS", label: t("homeGoods") },
+    { value: "TOYS", label: t("toys") },
+    { value: "SPORTS", label: t("sports") },
+    { value: "BOOKS", label: t("books") },
+    { value: "OTHER", label: t("other") },
+  ];
+
+  const sortOptions = [
+    { value: "distance", label: t("sortDistance") },
+    { value: "price", label: t("sortPrice") },
+    { value: "date", label: t("sortNewest") },
+    { value: "rating", label: t("sortRating") },
+  ];
 
   const [values, setValues] = useState<SearchFiltersValues>({
     postalCode: initialValues?.postalCode ?? "",
@@ -104,13 +106,13 @@ export function SearchFilters({
 
   const validatePostalCode = (code: string): boolean => {
     if (!code.trim()) {
-      setPostalCodeError("Please enter a postal code");
+      setPostalCodeError(t("pleaseEnterPostalCode"));
       return false;
     }
     const normalized = code.replace(/\s/g, "").toUpperCase();
     const postalCodeRegex = /^[A-Z]\d[A-Z]\d[A-Z]\d$/;
     if (!postalCodeRegex.test(normalized)) {
-      setPostalCodeError("Invalid postal code format (e.g., A1A 1A1)");
+      setPostalCodeError(t("invalidPostalCode"));
       return false;
     }
     setPostalCodeError(null);
@@ -158,7 +160,7 @@ export function SearchFilters({
     }
 
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
+      alert(t("geoNotSupported"));
       return;
     }
 
@@ -184,7 +186,7 @@ export function SearchFilters({
       },
       () => {
         setIsLocating(false);
-        alert("Unable to retrieve your location");
+        alert(t("unableToLocate"));
       }
     );
   };
@@ -209,7 +211,7 @@ export function SearchFilters({
         {/* Postal Code Input */}
         <div className="flex-1">
           <label className="mb-1.5 block text-sm font-medium text-gray-700">
-            Search by Postal Code
+            {t("searchByPostalCode")}
           </label>
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -236,7 +238,7 @@ export function SearchFilters({
               className="h-11 bg-[#0DAE09] px-6 hover:bg-[#0B9507]"
               onClick={handleSearch}
             >
-              Search
+              {t("search")}
             </Button>
             <Button
               type="button"
@@ -247,10 +249,10 @@ export function SearchFilters({
             >
               <MapPin className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">
-                {isLocating ? "Locating..." : "Use My Location"}
+                {isLocating ? t("locating") : t("useMyLocation")}
               </span>
               <span className="sm:hidden">
-                {isLocating ? "..." : "Location"}
+                {isLocating ? "..." : t("location")}
               </span>
             </Button>
           </div>
@@ -271,12 +273,12 @@ export function SearchFilters({
             {showMoreFilters ? (
               <>
                 <ChevronUp className="mr-2 h-4 w-4" />
-                Less Filters
+                {t("lessFilters")}
               </>
             ) : (
               <>
                 <SlidersHorizontal className="mr-2 h-4 w-4" />
-                More Filters
+                {t("moreFilters")}
                 {hasActiveFilters && (
                   <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-xs text-white">
                     !
@@ -294,7 +296,7 @@ export function SearchFilters({
           {/* Radius */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Radius
+              {t("radius")}
             </label>
             <Select value={values.radius} onValueChange={(v) => updateValue("radius", v)}>
               <SelectTrigger className={selectTriggerClassName}>
@@ -313,7 +315,7 @@ export function SearchFilters({
           {/* Sort By */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Sort By
+              {t("sortBy")}
             </label>
             <Select value={values.sortBy} onValueChange={(v) => updateValue("sortBy", v)}>
               <SelectTrigger className={selectTriggerClassName}>
@@ -332,7 +334,7 @@ export function SearchFilters({
           {/* Category */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Category
+              {t("category")}
             </label>
             <Select value={values.category} onValueChange={(v) => updateValue("category", v)}>
               <SelectTrigger className={selectTriggerClassName}>
@@ -351,7 +353,7 @@ export function SearchFilters({
           {/* Min Price */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Min Price (CAD)
+              {t("minPrice")}
             </label>
             <Input
               type="number"
@@ -366,7 +368,7 @@ export function SearchFilters({
           {/* Max Price */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Max Price (CAD)
+              {t("maxPrice")}
             </label>
             <Input
               type="number"

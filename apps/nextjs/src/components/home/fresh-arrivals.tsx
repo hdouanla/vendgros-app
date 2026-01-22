@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Star, ArrowRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface Listing {
   id: string;
@@ -30,6 +31,8 @@ function formatPrice(price: string | number): string {
 }
 
 export function FreshArrivals({ listings }: FreshArrivalsProps) {
+  const t = useTranslations("home");
+
   if (listings.length === 0) {
     return null;
   }
@@ -39,20 +42,20 @@ export function FreshArrivals({ listings }: FreshArrivalsProps) {
       <div className="mx-auto max-w-content px-4">
         <div className="mb-8 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
-            Fresh Arrivals
+            {t("freshArrivals")}
           </h2>
           <Link
             href="/listings/search?sortBy=date"
             className="flex items-center gap-1 text-sm font-medium text-[#0DAE09] hover:text-[#0B9507]"
           >
-            See All
+            {t("seeAll")}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
           {listings.slice(0, 4).map((listing) => (
-            <ArrivalCard key={listing.id} listing={listing} />
+            <ArrivalCard key={listing.id} listing={listing} t={t} />
           ))}
         </div>
       </div>
@@ -62,9 +65,10 @@ export function FreshArrivals({ listings }: FreshArrivalsProps) {
 
 interface ArrivalCardProps {
   listing: Listing;
+  t: ReturnType<typeof useTranslations<"home">>;
 }
 
-function ArrivalCard({ listing }: ArrivalCardProps) {
+function ArrivalCard({ listing, t }: ArrivalCardProps) {
   const rating = listing.seller?.sellerRatingAverage
     ? parseFloat(listing.seller.sellerRatingAverage)
     : null;
@@ -93,7 +97,7 @@ function ArrivalCard({ listing }: ArrivalCardProps) {
           <span className="text-lg font-bold text-[#0DAE09]">
             ${formatPrice(listing.pricePerPiece)}
           </span>
-          <span className="text-sm text-gray-500"> /piece</span>
+          <span className="text-sm text-gray-500">{t("perPiece")}</span>
         </p>
 
         {/* Title */}
@@ -113,7 +117,7 @@ function ArrivalCard({ listing }: ArrivalCardProps) {
 
         {/* Availability */}
         <p className="text-xs text-gray-500">
-          {listing.quantityAvailable} available
+          {t("available", { count: listing.quantityAvailable })}
         </p>
       </div>
     </Link>

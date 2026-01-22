@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 
 export function UserNav() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
   const { data: session, isLoading } = api.auth.getSession.useQuery();
 
   const isVerified = session?.user?.emailVerified === true;
@@ -33,14 +35,14 @@ export function UserNav() {
   }
 
   const navItems = [
-    { href: "/seller", label: "Seller Dashboard" },
-    { href: "/reservations", label: "My Reservations" },
+    { href: "/seller", label: t("sellerDashboard") },
+    { href: "/reservations", label: t("myReservations") },
     {
       href: "/chat",
-      label: "Chats",
+      label: t("chats"),
       badge: unreadCount && unreadCount > 0 ? unreadCount : undefined,
     },
-    { href: "/seller/analytics", label: "Analytics" },
+    { href: "/seller/analytics", label: t("analytics") },
   ];
 
   return (

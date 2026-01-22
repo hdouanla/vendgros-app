@@ -3,17 +3,20 @@
 import Link from "next/link";
 import Image from "next/image";
 import { CATEGORIES } from "@acme/validators";
+import { useTranslations } from "next-intl";
 
 interface CategoryGridProps {
   categoryCounts: Record<string, number>;
 }
 
 export function CategoryGrid({ categoryCounts }: CategoryGridProps) {
+  const t = useTranslations("home");
+
   return (
     <section className="py-12 md:py-16">
       <div className="mx-auto max-w-content px-4">
         <h2 className="mb-8 text-2xl font-bold text-gray-900 md:text-3xl">
-          Browse Categories
+          {t("browseCategories")}
         </h2>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">

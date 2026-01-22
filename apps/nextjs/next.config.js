@@ -6,10 +6,13 @@ const jiti = createJiti(import.meta.url);
 // Import env files to validate at build time. Use jiti so we can load .ts files in here.
 await jiti.import("./src/env");
 
-const withNextIntl = createNextIntlPlugin("./src/i18n.ts");
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 /** @type {import("next").NextConfig} */
 const config = {
+  /** Required for next-intl to work with Turbopack */
+  turbopack: {},
+
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
     "@acme/api",

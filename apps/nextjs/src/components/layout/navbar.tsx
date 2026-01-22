@@ -1,41 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { api } from "~/trpc/react";
 import { locales, localeNames, type Locale } from "~/i18n";
 
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations("nav");
+  const locale = useLocale();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [currentLocale, setCurrentLocale] = useState<Locale>(locale as Locale);
 
-  // Get current locale from pathname or default to 'en'
-  const currentLocale = (locales.find((l) => pathname?.startsWith(`/${l}`)) ||
-    "en") as Locale;
+  // Sync currentLocale with the actual locale from next-intl
+  useEffect(() => {
+    setCurrentLocale(locale as Locale);
+  }, [locale]);
 
   const handleLanguageChange = (newLocale: Locale) => {
     setShowLanguageMenu(false);
 
-    // Update the URL with the new locale
-    let newPath = pathname || "/";
-
-    // Check if the current path has a locale prefix
-    const hasLocalePrefix = locales.some((l) => pathname?.startsWith(`/${l}`));
-
-    if (hasLocalePrefix) {
-      // Replace existing locale
-      newPath = pathname?.replace(/^\/[a-z]{2}/, `/${newLocale}`) || `/${newLocale}`;
-    } else {
-      // Add locale prefix
-      newPath = `/${newLocale}${pathname}`;
-    }
-
-    router.push(newPath);
+    // Set locale cookie and refresh the page
+    document.cookie = `locale=${newLocale};path=/;max-age=31536000`; // 1 year
+    router.refresh();
   };
 
   const { data: session, isLoading } = api.auth.getSession.useQuery();
@@ -86,7 +79,7 @@ export function Navbar() {
                   : "text-gray-700 hover:text-green-600"
               }`}
             >
-              Browse
+              {t("browse")}
             </Link>
 
             <Link
@@ -97,7 +90,7 @@ export function Navbar() {
                   : "text-gray-700 hover:text-green-600"
               }`}
             >
-              Sell
+              {t("sell")}
             </Link>
           </div>
 
@@ -213,7 +206,7 @@ export function Navbar() {
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           onClick={() => setShowUserMenu(false)}
                         >
-                          Profile
+                          {t("profile")}
                         </Link>
                       )}
 
@@ -224,7 +217,7 @@ export function Navbar() {
                         }}
                         className="block w-full border-t border-gray-100 px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
                       >
-                        Sign Out
+                        {t("signOut")}
                       </button>
                     </div>
                   </>
@@ -236,13 +229,13 @@ export function Navbar() {
                   href="/auth/signin"
                   className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
                 >
-                  Sign In
+                  {t("signIn")}
                 </Link>
                 <Link
                   href="/auth/signup"
                   className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
                 >
-                  Sign Up
+                  {t("signUp")}
                 </Link>
               </div>
             )}
@@ -292,7 +285,7 @@ export function Navbar() {
               }`}
               onClick={() => setShowMobileMenu(false)}
             >
-              Browse
+              {t("browse")}
             </Link>
 
             <Link
@@ -304,7 +297,7 @@ export function Navbar() {
               }`}
               onClick={() => setShowMobileMenu(false)}
             >
-              Sell
+              {t("sell")}
             </Link>
 
             <Link
@@ -316,7 +309,7 @@ export function Navbar() {
               }`}
               onClick={() => setShowMobileMenu(false)}
             >
-              How it works
+              {t("howItWorks")}
             </Link>
 
             {session?.user && isVerified && (
@@ -325,14 +318,14 @@ export function Navbar() {
                 className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
                 onClick={() => setShowMobileMenu(false)}
               >
-                Profile
+                {t("profile")}
               </Link>
             )}
 
             {/* Mobile Language Switcher */}
             <div className="border-t border-gray-200 pt-2">
               <p className="px-3 py-1 text-xs font-medium uppercase tracking-wider text-gray-500">
-                Language
+                {t("language")}
               </p>
               <div className="flex flex-wrap gap-2 px-3 py-2">
                 {locales.map((locale) => (

@@ -2,10 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const t = useTranslations("profile");
+  const tCommon = useTranslations("common");
+  const tSettings = useTranslations("settings");
 
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
   const { data: currentUser, isLoading: userLoading } = api.user.getCurrentUser.useQuery(
@@ -16,7 +20,7 @@ export default function ProfilePage() {
   if (sessionLoading || userLoading) {
     return (
       <div className="py-12 text-center">
-        <p className="text-gray-600">Loading...</p>
+        <p className="text-gray-600">{tCommon("loading")}</p>
       </div>
     );
   }
@@ -33,13 +37,13 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">
-          My Profile
+          {t("myProfile")}
         </h1>
         <button
           onClick={() => router.push("/profile/edit")}
           className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
         >
-          Edit Profile
+          {t("editProfile")}
         </button>
       </div>
 
@@ -49,27 +53,27 @@ export default function ProfilePage() {
           {/* Basic Info Card */}
           <div className="rounded-lg bg-white p-6 shadow-md">
             <h2 className="mb-4 text-xl font-semibold">
-              Basic Information
+              {t("basicInfo")}
             </h2>
 
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-gray-600">
-                  Name
+                  {t("name")}
                 </label>
                 <p className="mt-1 text-gray-900">{user.name}</p>
               </div>
 
               <div>
                 <label className="text-sm font-medium text-gray-600">
-                  Email
+                  {t("email")}
                 </label>
                 <p className="mt-1 text-gray-900">{user.email}</p>
               </div>
 
               <div>
                 <label className="text-sm font-medium text-gray-600">
-                  Phone
+                  {t("phone")}
                 </label>
                 {user.phone ? (
                   <div className="mt-1 flex items-center gap-2">
@@ -92,10 +96,10 @@ export default function ProfilePage() {
                               clipRule="evenodd"
                             />
                           </svg>
-                          Verified
+                          {t("verified")}
                         </>
                       ) : (
-                        "Not Verified"
+                        t("notVerified")
                       )}
                     </span>
                     {!user.phoneVerified && (
@@ -103,18 +107,18 @@ export default function ProfilePage() {
                         href="/auth/verify-phone"
                         className="text-sm font-medium text-green-600 hover:text-green-500"
                       >
-                        Verify
+                        {t("verify")}
                       </Link>
                     )}
                   </div>
                 ) : (
                   <div className="mt-1 flex items-center gap-2">
-                    <span className="text-gray-500 italic">Not set</span>
+                    <span className="text-gray-500 italic">{t("notSet")}</span>
                     <Link
                       href="/profile/edit"
                       className="text-sm font-medium text-green-600 hover:text-green-500"
                     >
-                      Add phone
+                      {t("addPhone")}
                     </Link>
                   </div>
                 )}
@@ -122,7 +126,7 @@ export default function ProfilePage() {
 
               <div>
                 <label className="text-sm font-medium text-gray-600">
-                  Member Since
+                  {t("memberSince", { date: "" })}
                 </label>
                 <p className="mt-1 text-gray-900">
                   {new Date(user.createdAt).toLocaleDateString()}
@@ -134,7 +138,7 @@ export default function ProfilePage() {
           {/* Account Actions */}
           <div className="rounded-lg bg-white p-6 shadow-md">
             <h2 className="mb-4 text-xl font-semibold">
-              Account Actions
+              {t("accountActions")}
             </h2>
 
             <div className="space-y-3">
@@ -142,21 +146,21 @@ export default function ProfilePage() {
                 onClick={() => router.push("/seller/dashboard")}
                 className="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
               >
-                Go to Seller Dashboard
+                {t("goToSellerDashboard")}
               </button>
 
               <button
                 onClick={() => router.push("/reservations")}
                 className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
-                View My Reservations
+                {t("viewMyReservations")}
               </button>
 
               <button
                 onClick={() => router.push("/profile/settings")}
                 className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
-                Account Settings
+                {t("accountSettings")}
               </button>
             </div>
           </div>
@@ -167,7 +171,7 @@ export default function ProfilePage() {
           {/* Rating Card */}
           <div className="rounded-lg bg-white p-6 shadow-md">
             <h2 className="mb-4 text-lg font-semibold">
-              Rating
+              {t("rating")}
             </h2>
 
             <div className="text-center">
@@ -189,7 +193,7 @@ export default function ProfilePage() {
                 ))}
               </div>
               <p className="text-sm text-gray-600">
-                {user.ratingCount} {user.ratingCount === 1 ? 'review' : 'reviews'}
+                {user.ratingCount} {user.ratingCount === 1 ? t('review') : t('reviews')}
               </p>
             </div>
           </div>
@@ -197,48 +201,48 @@ export default function ProfilePage() {
           {/* Account Info */}
           <div className="rounded-lg bg-white p-6 shadow-md">
             <h2 className="mb-4 text-lg font-semibold">
-              Account Status
+              {t("accountStatus")}
             </h2>
 
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">
-                  Email Verified
+                  {t("emailVerified")}
                 </span>
                 <span className="font-semibold text-gray-900">
                   {user.emailVerified ? (
-                    <span className="text-green-600">Yes</span>
+                    <span className="text-green-600">{t("yes")}</span>
                   ) : (
-                    <span className="text-yellow-600">No</span>
+                    <span className="text-yellow-600">{t("no")}</span>
                   )}
                 </span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">
-                  Phone Verified
+                  {t("phoneVerified")}
                 </span>
                 <span className="font-semibold text-gray-900">
                   {user.phoneVerified ? (
-                    <span className="text-green-600">Yes</span>
+                    <span className="text-green-600">{t("yes")}</span>
                   ) : (
-                    <span className="text-yellow-600">No</span>
+                    <span className="text-yellow-600">{t("no")}</span>
                   )}
                 </span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">
-                  Verification
+                  {t("verification")}
                 </span>
                 <span className="font-semibold text-gray-900">
-                  {user.verificationBadge === "NONE" ? "Standard" : user.verificationBadge}
+                  {user.verificationBadge === "NONE" ? t("standard") : user.verificationBadge}
                 </span>
               </div>
 
               <div className="flex justify-between border-t pt-3">
                 <span className="text-sm text-gray-600">
-                  Status
+                  {t("status")}
                 </span>
                 <span className="font-semibold text-green-600">
                   {user.accountStatus || 'ACTIVE'}

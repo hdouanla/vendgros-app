@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 import Link from "next/link";
 import { RatingModal } from "~/components/ratings/rating-modal";
 
 // Component to show rating status for a completed reservation
-function RatingButton({ reservationId, sellerName }: { reservationId: string; sellerName: string }) {
+function RatingButton({ reservationId, sellerName, t }: { reservationId: string; sellerName: string; t: ReturnType<typeof useTranslations<"reservation">> }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const tCommon = useTranslations("common");
   const { data: ratingStatus, isLoading } = api.rating.getForReservation.useQuery(
     { reservationId },
   );
@@ -16,7 +18,7 @@ function RatingButton({ reservationId, sellerName }: { reservationId: string; se
   if (isLoading) {
     return (
       <span className="inline-flex items-center rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-400">
-        Loading...
+        {tCommon("loading")}
       </span>
     );
   }
@@ -24,7 +26,7 @@ function RatingButton({ reservationId, sellerName }: { reservationId: string; se
   if (ratingStatus?.myRating) {
     return (
       <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
-        ✓ Rated ({ratingStatus.myRating.score}/5)
+        ✓ {t("rated")} ({ratingStatus.myRating.score}/5)
       </span>
     );
   }
@@ -35,7 +37,7 @@ function RatingButton({ reservationId, sellerName }: { reservationId: string; se
         onClick={() => setIsModalOpen(true)}
         className="inline-flex items-center whitespace-nowrap rounded-md border-2 border-orange-500 bg-white px-4 py-2 text-sm font-medium text-orange-500 hover:bg-orange-50"
       >
-        * Rate this seller
+        * {t("rateSeller")}
       </button>
       <RatingModal
         reservationId={reservationId}
@@ -50,6 +52,8 @@ function RatingButton({ reservationId, sellerName }: { reservationId: string; se
 
 export default function MyReservationsPage() {
   const router = useRouter();
+  const t = useTranslations("reservation");
+  const tCommon = useTranslations("common");
   const [activeTab, setActiveTab] = useState<"active" | "completed" | "other">("active");
 
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery(undefined, {
@@ -72,7 +76,7 @@ export default function MyReservationsPage() {
   if (sessionLoading || !session?.user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-600">Loading...</p>
+        <p className="text-gray-600">{tCommon("loading")}</p>
       </div>
     );
   }
@@ -94,34 +98,34 @@ export default function MyReservationsPage() {
     <div className="mx-auto max-w-7xl px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">My Reservations</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t("myReservations")}</h1>
         <p className="mt-2 text-sm text-gray-600">
-          View and manage your reservations
+          {t("viewAndManage")}
         </p>
       </div>
 
       {/* Stats */}
       <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg bg-white p-6 shadow">
-          <p className="text-sm text-gray-600">Active</p>
+          <p className="text-sm text-gray-600">{t("active")}</p>
           <p className="mt-2 text-3xl font-bold text-blue-600">
             {activeReservations.length}
           </p>
         </div>
         <div className="rounded-lg bg-white p-6 shadow">
-          <p className="text-sm text-gray-600">Completed</p>
+          <p className="text-sm text-gray-600">{t("completed")}</p>
           <p className="mt-2 text-3xl font-bold text-green-600">
             {completedReservations.length}
           </p>
         </div>
         <div className="rounded-lg bg-white p-6 shadow">
-          <p className="text-sm text-gray-600">Other</p>
+          <p className="text-sm text-gray-600">{t("other")}</p>
           <p className="mt-2 text-3xl font-bold text-gray-600">
             {otherReservations.length}
           </p>
         </div>
         <div className="rounded-lg bg-white p-6 shadow">
-          <p className="text-sm text-gray-600">Total</p>
+          <p className="text-sm text-gray-600">{t("total")}</p>
           <p className="mt-2 text-3xl font-bold text-purple-600">
             {reservations?.length || 0}
           </p>
@@ -134,7 +138,7 @@ export default function MyReservationsPage() {
           href="/"
           className="rounded-md bg-green-600 px-6 py-3 text-sm font-medium text-white hover:bg-green-700"
         >
-          Browse Listings
+          {t("browseListings")}
         </Link>
       </div>
 
@@ -149,7 +153,7 @@ export default function MyReservationsPage() {
                 : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
             }`}
           >
-            Active ({activeReservations.length})
+            {t("active")} ({activeReservations.length})
           </button>
           <button
             onClick={() => setActiveTab("completed")}
@@ -159,7 +163,7 @@ export default function MyReservationsPage() {
                 : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
             }`}
           >
-            Completed ({completedReservations.length})
+            {t("completed")} ({completedReservations.length})
           </button>
           <button
             onClick={() => setActiveTab("other")}
@@ -169,7 +173,7 @@ export default function MyReservationsPage() {
                 : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
             }`}
           >
-            Other ({otherReservations.length})
+            {t("other")} ({otherReservations.length})
           </button>
         </nav>
       </div>
@@ -179,16 +183,16 @@ export default function MyReservationsPage() {
         <div className="rounded-lg bg-white shadow">
           {reservationsLoading ? (
             <div className="py-12 text-center">
-              <p className="text-gray-600">Loading reservations...</p>
+              <p className="text-gray-600">{t("loadingReservations")}</p>
             </div>
           ) : activeReservations.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-gray-600">No active reservations</p>
+              <p className="text-gray-600">{t("noActiveReservations")}</p>
               <Link
                 href="/"
                 className="mt-4 inline-block text-green-600 hover:text-green-700"
               >
-                Browse listings →
+                {t("browseListings")} →
               </Link>
             </div>
           ) : (
@@ -214,29 +218,29 @@ export default function MyReservationsPage() {
 
                       <div className="mt-2 space-y-1 text-sm text-gray-600">
                         <p>
-                          <span className="font-medium">Seller:</span>{" "}
+                          <span className="font-medium">{t("seller")}:</span>{" "}
                           {reservation.listing.seller?.name || reservation.listing.seller?.email || "N/A"}
                         </p>
                         <p>
-                          <span className="font-medium">Quantity:</span>{" "}
-                          {reservation.quantityReserved} units
+                          <span className="font-medium">{t("quantity")}:</span>{" "}
+                          {reservation.quantityReserved} {t("units")}
                         </p>
                         <p>
-                          <span className="font-medium">Total Price:</span>{" "}
+                          <span className="font-medium">{t("totalPrice")}:</span>{" "}
                           ${reservation.totalPrice.toFixed(2)} CAD
                         </p>
                         <p>
-                          <span className="font-medium">Deposit Paid:</span>{" "}
+                          <span className="font-medium">{t("depositPaid")}:</span>{" "}
                           ${reservation.depositAmount.toFixed(2)} CAD
                         </p>
                         <p>
-                          <span className="font-medium">Balance Due:</span>{" "}
+                          <span className="font-medium">{t("balanceDue")}:</span>{" "}
                           <span className="text-lg font-bold text-green-600">
                             ${(reservation.totalPrice - reservation.depositAmount).toFixed(2)} CAD
                           </span>
                         </p>
                         <p>
-                          <span className="font-medium">Pickup by:</span>{" "}
+                          <span className="font-medium">{t("pickupBy", { date: "" })}:</span>{" "}
                           {new Date(reservation.expiresAt).toLocaleString()}
                         </p>
                       </div>
@@ -244,7 +248,7 @@ export default function MyReservationsPage() {
                       {reservation.status === "PENDING" && (
                         <div className="mt-3 rounded-md bg-yellow-50 p-3">
                           <p className="text-sm text-yellow-800">
-                            ⚠️ Payment pending - Complete your payment to confirm this reservation
+                            ⚠️ {t("paymentPending")}
                           </p>
                         </div>
                       )}
@@ -255,14 +259,14 @@ export default function MyReservationsPage() {
                         href={`/reservations/${reservation.id}`}
                         className="whitespace-nowrap rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
                       >
-                        View Details
+                        {t("viewDetails")}
                       </Link>
                       {reservation.status === "PENDING" && (
                         <Link
                           href={`/payment/${reservation.id}`}
                           className="whitespace-nowrap rounded-md border border-green-600 bg-white px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-50"
                         >
-                          Pay Deposit
+                          {t("payDeposit")}
                         </Link>
                       )}
                       {reservation.status === "CONFIRMED" && (
@@ -273,7 +277,7 @@ export default function MyReservationsPage() {
                           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                           </svg>
-                          Chat
+                          {t("chat")}
                         </Link>
                       )}
                     </div>
@@ -287,13 +291,13 @@ export default function MyReservationsPage() {
         <div className="rounded-lg bg-white shadow">
           {reservationsLoading ? (
             <div className="py-12 text-center">
-              <p className="text-gray-600">Loading completed reservations...</p>
+              <p className="text-gray-600">{t("loadingCompletedReservations")}</p>
             </div>
           ) : completedReservations.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-gray-600">No completed reservations yet</p>
+              <p className="text-gray-600">{t("noCompletedReservations")}</p>
               <p className="mt-2 text-sm text-gray-500">
-                Completed orders will appear here after successful pickup
+                {t("completedOrdersAppear")}
               </p>
             </div>
           ) : (
@@ -313,21 +317,21 @@ export default function MyReservationsPage() {
 
                       <div className="mt-2 space-y-1 text-sm text-gray-600">
                         <p>
-                          <span className="font-medium">Seller:</span>{" "}
+                          <span className="font-medium">{t("seller")}:</span>{" "}
                           {reservation.listing.seller?.name || reservation.listing.seller?.email || "N/A"}
                         </p>
                         <p>
-                          <span className="font-medium">Quantity:</span>{" "}
-                          {reservation.quantityReserved} units
+                          <span className="font-medium">{t("quantity")}:</span>{" "}
+                          {reservation.quantityReserved} {t("units")}
                         </p>
                         <p>
-                          <span className="font-medium">Total Paid:</span>{" "}
+                          <span className="font-medium">{t("totalPaid")}:</span>{" "}
                           <span className="text-lg font-bold text-green-600">
                             ${reservation.totalPrice.toFixed(2)} CAD
                           </span>
                         </p>
                         <p>
-                          <span className="font-medium">Completed:</span>{" "}
+                          <span className="font-medium">{t("completed")}:</span>{" "}
                           {reservation.completedAt
                             ? new Date(reservation.completedAt).toLocaleString()
                             : "N/A"}
@@ -343,14 +347,15 @@ export default function MyReservationsPage() {
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                         </svg>
-                        Chat
+                        {t("chat")}
                       </Link>
                       <span className="inline-flex items-center justify-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
-                        ✓ Delivered
+                        ✓ {t("delivered")}
                       </span>
                       <RatingButton
                         reservationId={reservation.id}
                         sellerName={reservation.listing.seller?.name || reservation.listing.seller?.email || "Seller"}
+                        t={t}
                       />
                     </div>
                   </div>
@@ -363,13 +368,13 @@ export default function MyReservationsPage() {
         <div className="rounded-lg bg-white shadow">
           {reservationsLoading ? (
             <div className="py-12 text-center">
-              <p className="text-gray-600">Loading reservations...</p>
+              <p className="text-gray-600">{t("loadingReservations")}</p>
             </div>
           ) : otherReservations.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-gray-600">No other reservations</p>
+              <p className="text-gray-600">{t("noOtherReservations")}</p>
               <p className="mt-2 text-sm text-gray-500">
-                Cancelled or expired reservations will appear here
+                {t("cancelledExpiredAppear")}
               </p>
             </div>
           ) : (
@@ -389,15 +394,15 @@ export default function MyReservationsPage() {
 
                       <div className="mt-2 space-y-1 text-sm text-gray-600">
                         <p>
-                          <span className="font-medium">Seller:</span>{" "}
+                          <span className="font-medium">{t("seller")}:</span>{" "}
                           {reservation.listing.seller?.name || reservation.listing.seller?.email || "N/A"}
                         </p>
                         <p>
-                          <span className="font-medium">Quantity:</span>{" "}
-                          {reservation.quantityReserved} units
+                          <span className="font-medium">{t("quantity")}:</span>{" "}
+                          {reservation.quantityReserved} {t("units")}
                         </p>
                         <p>
-                          <span className="font-medium">Total Price:</span>{" "}
+                          <span className="font-medium">{t("totalPrice")}:</span>{" "}
                           ${reservation.totalPrice.toFixed(2)} CAD
                         </p>
                         <p>
@@ -412,7 +417,7 @@ export default function MyReservationsPage() {
                         href={`/reservations/${reservation.id}`}
                         className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                       >
-                        View Details
+                        {t("viewDetails")}
                       </Link>
                     </div>
                   </div>

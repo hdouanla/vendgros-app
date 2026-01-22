@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 import { ListingMap } from "~/components/map/listing-map";
 import { SearchFilters, type SearchFiltersValues } from "~/components/search";
@@ -9,6 +10,9 @@ import { SearchFilters, type SearchFiltersValues } from "~/components/search";
 export default function SearchListingsPage() {
   const router = useRouter();
   const urlSearchParams = useSearchParams();
+  const t = useTranslations("search");
+  const tListing = useTranslations("listing");
+  const tCommon = useTranslations("common");
 
   // Parse URL params
   const urlPostalCode = urlSearchParams.get("postalCode") || "";
@@ -143,10 +147,10 @@ export default function SearchListingsPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
-          Search Nearby Listings
+          {t("searchNearbyListings")}
         </h1>
         <p className="mt-2 text-sm text-gray-600">
-          Find bulk deals in your area
+          {t("findBulkDeals")}
         </p>
       </div>
 
@@ -174,7 +178,7 @@ export default function SearchListingsPage() {
       <div>
         {isLoading ? (
           <div className="py-12 text-center">
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-gray-600">{tCommon("loading")}</p>
           </div>
         ) : postalCodeError ? (
           <div className="rounded-lg bg-red-50 border border-red-200 p-8 text-center">
@@ -185,13 +189,13 @@ export default function SearchListingsPage() {
             </div>
             <p className="text-red-700 font-medium">{postalCodeError}</p>
             <p className="mt-2 text-sm text-red-600">
-              Try a different postal code or use "Use My Location" instead.
+              {t("tryDifferentPostalCode")}
             </p>
           </div>
         ) : !latitude && !longitude && !activePostalCode ? (
           <div className="rounded-lg bg-blue-50 p-8 text-center">
             <p className="text-gray-700">
-              Enter a postal code and click "Search", or use "Use My Location" to see nearby listings
+              {t("enterPostalCodePrompt")}
             </p>
           </div>
         ) : listings && listings.length > 0 ? (
@@ -199,7 +203,7 @@ export default function SearchListingsPage() {
             {/* View Toggle and Results Count */}
             <div className="mb-4 flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                {listings.length} listings found
+                {t("listingsFound", { count: listings.length })}
               </div>
               <div className="flex gap-2">
                 <button
@@ -223,7 +227,7 @@ export default function SearchListingsPage() {
                       d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
                     />
                   </svg>
-                  Grid
+                  {t("grid")}
                 </button>
                 <button
                   onClick={() => setViewMode("map")}
@@ -246,7 +250,7 @@ export default function SearchListingsPage() {
                       d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
                     />
                   </svg>
-                  Map
+                  {t("map")}
                 </button>
               </div>
             </div>
@@ -270,7 +274,7 @@ export default function SearchListingsPage() {
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center text-gray-400">
-                          No photo
+                          {tListing("noPhoto")}
                         </div>
                       )}
                     </div>
@@ -307,11 +311,11 @@ export default function SearchListingsPage() {
                             ${item.listing.pricePerPiece.toFixed(2)}
                           </span>
                           <span className="ml-1 text-sm text-gray-600">
-                            / piece
+                            {tListing("perPiece")}
                           </span>
                         </div>
                         <div className="text-sm text-gray-600">
-                          {item.listing.quantityAvailable} available
+                          {item.listing.quantityAvailable} {tListing("quantityAvailable").toLowerCase()}
                         </div>
                       </div>
                     </div>
@@ -353,7 +357,7 @@ export default function SearchListingsPage() {
           </>
         ) : (
           <div className="rounded-lg bg-gray-50 p-8 text-center">
-            <p className="text-gray-700">No listings found</p>
+            <p className="text-gray-700">{tListing("noListings")}</p>
           </div>
         )}
       </div>

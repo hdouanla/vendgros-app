@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 import Link from "next/link";
 import { ReservationCard } from "~/components/seller/reservation-card";
 
 export default function SellerDashboardPage() {
   const router = useRouter();
+  const t = useTranslations("seller");
+  const tCommon = useTranslations("common");
   const [activeTab, setActiveTab] = useState<"listings" | "reservations" | "completed">("listings");
 
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery(undefined, {
@@ -50,7 +53,7 @@ export default function SellerDashboardPage() {
   if (sessionLoading || !session?.user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-600">Loading...</p>
+        <p className="text-gray-600">{tCommon("loading")}</p>
       </div>
     );
   }
@@ -63,44 +66,44 @@ export default function SellerDashboardPage() {
     <div className="mx-auto max-w-7xl px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Seller Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t("sellerDashboard")}</h1>
         <p className="mt-2 text-sm text-gray-600">
-          Manage your listings and reservations
+          {t("manageListingsAndReservations")}
         </p>
       </div>
 
       {/* Quick Stats */}
       <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
         <div className="rounded-lg bg-white p-6 shadow">
-          <p className="text-sm text-gray-600">Active Listings</p>
+          <p className="text-sm text-gray-600">{t("activeListings")}</p>
           <p className="mt-2 text-3xl font-bold text-green-600">
             {activeListings.length}
           </p>
         </div>
 
         <div className="rounded-lg bg-white p-6 shadow">
-          <p className="text-sm text-gray-600">Pending Review</p>
+          <p className="text-sm text-gray-600">{t("pendingReview")}</p>
           <p className="mt-2 text-3xl font-bold text-yellow-600">
             {pendingReviewListings.length}
           </p>
         </div>
 
         <div className="rounded-lg bg-white p-6 shadow">
-          <p className="text-sm text-gray-600">Awaiting Pickup</p>
+          <p className="text-sm text-gray-600">{t("awaitingPickup")}</p>
           <p className="mt-2 text-3xl font-bold text-blue-600">
             {pendingReservations?.length || 0}
           </p>
         </div>
 
         <div className="rounded-lg bg-white p-6 shadow">
-          <p className="text-sm text-gray-600">Completed</p>
+          <p className="text-sm text-gray-600">{t("completed")}</p>
           <p className="mt-2 text-3xl font-bold text-purple-600">
             {completedReservations?.length || 0}
           </p>
         </div>
 
         <div className="rounded-lg bg-white p-6 shadow">
-          <p className="text-sm text-gray-600">Drafts</p>
+          <p className="text-sm text-gray-600">{t("drafts")}</p>
           <p className="mt-2 text-3xl font-bold text-gray-600">
             {draftListings.length}
           </p>
@@ -113,19 +116,19 @@ export default function SellerDashboardPage() {
           href="/listings/create"
           className="rounded-md bg-green-600 px-6 py-3 text-sm font-medium text-white hover:bg-green-700"
         >
-          + Create New Listing
+          {t("createNewListing")}
         </Link>
         <Link
           href="/seller/scanner"
           className="rounded-md bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700"
         >
-          📱 Scan QR Code
+          {t("scanQrCode")}
         </Link>
         <Link
           href="/seller/analytics"
           className="rounded-md bg-purple-600 px-6 py-3 text-sm font-medium text-white hover:bg-purple-700"
         >
-          📊 View Analytics
+          {t("viewAnalytics")}
         </Link>
       </div>
 
@@ -140,7 +143,7 @@ export default function SellerDashboardPage() {
                 : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
             }`}
           >
-            My Listings ({listings?.length || 0})
+            {t("myListings")} ({listings?.length || 0})
           </button>
           <button
             onClick={() => setActiveTab("reservations")}
@@ -150,7 +153,7 @@ export default function SellerDashboardPage() {
                 : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
             }`}
           >
-            Pending Pickups ({pendingReservations?.length || 0})
+            {t("pendingPickups")} ({pendingReservations?.length || 0})
           </button>
           <button
             onClick={() => setActiveTab("completed")}
@@ -160,7 +163,7 @@ export default function SellerDashboardPage() {
                 : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
             }`}
           >
-            Completed ({completedReservations?.length || 0})
+            {t("completed")} ({completedReservations?.length || 0})
           </button>
         </nav>
       </div>
@@ -170,13 +173,13 @@ export default function SellerDashboardPage() {
         <div className="rounded-lg bg-white shadow">
           {completedLoading ? (
             <div className="py-12 text-center">
-              <p className="text-gray-600">Loading completed orders...</p>
+              <p className="text-gray-600">{t("loadingCompletedOrders")}</p>
             </div>
           ) : !completedReservations || completedReservations.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-gray-600">No completed orders yet</p>
+              <p className="text-gray-600">{t("noCompletedOrders")}</p>
               <p className="mt-2 text-sm text-gray-500">
-                Orders will appear here after successful pickup
+                {t("ordersAppearAfterPickup")}
               </p>
             </div>
           ) : (
@@ -195,16 +198,16 @@ export default function SellerDashboardPage() {
         <div className="rounded-lg bg-white shadow">
           {listingsLoading ? (
             <div className="py-12 text-center">
-              <p className="text-gray-600">Loading listings...</p>
+              <p className="text-gray-600">{t("loadingListings")}</p>
             </div>
           ) : !listings || listings.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-gray-600">No listings yet</p>
+              <p className="text-gray-600">{t("noListingsYet")}</p>
               <Link
                 href="/listings/create"
                 className="mt-4 inline-block text-green-600 hover:text-green-700"
               >
-                Create your first listing →
+                {t("createFirstListing")} →
               </Link>
             </div>
           ) : (
@@ -213,22 +216,22 @@ export default function SellerDashboardPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Listing
+                      {t("listing")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Status
+                      {t("status")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Price
+                      {t("price")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Available
+                      {t("available")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Views
+                      {t("views")}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Actions
+                      {t("actions")}
                     </th>
                   </tr>
                 </thead>
@@ -276,14 +279,14 @@ export default function SellerDashboardPage() {
                             }`}
                           >
                             {listing.status === "DRAFT" && listing.moderationNotes
-                              ? "REJECTED"
+                              ? t("rejected")
                               : listing.status}
                           </span>
                           {/* Show rejection reason for DRAFT listings with moderation notes */}
                           {listing.status === "DRAFT" && listing.moderationNotes && (
                             <div className="mt-1 max-w-xs">
                               <p className="text-xs font-medium text-red-600">
-                                Rejection reason:
+                                {t("rejectionReason")}
                               </p>
                               <p className="text-xs text-red-600 line-clamp-2">
                                 {listing.moderationNotes}
@@ -306,14 +309,14 @@ export default function SellerDashboardPage() {
                           href={`/listings/${listing.id}`}
                           className="text-blue-600 hover:text-blue-900"
                         >
-                          View
+                          {t("view")}
                         </Link>
                         <span className="mx-2 text-gray-300">|</span>
                         <Link
                           href={`/seller/listings/${listing.id}/edit`}
                           className="text-green-600 hover:text-green-900"
                         >
-                          Edit
+                          {t("edit")}
                         </Link>
                       </td>
                     </tr>
@@ -327,13 +330,13 @@ export default function SellerDashboardPage() {
         <div className="rounded-lg bg-white shadow">
           {reservationsLoading ? (
             <div className="py-12 text-center">
-              <p className="text-gray-600">Loading reservations...</p>
+              <p className="text-gray-600">{t("loadingReservations")}</p>
             </div>
           ) : !pendingReservations || pendingReservations.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-gray-600">No pending pickups</p>
+              <p className="text-gray-600">{t("noPendingPickups")}</p>
               <p className="mt-2 text-sm text-gray-500">
-                Reservations will appear here when buyers pay their deposit
+                {t("reservationsAppearWhenPaid")}
               </p>
             </div>
           ) : (

@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 
 import { cn } from "@acme/ui";
 import { ThemeProvider, ThemeToggle } from "@acme/ui/theme";
@@ -61,9 +63,12 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
 });
 
-export default function RootLayout(props: { children: React.ReactNode }) {
+export default async function RootLayout(props: { children: React.ReactNode }) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body
         className={cn(
           "bg-background text-foreground min-h-screen font-sans antialiased",
@@ -73,12 +78,14 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         suppressHydrationWarning
       >
         <ThemeProvider>
-          <TRPCReactProvider>
-            <Navbar />
-            <UserNav />
-            <main>{props.children}</main>
-            <FooterWrapper />
-          </TRPCReactProvider>
+          <NextIntlClientProvider messages={messages}>
+            <TRPCReactProvider>
+              <Navbar />
+              <UserNav />
+              <main>{props.children}</main>
+              <FooterWrapper />
+            </TRPCReactProvider>
+          </NextIntlClientProvider>
           <div className="absolute right-4 bottom-4">
             <ThemeToggle />
           </div>

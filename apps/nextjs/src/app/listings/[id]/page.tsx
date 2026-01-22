@@ -2,41 +2,10 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 import { ListingMap } from "~/components/map/listing-map";
 import { ImageLightbox } from "~/components/ui/image-lightbox";
-
-// Simple translation stub - replace with actual translations later
-const t = (key: string, params?: any) => {
-  const translations: Record<string, string> = {
-    "common.loading": "Loading...",
-    "common.back": "Back",
-    "common.cancel": "Cancel",
-    "common.confirm": "Confirm",
-    "errors.notFound": "Listing not found",
-    "listing.photos": "No photos",
-    "listing.description": "Description",
-    "listing.pickupAddress": "Pickup Address",
-    "listing.pickupInstructions": "Pickup Instructions",
-    "listing.seller": "Seller",
-    "listing.rating": "Rating",
-    "listing.reviews": "reviews",
-    "listing.pricePerPiece": "per piece",
-    "listing.quantity": "Quantity",
-    "listing.quantityAvailable": "Available",
-    "listing.maxPerBuyer": "Max per buyer",
-    "listing.itemTitle": "Item",
-    "profile.accountType": "Account Type",
-    "profile.memberSince": "Member since",
-    "reservation.reserve": "Reserve Now",
-    "reservation.totalPrice": "Total Price",
-    "reservation.depositAmount": "Deposit (5%)",
-    "reservation.balanceDue": "Balance Due at Pickup",
-    "reservation.confirmReservation": "Confirm Reservation",
-    "reservation.balancePayment": `Pay remaining balance at pickup`,
-  };
-  return translations[key] || key;
-};
 
 export default function ListingDetailPage({
   params,
@@ -45,6 +14,11 @@ export default function ListingDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const tCommon = useTranslations("common");
+  const tListing = useTranslations("listing");
+  const tReservation = useTranslations("reservation");
+  const tProfile = useTranslations("profile");
+  const tErrors = useTranslations("errors");
 
   const [quantityToReserve, setQuantityToReserve] = useState(1);
   const [showReserveModal, setShowReserveModal] = useState(false);
@@ -71,9 +45,9 @@ export default function ListingDetailPage({
     },
     onError: (error) => {
       if (error.data?.code === "UNAUTHORIZED") {
-        setReservationError("Please sign in to make a reservation");
+        setReservationError(tReservation("pleaseSignIn"));
       } else {
-        setReservationError(error.message || "Failed to create reservation");
+        setReservationError(error.message || tReservation("reservationFailed"));
       }
     },
   });
@@ -125,7 +99,7 @@ export default function ListingDetailPage({
   if (isLoading) {
     return (
       <div className="py-12 text-center">
-        <p className="text-gray-600">{t("common.loading")}</p>
+        <p className="text-gray-600">{tCommon("loading")}</p>
       </div>
     );
   }
@@ -133,7 +107,7 @@ export default function ListingDetailPage({
   if (!listing) {
     return (
       <div className="py-12 text-center">
-        <p className="text-gray-600">{t("errors.notFound")}</p>
+        <p className="text-gray-600">{tErrors("notFound")}</p>
       </div>
     );
   }
@@ -162,7 +136,7 @@ export default function ListingDetailPage({
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        {t("common.back")}
+        {tCommon("back")}
       </button>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
@@ -195,13 +169,13 @@ export default function ListingDetailPage({
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
                       />
                     </svg>
-                    <span className="text-sm font-medium">Click to enlarge</span>
+                    <span className="text-sm font-medium">{tListing("clickToEnlarge")}</span>
                   </div>
                 </div>
               </button>
             ) : (
               <div className="flex h-full items-center justify-center text-gray-400">
-                {t("listing.photos")}
+                {tListing("noPhoto")}
               </div>
             )}
           </div>
@@ -232,7 +206,7 @@ export default function ListingDetailPage({
           {/* Description */}
           <div className="rounded-lg bg-white p-6 shadow-md">
             <h2 className="mb-4 text-xl font-semibold">
-              {t("listing.description")}
+              {tListing("description")}
             </h2>
             <p className="whitespace-pre-wrap text-gray-700">
               {listing.description}
@@ -242,14 +216,14 @@ export default function ListingDetailPage({
           {/* Pickup Information */}
           <div className="rounded-lg bg-white p-6 shadow-md">
             <h2 className="mb-4 text-xl font-semibold">
-              {t("listing.pickupAddress")}
+              {tListing("pickupAddress")}
             </h2>
             <p className="mb-4 text-gray-700">{listing.pickupAddress}</p>
 
             {listing.pickupInstructions && (
               <>
                 <h3 className="mb-2 font-medium">
-                  {t("listing.pickupInstructions")}
+                  {tListing("pickupInstructions")}
                 </h3>
                 <p className="text-sm text-gray-600">
                   {listing.pickupInstructions}
@@ -281,25 +255,25 @@ export default function ListingDetailPage({
           {/* Seller Information */}
           <div className="rounded-lg bg-white p-6 shadow-md">
             <h2 className="mb-4 text-xl font-semibold">
-              {t("listing.seller")}
+              {tListing("seller")}
             </h2>
             <div className="space-y-2 text-sm">
               <div>
                 <span className="font-medium text-gray-600">
-                  Verification:
+                  {tListing("verification")}:
                 </span>{" "}
-                {listing.seller.verificationBadge === "NONE" ? "Standard" : listing.seller.verificationBadge}
+                {listing.seller.verificationBadge === "NONE" ? tListing("standard") : listing.seller.verificationBadge}
               </div>
               <div>
                 <span className="font-medium text-gray-600">
-                  {t("listing.rating")}:
+                  {tListing("rating")}:
                 </span>{" "}
                 ⭐ {listing.seller.sellerRatingAverage?.toFixed(1) ?? "—"} (
-                {listing.seller.sellerRatingCount} seller {t("listing.reviews")})
+                {listing.seller.sellerRatingCount} {tListing("sellerReviews")})
               </div>
               <div>
                 <span className="font-medium text-gray-600">
-                  {t("profile.memberSince")}:
+                  {tProfile("memberSince", { date: "" })}
                 </span>{" "}
                 {new Date(listing.seller.createdAt).toLocaleDateString()}
               </div>
@@ -329,7 +303,7 @@ export default function ListingDetailPage({
               </span>
               {!listing.isActive && (
                 <span className="inline-block rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-800">
-                  Inactive
+                  {tListing("inactive")}
                 </span>
               )}
             </div>
@@ -340,22 +314,22 @@ export default function ListingDetailPage({
                   ${listing.pricePerPiece.toFixed(2)}
                 </span>
                 <span className="text-sm text-gray-600">
-                  / {t("listing.pricePerPiece")}
+                  {tListing("perPiece")}
                 </span>
               </div>
 
               <div className="text-sm text-gray-600">
                 <div className="flex justify-between">
-                  <span>{t("listing.quantityAvailable")}:</span>
+                  <span>{tListing("quantityAvailable")}:</span>
                   <span className="font-medium">
-                    {listing.quantityAvailable} units
+                    {listing.quantityAvailable} {tListing("units")}
                   </span>
                 </div>
                 {listing.maxPerBuyer && (
                   <div className="flex justify-between">
-                    <span>{t("listing.maxPerBuyer")}:</span>
+                    <span>{tListing("maxPerBuyer")}:</span>
                     <span className="font-medium">
-                      {listing.maxPerBuyer} units
+                      {listing.maxPerBuyer} {tListing("units")}
                     </span>
                   </div>
                 )}
@@ -365,7 +339,7 @@ export default function ListingDetailPage({
               <div className="mt-4">
                 <div className="mb-1 flex justify-between text-xs text-gray-600">
                   <span>
-                    {Math.round((listing.quantityAvailable / listing.quantityTotal) * 100)}% remaining
+                    {tListing("remaining", { percent: Math.round((listing.quantityAvailable / listing.quantityTotal) * 100) })}
                   </span>
                 </div>
                 <div className="h-4 w-full overflow-hidden rounded-lg bg-gray-200">
@@ -393,7 +367,7 @@ export default function ListingDetailPage({
                 htmlFor="quantity"
                 className="mb-2 block text-sm font-medium"
               >
-                {t("listing.quantity")}
+                {tListing("quantity")}
               </label>
               <input
                 type="number"
@@ -422,21 +396,21 @@ export default function ListingDetailPage({
             {/* Price Breakdown */}
             <div className="mb-6 space-y-2 rounded-lg bg-gray-50 p-4 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">{t("reservation.totalPrice")}:</span>
+                <span className="text-gray-600">{tReservation("totalPrice")}:</span>
                 <span className="font-medium">
                   ${totalPrice.toFixed(2)} CAD
                 </span>
               </div>
               <div className="flex justify-between border-t pt-2">
                 <span className="text-gray-600">
-                  {t("reservation.depositAmount")}:
+                  {tReservation("depositAmount")}:
                 </span>
                 <span className="font-medium text-green-600">
                   ${depositAmount.toFixed(2)} CAD
                 </span>
               </div>
               <div className="flex justify-between text-base font-semibold">
-                <span>{t("reservation.balanceDue")}:</span>
+                <span>{tReservation("balanceDue")}:</span>
                 <span>${balanceDue.toFixed(2)} CAD</span>
               </div>
             </div>
@@ -445,10 +419,10 @@ export default function ListingDetailPage({
             {session?.user?.id === listing.sellerId ? (
               <div className="rounded-md bg-blue-50 p-4 text-center">
                 <p className="text-sm font-medium text-blue-900">
-                  This is your listing
+                  {tListing("thisIsYourListing")}
                 </p>
                 <p className="mt-1 text-xs text-blue-700">
-                  You cannot reserve your own items
+                  {tListing("cannotReserveOwn")}
                 </p>
               </div>
             ) : (
@@ -457,10 +431,10 @@ export default function ListingDetailPage({
                 {!listing.isActive && (
                   <div className="mb-4 rounded-md bg-orange-50 p-4 text-center">
                     <p className="text-sm font-medium text-orange-900">
-                      Temporarily Unavailable
+                      {tListing("temporarilyUnavailable")}
                     </p>
                     <p className="mt-1 text-xs text-orange-700">
-                      The seller has temporarily deactivated this listing. Check back later.
+                      {tListing("checkBackLater")}
                     </p>
                   </div>
                 )}
@@ -475,15 +449,15 @@ export default function ListingDetailPage({
                   className="w-full rounded-md bg-green-600 px-6 py-3 text-lg font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {!listing.isActive
-                    ? "Temporarily Unavailable"
+                    ? tListing("temporarilyUnavailable")
                     : listing.quantityAvailable === 0
-                      ? "Out of Stock"
-                      : t("reservation.reserve")}
+                      ? tListing("outOfStock")
+                      : tListing("reserveNow")}
                 </button>
 
                 {listing.isActive && (
                   <p className="mt-3 text-center text-xs text-gray-500">
-                    {t("reservation.balancePayment", {
+                    {tReservation("balancePayment", {
                       amount: balanceDue.toFixed(2),
                     })}
                   </p>
@@ -499,21 +473,21 @@ export default function ListingDetailPage({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
             <h2 className="mb-4 text-xl font-semibold">
-              {t("reservation.confirmReservation")}
+              {tReservation("confirmReservation")}
             </h2>
 
             <div className="mb-6 space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">{t("listing.itemTitle")}:</span>
+                <span className="text-gray-600">{tListing("itemTitle")}:</span>
                 <span className="font-medium">{listing.title}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">{t("listing.quantity")}:</span>
-                <span className="font-medium">{quantityToReserve} units</span>
+                <span className="text-gray-600">{tListing("quantity")}:</span>
+                <span className="font-medium">{quantityToReserve} {tListing("units")}</span>
               </div>
               <div className="flex justify-between border-t pt-2">
                 <span className="text-gray-600">
-                  {t("reservation.depositAmount")}:
+                  {tReservation("depositAmount")}:
                 </span>
                 <span className="font-medium text-green-600">
                   ${depositAmount.toFixed(2)} CAD
@@ -532,15 +506,14 @@ export default function ListingDetailPage({
                     }}
                     className="mt-2 text-sm font-medium text-red-900 underline hover:text-red-700"
                   >
-                    Go to Sign In
+                    {tListing("goToSignIn")}
                   </button>
                 )}
               </div>
             )}
 
             <p className="mb-6 text-sm text-gray-600">
-              You'll be redirected to payment to secure your reservation. The
-              remaining ${balanceDue.toFixed(2)} CAD will be paid at pickup.
+              {tListing("redirectToPayment", { amount: balanceDue.toFixed(2) })}
             </p>
 
             <div className="flex gap-3">
@@ -551,7 +524,7 @@ export default function ListingDetailPage({
                 }}
                 className="flex-1 rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
               >
-                {t("common.cancel")}
+                {tCommon("cancel")}
               </button>
               <button
                 onClick={handleReserve}
@@ -559,8 +532,8 @@ export default function ListingDetailPage({
                 className="flex-1 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
               >
                 {createReservation.isPending
-                  ? t("common.loading")
-                  : t("common.confirm")}
+                  ? tCommon("loading")
+                  : tCommon("confirm")}
               </button>
             </div>
           </div>

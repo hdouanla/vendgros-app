@@ -2,28 +2,31 @@
 
 import Link from "next/link";
 import Image from "next/image";
-
-const footerLinks = {
-  company: [
-    { label: "About Us", href: "/about" },
-    { label: "Careers", href: "/careers" },
-    { label: "Press", href: "/press" },
-    { label: "Blog", href: "/blog" },
-  ],
-  support: [
-    { label: "Help Center", href: "/help" },
-    { label: "Safety Guidelines", href: "/safety" },
-    { label: "Selling Fees", href: "/fees" },
-    { label: "Contact Us", href: "/contact" },
-  ],
-  legal: [
-    { label: "Terms of Service", href: "/terms-of-service" },
-    { label: "Privacy Policy", href: "/privacy-policy" },
-    { label: "Cookie Policy", href: "/cookies" },
-  ],
-};
+import { useTranslations } from "next-intl";
 
 export function Footer() {
+  const t = useTranslations("footer");
+
+  const footerLinks = {
+    company: [
+      { label: t("aboutUs"), href: "/about" },
+      { label: t("careers"), href: "/careers" },
+      { label: t("press"), href: "/press" },
+      { label: t("blog"), href: "/blog" },
+    ],
+    support: [
+      { label: t("helpCenter"), href: "/help" },
+      { label: t("safetyGuidelines"), href: "/safety" },
+      { label: t("sellingFees"), href: "/fees" },
+      { label: t("contactUs"), href: "/contact" },
+    ],
+    legal: [
+      { label: t("termsOfService"), href: "/terms-of-service" },
+      { label: t("privacyPolicy"), href: "/privacy-policy" },
+      { label: t("cookiePolicy"), href: "/cookies" },
+    ],
+  };
+
   return (
     <footer className="bg-[#0B1D14] text-white">
       <div className="mx-auto max-w-content px-4 py-12 md:py-16">
@@ -39,8 +42,7 @@ export function Footer() {
               />
             </Link>
             <p className="mb-6 max-w-sm text-sm text-gray-400">
-              Canada&apos;s premier marketplace for local bulk deals. Connecting
-              businesses and buyers for smarter inventory solutions.
+              {t("tagline")}
             </p>
             {/* Social icons */}
             <div className="flex gap-4">
@@ -94,7 +96,7 @@ export function Footer() {
 
           {/* Company links */}
           <div>
-            <h3 className="mb-4 font-semibold text-white">Company</h3>
+            <h3 className="mb-4 font-semibold text-white">{t("company")}</h3>
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
                 <li key={link.href}>
@@ -111,7 +113,7 @@ export function Footer() {
 
           {/* Support links */}
           <div>
-            <h3 className="mb-4 font-semibold text-white">Support</h3>
+            <h3 className="mb-4 font-semibold text-white">{t("support")}</h3>
             <ul className="space-y-3">
               {footerLinks.support.map((link) => (
                 <li key={link.href}>
@@ -128,7 +130,7 @@ export function Footer() {
 
           {/* Legal links */}
           <div>
-            <h3 className="mb-4 font-semibold text-white">Legal</h3>
+            <h3 className="mb-4 font-semibold text-white">{t("legal")}</h3>
             <ul className="space-y-3">
               {footerLinks.legal.map((link) => (
                 <li key={link.href}>
@@ -147,8 +149,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-gray-800 pt-8 md:flex-row">
           <p className="text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} VendGros Marketplace Inc. All
-            rights reserved.
+            &copy; {new Date().getFullYear()} {t("copyright")}
           </p>
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <span className="text-lg">🇨🇦</span>

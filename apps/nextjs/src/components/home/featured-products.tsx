@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Star } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@acme/ui/button";
 
@@ -32,6 +33,8 @@ function formatPrice(price: string | number): string {
 }
 
 export function FeaturedProducts({ listings }: FeaturedProductsProps) {
+  const t = useTranslations("home");
+
   if (listings.length === 0) {
     return null;
   }
@@ -46,23 +49,23 @@ export function FeaturedProducts({ listings }: FeaturedProductsProps) {
       <div className="mx-auto max-w-content px-4">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
-            Featured Products
+            {t("featuredProducts")}
           </h2>
           <p className="mt-1 text-gray-600">
-            Popular items picked just for you
+            {t("featuredSubtitle")}
           </p>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2 lg:gap-4">
           {/* Main large card - left side (50%) */}
           {mainItem && (
-            <FeaturedCard listing={mainItem} size="large" />
+            <FeaturedCard listing={mainItem} size="large" t={t} />
           )}
 
           {/* Side grid - 2x2 on right (50%) */}
           <div className="grid grid-cols-2 gap-4">
             {sideItems.map((listing) => (
-              <FeaturedCard key={listing.id} listing={listing} size="normal" />
+              <FeaturedCard key={listing.id} listing={listing} size="normal" t={t} />
             ))}
           </div>
         </div>
@@ -74,9 +77,10 @@ export function FeaturedProducts({ listings }: FeaturedProductsProps) {
 interface FeaturedCardProps {
   listing: Listing;
   size: "large" | "normal";
+  t: ReturnType<typeof useTranslations<"home">>;
 }
 
-function FeaturedCard({ listing, size }: FeaturedCardProps) {
+function FeaturedCard({ listing, size, t }: FeaturedCardProps) {
   const rating = listing.seller?.sellerRatingAverage
     ? parseFloat(listing.seller.sellerRatingAverage)
     : 4.9;
@@ -112,7 +116,7 @@ function FeaturedCard({ listing, size }: FeaturedCardProps) {
             <span className={`font-bold text-[#0DAE09] ${size === "large" ? "text-xl" : "text-base"}`}>
               ${formatPrice(listing.pricePerPiece)}
             </span>
-            <span className={`text-white/70 ${size === "large" ? "text-sm" : "text-xs"}`}> /set</span>
+            <span className={`text-white/70 ${size === "large" ? "text-sm" : "text-xs"}`}>{t("perSet")}</span>
           </div>
           <div className="flex items-center gap-1">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -135,13 +139,13 @@ function FeaturedCard({ listing, size }: FeaturedCardProps) {
         {/* Availability and Button row */}
         <div className="flex items-center justify-between">
           <span className={`text-white/70 ${size === "large" ? "text-sm" : "text-xs"}`}>
-            {listing.quantityAvailable} available
+            {t("available", { count: listing.quantityAvailable })}
           </span>
           <Button
             size="sm"
             className="bg-[#0DAE09] text-white hover:bg-[#0B9507]"
           >
-            Shop Now
+            {t("shopNow")}
           </Button>
         </div>
       </div>

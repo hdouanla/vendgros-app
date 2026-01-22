@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 export function HeroSection() {
+  const t = useTranslations("home");
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-green-50 to-white">
       <div className="mx-auto max-w-content px-4 py-12 md:py-16 lg:py-20">
@@ -11,23 +14,22 @@ export function HeroSection() {
           {/* Left: Content */}
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#0DAE09]">
-              Canada&apos;s #1 Bulk Marketplace
+              {t("heroSubtitle")}
             </p>
             <h1 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 md:text-5xl">
-              Find Local{" "}
-              <span className="text-[#0DAE09]">Bulk Deals</span>
+              {t("heroTitle")}{" "}
+              <span className="text-[#0DAE09]">{t("heroTitleHighlight")}</span>
               <br />
-              Near You
+              {t("heroTitleEnd")}
             </h1>
             <p className="mb-6 text-lg text-gray-600">
-              Connect with local sellers, save on shipping, and grab massive
-              discounts on bulk inventory.
+              {t("heroDescription")}
             </p>
             <Link
               href="/listings/search"
               className="inline-flex items-center rounded-lg bg-[#0DAE09] px-6 py-3 text-base font-semibold text-white shadow-lg transition-colors hover:bg-[#0B9507]"
             >
-              Browse Listings
+              {t("browseListings")}
             </Link>
           </div>
 

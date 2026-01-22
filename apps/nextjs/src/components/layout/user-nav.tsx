@@ -44,17 +44,17 @@ export function UserNav() {
   ];
 
   return (
-    <div className="border-b border-green-200 bg-green-100">
+    <div className="border-b border-green-200 bg-[#ffe9a1]">
       <div className="mx-auto max-w-content px-4 sm:px-6 lg:px-8">
-        <div className="flex h-10 items-center justify-center gap-1 overflow-x-auto sm:gap-2">
+        <div className="flex items-center justify-center gap-1 overflow-x-auto sm:gap-2">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-1 whitespace-nowrap px-3 py-1.5 text-md font-medium transition-colors ${
+              className={`flex items-center gap-1 whitespace-nowrap px-3 py-4 text-base font-medium transition-colors ${
                 isActive(item.href)
-                  ? "border-b-2 border-green-600 text-green-600"
-                  : "hover:bg-green-100"
+                  ? "text-green-600"
+                  : "hover:text-green-600"
               }`}
             >
               {item.label}

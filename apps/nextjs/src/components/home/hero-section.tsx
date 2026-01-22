@@ -9,11 +9,11 @@ export function HeroSection() {
       <div className="mx-auto max-w-content px-4 py-12 md:py-16 lg:py-20">
         <div className="grid items-center gap-8 lg:grid-cols-2">
           {/* Left: Content */}
-          <div className="max-w-xl">
+          <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#0DAE09]">
               Canada&apos;s #1 Bulk Marketplace
             </p>
-            <h1 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 md:text-5xl lg:text-6xl">
+            <h1 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 md:text-5xl">
               Find Local{" "}
               <span className="text-[#0DAE09]">Bulk Deals</span>
               <br />

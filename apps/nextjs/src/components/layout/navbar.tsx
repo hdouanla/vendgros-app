@@ -57,7 +57,8 @@ export function Navbar() {
       <div className="mx-auto max-w-content px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center">
+          {/* Logo and Desktop Navigation - Left Aligned */}
+          <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center">
               <Image
                 src="/vendgros-logo-light.png"
@@ -67,31 +68,31 @@ export function Navbar() {
                 priority
               />
             </Link>
-          </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-8">
-            <Link
-              href="/listings/search"
-              className={`text-md uppercase font-medium transition-colors ${
-                isActive("/listings/search")
-                  ? "text-green-600"
-                  : "text-gray-700 hover:text-green-600"
-              }`}
-            >
-              {t("browse")}
-            </Link>
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-6">
+              <Link
+                href="/listings/search"
+                className={`text-md font-medium transition-colors ${
+                  isActive("/listings/search")
+                    ? "text-green-600"
+                    : "text-gray-700 hover:text-green-600"
+                }`}
+              >
+                {t("browse")}
+              </Link>
 
-            <Link
-              href="/listings/create"
-              className={`text-md uppercase font-medium transition-colors ${
-                isActive("/listings/create")
-                  ? "text-green-600"
-                  : "text-gray-700 hover:text-green-600"
-              }`}
-            >
-              {t("sell")}
-            </Link>
+              <Link
+                href="/listings/create"
+                className={`text-md font-medium transition-colors ${
+                  isActive("/listings/create")
+                    ? "text-green-600"
+                    : "text-gray-700 hover:text-green-600"
+                }`}
+              >
+                {t("sell")}
+              </Link>
+            </div>
           </div>
 
           {/* Right side - Language & User Menu */}

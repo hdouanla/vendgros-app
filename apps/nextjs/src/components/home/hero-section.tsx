@@ -16,9 +16,9 @@ export function HeroSection() {
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#0DAE09]">
               {t("heroSubtitle")}
             </p>
-            <h1 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 md:text-5xl">
+            <h1 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 md:text-6xl lg:text-8xl">
               {t("heroTitle")}{" "}
-              <span className="text-[#0DAE09]">{t("heroTitleHighlight")}</span>
+              <span className="text-[#0DAE09]"><br />{t("heroTitleHighlight")}</span>
               <br />
               {t("heroTitleEnd")}
             </h1>
@@ -35,17 +35,15 @@ export function HeroSection() {
 
           {/* Right: Map Illustration */}
           <div className="relative hidden lg:block">
-            <div className="relative h-[350px] w-full">
-              {/* Map background with gradient */}
-              <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-                <Image
-                  src="/map-with-pointers.png"
-                  alt="VendGros"
-                  fill
-                  className="object-contain grayscale-50 hover:grayscale-0"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                />
-              </div>
+            <div className="relative h-[400px] w-full">
+              <Image
+                src="/map-with-pointers.png"
+                alt="VendGros Map"
+                fill
+                className="object-contain"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
+              />
             </div>
           </div>
         </div>

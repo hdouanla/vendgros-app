@@ -206,88 +206,87 @@ export function SearchFilters({
 
   const content = (
     <>
-      {/* Primary Row: Postal Code, Search, Use My Location */}
-      <div className={`flex flex-col gap-4 sm:flex-row sm:items-end ${postalCodeError ? "pb-4" : ""}`}>
-        {/* Postal Code Input */}
-        <div className="flex-1">
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">
-            {t("searchByPostalCode")}
-          </label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Input
-                type="text"
-                placeholder="A1A 1A1"
-                value={values.postalCode}
-                onChange={(e) => {
-                  setPostalCodeError(null);
-                  updateValue("postalCode", e.target.value.toUpperCase());
-                }}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                className={`w-full ${inputClassName} ${postalCodeError ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
-                maxLength={7}
+      {/* Primary Row: More Filters | Search Input + Button | Use My Location */}
+      <div className={`flex flex-col gap-3 lg:flex-row lg:items-center ${postalCodeError ? "pb-4" : ""}`}>
+        {/* More Filters Button */}
+        <Button
+          type="button"
+          variant="outline"
+          className={`h-12 whitespace-nowrap rounded-lg border-gray-300 px-5 ${
+            showMoreFilters || hasActiveFilters
+              ? "bg-green-50 border-green-300 text-green-700"
+              : "text-gray-700 hover:bg-gray-50"
+          }`}
+          onClick={() => setShowMoreFilters(!showMoreFilters)}
+        >
+          <SlidersHorizontal className="mr-2 h-4 w-4" />
+          {t("moreFilters")}
+          {hasActiveFilters && !showMoreFilters && (
+            <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-xs text-white">
+              !
+            </span>
+          )}
+        </Button>
+
+        {/* Search Input with integrated Search Button */}
+        <div className="relative flex flex-1 items-center">
+          <div className="relative flex flex-1 items-center rounded-lg border border-gray-300 bg-white focus-within:border-[#0DAE09] focus-within:ring-1 focus-within:ring-[#0DAE09]">
+            <svg
+              className="ml-4 h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
-              {postalCodeError && (
-                <p className="absolute -bottom-5 left-0 text-xs text-red-600">
-                  {postalCodeError}
-                </p>
-              )}
-            </div>
+            </svg>
+            <Input
+              type="text"
+              placeholder={t("searchByPostalCode")}
+              value={values.postalCode}
+              onChange={(e) => {
+                setPostalCodeError(null);
+                updateValue("postalCode", e.target.value.toUpperCase());
+              }}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              className={`h-12 flex-1 border-0 bg-transparent pl-3 pr-4 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 ${postalCodeError ? "text-red-600" : ""}`}
+              maxLength={7}
+            />
             <Button
               type="button"
-              className="h-11 bg-[#0DAE09] px-6 hover:bg-[#0B9507]"
+              className="h-12 rounded-l-none rounded-r-lg bg-[#0DAE09] px-6 hover:bg-[#0B9507]"
               onClick={handleSearch}
             >
               {t("search")}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-11 whitespace-nowrap border-gray-300 text-gray-700 hover:bg-gray-50"
-              onClick={handleUseLocation}
-              disabled={isLocating}
-            >
-              <MapPin className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">
-                {isLocating ? t("locating") : t("useMyLocation")}
-              </span>
-              <span className="sm:hidden">
-                {isLocating ? "..." : t("location")}
-              </span>
-            </Button>
           </div>
+          {postalCodeError && (
+            <p className="absolute -bottom-5 left-0 text-xs text-red-600">
+              {postalCodeError}
+            </p>
+          )}
         </div>
 
-        {/* More Filters Toggle (only in compact mode) */}
-        {compact && (
-          <Button
-            type="button"
-            variant="outline"
-            className={`h-11 whitespace-nowrap border-gray-300 ${
-              showMoreFilters || hasActiveFilters
-                ? "bg-green-50 border-green-300 text-green-700"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-            onClick={() => setShowMoreFilters(!showMoreFilters)}
-          >
-            {showMoreFilters ? (
-              <>
-                <ChevronUp className="mr-2 h-4 w-4" />
-                {t("lessFilters")}
-              </>
-            ) : (
-              <>
-                <SlidersHorizontal className="mr-2 h-4 w-4" />
-                {t("moreFilters")}
-                {hasActiveFilters && (
-                  <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-xs text-white">
-                    !
-                  </span>
-                )}
-              </>
-            )}
-          </Button>
-        )}
+        {/* Use My Location Button */}
+        <Button
+          type="button"
+          variant="outline"
+          className="h-12 whitespace-nowrap rounded-lg border-gray-300 px-5 text-[#0DAE09] hover:bg-green-50 hover:border-green-300"
+          onClick={handleUseLocation}
+          disabled={isLocating}
+        >
+          <MapPin className="mr-2 h-4 w-4 text-[#0DAE09]" />
+          <span className="hidden sm:inline">
+            {isLocating ? t("locating") : t("useMyLocation")}
+          </span>
+          <span className="sm:hidden">
+            {isLocating ? "..." : t("location")}
+          </span>
+        </Button>
       </div>
 
       {/* Advanced Filters (hidden in compact mode until expanded) */}

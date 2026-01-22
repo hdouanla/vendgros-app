@@ -16,7 +16,7 @@ export function HeroSection() {
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#0DAE09]">
               {t("heroSubtitle")}
             </p>
-            <h1 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 md:text-6xl lg:text-8xl">
+            <h1 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 md:text-5xl lg:text-7xl">
               {t("heroTitle")}{" "}
               <span className="text-[#0DAE09]"><br />{t("heroTitleHighlight")}</span>
               <br />

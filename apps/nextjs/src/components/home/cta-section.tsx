@@ -21,16 +21,15 @@ export function CTASection() {
                 {t("ctaDescription")}
               </p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
               <Link href="/listings/create">
-                <Button className="bg-white text-[#0B4D26] hover:bg-gray-100">
+                <Button className="h-12 px-8 text-base font-semibold bg-white text-[#0B4D26] hover:bg-gray-100">
                   {t("startSelling")}
                 </Button>
               </Link>
               <Link href="/how-it-works">
                 <Button
-                  variant="outline"
-                  className="border-white text-white hover:bg-white/10"
+                  className="h-12 px-8 text-base font-semibold bg-transparent border-2 border-white text-white hover:bg-white/20"
                 >
                   {t("learnMore")}
                 </Button>

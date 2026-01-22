@@ -46,7 +46,7 @@ export function UserNav() {
   ];
 
   return (
-    <div className="border-b border-green-200 bg-[#ffe9a1]">
+    <div className="border-b border-green-200 bg-[#FFE9A1]">
       <div className="mx-auto max-w-content px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-1 overflow-x-auto sm:gap-2">
           {navItems.map((item) => (

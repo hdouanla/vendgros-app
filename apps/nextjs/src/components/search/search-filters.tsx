@@ -212,7 +212,7 @@ export function SearchFilters({
         <Button
           type="button"
           variant="outline"
-          className={`h-12 whitespace-nowrap rounded-lg border-gray-300 px-5 ${
+          className={`h-12 whitespace-nowrap rounded-lg font-semibold text-lg border-gray-300 px-5 ${
             showMoreFilters || hasActiveFilters
               ? "bg-green-50 border-green-300 text-green-700"
               : "text-gray-700 hover:bg-gray-50"
@@ -258,7 +258,7 @@ export function SearchFilters({
             />
             <Button
               type="button"
-              className="h-12 rounded-l-none rounded-r-lg bg-[#0DAE09] px-6 hover:bg-[#0B9507]"
+              className="h-12 rounded-l-none text-lg font-semibold rounded-r-lg bg-[#0DAE09] px-6 hover:bg-[#0B9507]"
               onClick={handleSearch}
             >
               {t("search")}
@@ -275,7 +275,7 @@ export function SearchFilters({
         <Button
           type="button"
           variant="outline"
-          className="h-12 whitespace-nowrap rounded-lg border-gray-300 px-5 text-[#0DAE09] hover:bg-green-50 hover:border-green-300"
+          className="h-12 whitespace-nowrap rounded-lg border-gray-300 font-semibold text-lg px-5 text-[#0DAE09] hover:bg-green-50 hover:border-green-300"
           onClick={handleUseLocation}
           disabled={isLocating}
         >

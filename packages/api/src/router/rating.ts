@@ -57,10 +57,6 @@ export const ratingRouter = createTRPCRouter({
           ),
       });
 
-      if (existingRating) {
-        throw new Error("You have already rated this transaction");
-      }
-
       const ratedId = isBuyer
         ? existingReservation.listing.sellerId
         : existingReservation.buyerId;
@@ -70,18 +66,35 @@ export const ratingRouter = createTRPCRouter({
       // If seller is rating, they're rating the buyer (AS_BUYER)
       const ratingType = isBuyer ? "AS_SELLER" : "AS_BUYER";
 
-      // Create rating
-      const [newRating] = await ctx.db
-        .insert(rating)
-        .values({
-          reservationId: input.reservationId,
-          raterId: ctx.session.user.id,
-          ratedId,
-          ratingType,
-          score: input.score,
-          comment: input.comment ?? null,
-        })
-        .returning();
+      let newRating;
+
+      if (existingRating) {
+        // Update existing rating
+        const [updatedRating] = await ctx.db
+          .update(rating)
+          .set({
+            score: input.score,
+            comment: input.comment ?? null,
+            updatedAt: new Date(),
+          })
+          .where(eq(rating.id, existingRating.id))
+          .returning();
+        newRating = updatedRating;
+      } else {
+        // Create new rating
+        const [createdRating] = await ctx.db
+          .insert(rating)
+          .values({
+            reservationId: input.reservationId,
+            raterId: ctx.session.user.id,
+            ratedId,
+            ratingType,
+            score: input.score,
+            comment: input.comment ?? null,
+          })
+          .returning();
+        newRating = createdRating;
+      }
 
       if (!newRating) {
         throw new Error("Failed to create rating");
@@ -106,6 +119,7 @@ export const ratingRouter = createTRPCRouter({
         success: true,
         ratingId: newRating.id,
         bothRated: !!otherRating,
+        wasUpdate: !!existingRating,
       };
     }),
 
@@ -316,11 +330,16 @@ export const ratingRouter = createTRPCRouter({
           ),
       });
 
-      if (existingRating) {
-        return { canRate: false, reason: "Already rated" };
-      }
-
-      return { canRate: true, reason: null };
+      // User can rate or update their existing rating
+      return {
+        canRate: true,
+        reason: null,
+        existingRating: existingRating ? {
+          id: existingRating.id,
+          score: existingRating.score,
+          comment: existingRating.comment,
+        } : null,
+      };
     }),
 });
 

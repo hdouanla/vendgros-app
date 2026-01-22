@@ -234,21 +234,27 @@ export default function ReservationDetailPage({
       {/* Rating CTA - Show when transaction is completed */}
       {reservation.status === "COMPLETED" && (
         <div className="mb-6 rounded-lg border-2 border-green-200 bg-green-50 p-6">
-          {ratingStatus?.myRating ? (
-            // User has already rated
+          {ratingStatus?.ownRating ? (
+            // User has already rated - show with edit option
             <div className="text-center">
               <div className="mb-2 text-4xl">✅</div>
               <h3 className="text-lg font-semibold text-green-800">
                 Thanks for your feedback!
               </h3>
               <p className="mt-1 text-sm text-green-700">
-                You rated this transaction {ratingStatus.myRating.score}/5 stars
+                You rated this transaction {ratingStatus.ownRating.score}/5 stars
               </p>
-              {!ratingStatus.otherPartyRating && (
+              {!ratingStatus.otherRating && (
                 <p className="mt-2 text-xs text-green-600">
                   Your rating will be visible once the other party also submits their rating
                 </p>
               )}
+              <button
+                onClick={() => setIsRatingModalOpen(true)}
+                className="mt-4 inline-block rounded-md border border-green-600 bg-white px-6 py-2 text-sm font-medium text-green-600 hover:bg-green-50"
+              >
+                Edit Rating
+              </button>
             </div>
           ) : (
             // User hasn't rated yet
@@ -269,19 +275,19 @@ export default function ReservationDetailPage({
               >
                 Rate Now
               </button>
-              <RatingModal
-                reservationId={id}
-                targetName={
-                  isBuyer
-                    ? reservation.listing.seller?.name || reservation.listing.seller?.email || "Seller"
-                    : reservation.buyer?.name || reservation.buyer?.email || "Buyer"
-                }
-                targetRole={isBuyer ? "seller" : "buyer"}
-                isOpen={isRatingModalOpen}
-                onClose={() => setIsRatingModalOpen(false)}
-              />
             </div>
           )}
+          <RatingModal
+            reservationId={id}
+            targetName={
+              isBuyer
+                ? reservation.listing.seller?.name || reservation.listing.seller?.email || "Seller"
+                : reservation.buyer?.name || reservation.buyer?.email || "Buyer"
+            }
+            targetRole={isBuyer ? "seller" : "buyer"}
+            isOpen={isRatingModalOpen}
+            onClose={() => setIsRatingModalOpen(false)}
+          />
         </div>
       )}
 

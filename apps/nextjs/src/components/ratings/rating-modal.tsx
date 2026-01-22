@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "~/trpc/react";
 
 interface RatingModalProps {
@@ -23,18 +23,40 @@ export function RatingModal({
   const [score, setScore] = useState(0);
   const [hoveredScore, setHoveredScore] = useState(0);
   const [comment, setComment] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   const utils = api.useUtils();
+
+  // Fetch existing rating if any
+  const { data: canRateData } = api.rating.canRate.useQuery(
+    { reservationId },
+    { enabled: isOpen }
+  );
+
+  // Preload existing rating when modal opens
+  useEffect(() => {
+    if (canRateData?.existingRating) {
+      setScore(canRateData.existingRating.score);
+      setComment(canRateData.existingRating.comment ?? "");
+      setIsEditing(true);
+    } else {
+      setScore(0);
+      setComment("");
+      setIsEditing(false);
+    }
+  }, [canRateData]);
 
   const submitRating = api.rating.submit.useMutation({
     onSuccess: () => {
       // Invalidate rating queries to refresh the UI
       void utils.rating.getForReservation.invalidate({ reservationId });
+      void utils.rating.canRate.invalidate({ reservationId });
       onSuccess?.();
       onClose();
       // Reset form
       setScore(0);
       setComment("");
+      setIsEditing(false);
     },
   });
 
@@ -78,9 +100,9 @@ export function RatingModal({
 
         {/* Header */}
         <div className="mb-6 text-center">
-          <div className="mb-2 text-4xl">⭐</div>
+          <div className="mb-2 text-4xl">{isEditing ? "✏️" : "⭐"}</div>
           <h2 className="text-xl font-bold text-gray-900">
-            Rate this {targetRole}
+            {isEditing ? "Update your rating" : `Rate this ${targetRole}`}
           </h2>
           <p className="mt-1 text-sm text-gray-600">{targetName}</p>
         </div>
@@ -153,7 +175,9 @@ export function RatingModal({
               disabled={score === 0 || submitRating.isPending}
               className="flex-1 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {submitRating.isPending ? "Submitting..." : "Submit Rating"}
+              {submitRating.isPending
+                ? (isEditing ? "Updating..." : "Submitting...")
+                : (isEditing ? "Update Rating" : "Submit Rating")}
             </button>
           </div>
         </form>

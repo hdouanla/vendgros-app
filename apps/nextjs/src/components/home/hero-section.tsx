@@ -8,15 +8,29 @@ export function HeroSection() {
   const t = useTranslations("home");
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-green-50 to-white">
-      <div className="mx-auto max-w-content px-4 py-12 md:py-16 lg:py-20">
+    <section className="relative overflow-hidden">
+      {/* Background Image */}
+      <div className="absolute inset-0">
+        <Image
+          src="/vendgros-sale-02-2026.jpg"
+          alt=""
+          fill
+          className="object-cover"
+          sizes="100vw"
+          priority
+        />
+        {/* Overlay for readability */}
+        <div className="absolute inset-0 bg-[#FAF1E5]/70" />
+      </div>
+
+      <div className="relative mx-auto max-w-content px-4 py-12 md:py-22 lg:py-24">
         <div className="grid items-center gap-8 lg:grid-cols-2">
           {/* Left: Content */}
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#0DAE09]">
+            <p className="mb-2 text-base font-semibold uppercase tracking-wider text-[#0DAE09]">
               {t("heroSubtitle")}
             </p>
-            <h1 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 md:text-5xl lg:text-7xl">
+            <h1 className="mb-4 text-4xl font-bold tracking-tight text-[#0B1D14] md:text-6xl lg:text-8xl">
               {t("heroTitle")}{" "}
               <span className="text-[#0DAE09]"><br />{t("heroTitleHighlight")}</span>
               <br />
@@ -27,7 +41,7 @@ export function HeroSection() {
             </p>
             <Link
               href="/listings/search"
-              className="inline-flex items-center rounded-lg bg-[#0DAE09] px-6 py-3 text-base font-semibold text-white shadow-lg transition-colors hover:bg-[#0B9507]"
+              className="inline-flex items-center rounded-md bg-[#0DAE09] px-6 py-3 text-lg font-semibold text-white shadow-lg transition-colors hover:bg-[#0B9507]"
             >
               {t("browseListings")}
             </Link>

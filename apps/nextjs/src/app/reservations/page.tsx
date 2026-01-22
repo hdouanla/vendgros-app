@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import Link from "next/link";
@@ -62,17 +62,19 @@ export default function MyReservationsPage() {
       staleTime: 0,
     });
 
-  if (sessionLoading) {
+  // Handle redirect to signin if not authenticated
+  useEffect(() => {
+    if (!sessionLoading && !session?.user) {
+      router.push("/auth/signin?callbackUrl=/reservations");
+    }
+  }, [sessionLoading, session, router]);
+
+  if (sessionLoading || !session?.user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p className="text-gray-600">Loading...</p>
       </div>
     );
-  }
-
-  if (!session?.user) {
-    router.push("/auth/signin?callbackUrl=/reservations");
-    return null;
   }
 
   const activeReservations = reservations?.filter(

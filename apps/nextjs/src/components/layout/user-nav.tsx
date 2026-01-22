@@ -20,6 +20,10 @@ export function UserNav() {
   );
 
   const isActive = (path: string) => {
+    // Exact match for paths that have child routes (like /seller has /seller/analytics)
+    if (path === "/seller") {
+      return pathname === path;
+    }
     return pathname === path || pathname?.startsWith(path + "/");
   };
 

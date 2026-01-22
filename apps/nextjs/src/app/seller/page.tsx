@@ -10,7 +10,9 @@ export default function SellerDashboardPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"listings" | "reservations" | "completed">("listings");
 
-  const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
+  const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery(undefined, {
+    refetchOnMount: true,
+  });
 
   // Handle redirect to signin if not authenticated
   useEffect(() => {
@@ -24,6 +26,8 @@ export default function SellerDashboardPage() {
     undefined,
     {
       enabled: !!session?.user,
+      refetchOnMount: true,
+      staleTime: 0,
     }
   );
 
@@ -31,12 +35,16 @@ export default function SellerDashboardPage() {
   const { data: pendingReservations, isLoading: reservationsLoading } =
     api.reservation.getPendingPickups.useQuery(undefined, {
       enabled: !!session?.user,
+      refetchOnMount: true,
+      staleTime: 0,
     });
 
   // Fetch completed reservations (delivered orders)
   const { data: completedReservations, isLoading: completedLoading } =
     api.reservation.getCompletedPickups.useQuery(undefined, {
       enabled: !!session?.user,
+      refetchOnMount: true,
+      staleTime: 0,
     });
 
   if (sessionLoading || !session?.user) {

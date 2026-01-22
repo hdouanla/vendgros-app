@@ -57,6 +57,14 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Get current user to check if phone actually changed
+      const currentUser = await ctx.db.query.user.findFirst({
+        where: (users, { eq }) => eq(users.id, ctx.session.user.id),
+        columns: {
+          phone: true,
+        },
+      });
+
       // Build update object with only provided fields
       const updateData: Record<string, unknown> = {
         updatedAt: new Date(),
@@ -68,8 +76,8 @@ export const userRouter = createTRPCRouter({
 
       if (input.phone !== undefined) {
         updateData.phone = input.phone;
-        // Reset phone verification if phone changed
-        if (input.phone) {
+        // Only reset phone verification if phone actually changed
+        if (input.phone && input.phone !== currentUser?.phone) {
           updateData.phoneVerified = false;
         }
       }

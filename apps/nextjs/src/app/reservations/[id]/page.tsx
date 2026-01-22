@@ -6,6 +6,7 @@ import Link from "next/link";
 import { api } from "~/trpc/react";
 import { QRCode } from "@acme/ui/qr-code";
 import { PaymentCountdownTimer } from "~/components/reservations/payment-countdown-timer";
+import { RatingModal } from "~/components/ratings/rating-modal";
 import { env } from "~/env";
 
 // Simple translation stub - replace with actual translations later
@@ -47,6 +48,7 @@ export default function ReservationDetailPage({
   const [pollCount, setPollCount] = useState(0);
   const maxPollAttempts = 30; // Poll for up to 30 seconds
   const [timerExpired, setTimerExpired] = useState(true); // Default to expired, will be set correctly when reservation loads
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
 
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
   const { data: reservation, isLoading: reservationLoading, refetch: refetchReservation } = api.reservation.getById.useQuery({
@@ -63,6 +65,12 @@ export default function ReservationDetailPage({
       enabled: !!reservation,
       refetchInterval: isPolling ? 1000 : false, // Poll every second when waiting for payment
     },
+  );
+
+  // Check if user can rate this reservation
+  const { data: ratingStatus } = api.rating.getForReservation.useQuery(
+    { reservationId: id },
+    { enabled: !!reservation && reservation.status === "COMPLETED" },
   );
 
   // Calculate if timer is expired when reservation loads
@@ -222,6 +230,60 @@ export default function ReservationDetailPage({
           </p>
         )}
       </div>
+
+      {/* Rating CTA - Show when transaction is completed */}
+      {reservation.status === "COMPLETED" && (
+        <div className="mb-6 rounded-lg border-2 border-green-200 bg-green-50 p-6">
+          {ratingStatus?.myRating ? (
+            // User has already rated
+            <div className="text-center">
+              <div className="mb-2 text-4xl">✅</div>
+              <h3 className="text-lg font-semibold text-green-800">
+                Thanks for your feedback!
+              </h3>
+              <p className="mt-1 text-sm text-green-700">
+                You rated this transaction {ratingStatus.myRating.score}/5 stars
+              </p>
+              {!ratingStatus.otherPartyRating && (
+                <p className="mt-2 text-xs text-green-600">
+                  Your rating will be visible once the other party also submits their rating
+                </p>
+              )}
+            </div>
+          ) : (
+            // User hasn't rated yet
+            <div className="text-center">
+              <div className="mb-2 text-4xl">⭐</div>
+              <h3 className="text-lg font-semibold text-green-800">
+                Rate Your Experience
+              </h3>
+              <p className="mt-1 text-sm text-green-700">
+                Help build trust in our community by rating this transaction
+              </p>
+              <p className="mt-2 text-xs text-green-600">
+                Ratings are blind - both parties must rate before reviews become visible
+              </p>
+              <button
+                onClick={() => setIsRatingModalOpen(true)}
+                className="mt-4 inline-block rounded-md bg-green-600 px-6 py-3 font-medium text-white hover:bg-green-700"
+              >
+                Rate Now
+              </button>
+              <RatingModal
+                reservationId={id}
+                targetName={
+                  isBuyer
+                    ? reservation.listing.seller?.name || reservation.listing.seller?.email || "Seller"
+                    : reservation.buyer?.name || reservation.buyer?.email || "Buyer"
+                }
+                targetRole={isBuyer ? "seller" : "buyer"}
+                isOpen={isRatingModalOpen}
+                onClose={() => setIsRatingModalOpen(false)}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Left Column - Listing Details */}

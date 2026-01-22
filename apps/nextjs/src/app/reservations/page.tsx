@@ -1,16 +1,65 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import Link from "next/link";
+import { RatingModal } from "~/components/ratings/rating-modal";
+
+// Component to show rating status for a completed reservation
+function RatingButton({ reservationId, sellerName }: { reservationId: string; sellerName: string }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data: ratingStatus, isLoading } = api.rating.getForReservation.useQuery(
+    { reservationId },
+  );
+
+  if (isLoading) {
+    return (
+      <span className="inline-flex items-center rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-400">
+        Loading...
+      </span>
+    );
+  }
+
+  if (ratingStatus?.myRating) {
+    return (
+      <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
+        ✓ Rated ({ratingStatus.myRating.score}/5)
+      </span>
+    );
+  }
+
+  return (
+    <>
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className="inline-flex items-center whitespace-nowrap rounded-md border-2 border-orange-500 bg-white px-4 py-2 text-sm font-medium text-orange-500 hover:bg-orange-50"
+      >
+        * Rate this seller
+      </button>
+      <RatingModal
+        reservationId={reservationId}
+        targetName={sellerName}
+        targetRole="seller"
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+    </>
+  );
+}
 
 export default function MyReservationsPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"active" | "completed" | "other">("active");
 
-  const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
+  const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery(undefined, {
+    refetchOnMount: true,
+  });
   const { data: reservations, isLoading: reservationsLoading } =
     api.reservation.myReservations.useQuery(undefined, {
       enabled: !!session?.user,
+      refetchOnMount: true,
+      staleTime: 0,
     });
 
   if (sessionLoading) {
@@ -28,16 +77,16 @@ export default function MyReservationsPage() {
 
   const activeReservations = reservations?.filter(
     (r) => r.status === "CONFIRMED" || r.status === "PENDING",
-  );
+  ) || [];
   const completedReservations = reservations?.filter(
     (r) => r.status === "COMPLETED",
-  );
+  ) || [];
   const otherReservations = reservations?.filter(
     (r) =>
       r.status !== "CONFIRMED" &&
       r.status !== "PENDING" &&
       r.status !== "COMPLETED",
-  );
+  ) || [];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -50,229 +99,323 @@ export default function MyReservationsPage() {
       </div>
 
       {/* Stats */}
-      <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
+      <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg bg-white p-6 shadow">
           <p className="text-sm text-gray-600">Active</p>
           <p className="mt-2 text-3xl font-bold text-blue-600">
-            {activeReservations?.length || 0}
+            {activeReservations.length}
           </p>
         </div>
         <div className="rounded-lg bg-white p-6 shadow">
           <p className="text-sm text-gray-600">Completed</p>
           <p className="mt-2 text-3xl font-bold text-green-600">
-            {completedReservations?.length || 0}
+            {completedReservations.length}
+          </p>
+        </div>
+        <div className="rounded-lg bg-white p-6 shadow">
+          <p className="text-sm text-gray-600">Other</p>
+          <p className="mt-2 text-3xl font-bold text-gray-600">
+            {otherReservations.length}
           </p>
         </div>
         <div className="rounded-lg bg-white p-6 shadow">
           <p className="text-sm text-gray-600">Total</p>
-          <p className="mt-2 text-3xl font-bold text-gray-600">
+          <p className="mt-2 text-3xl font-bold text-purple-600">
             {reservations?.length || 0}
           </p>
         </div>
       </div>
 
-      {reservationsLoading ? (
-        <div className="py-12 text-center">
-          <p className="text-gray-600">Loading reservations...</p>
-        </div>
-      ) : !reservations || reservations.length === 0 ? (
-        <div className="rounded-lg bg-white p-12 text-center shadow">
-          <p className="text-gray-600">No reservations yet</p>
-          <Link
-            href="/listings/search"
-            className="mt-4 inline-block text-green-600 hover:text-green-700"
+      {/* Quick Actions */}
+      <div className="mb-8 flex flex-wrap gap-4">
+        <Link
+          href="/"
+          className="rounded-md bg-green-600 px-6 py-3 text-sm font-medium text-white hover:bg-green-700"
+        >
+          Browse Listings
+        </Link>
+      </div>
+
+      {/* Tabs */}
+      <div className="mb-6 border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab("active")}
+            className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium ${
+              activeTab === "active"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+            }`}
           >
-            Browse listings →
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-8">
-          {/* Active Reservations */}
-          {activeReservations && activeReservations.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-xl font-semibold text-gray-900">
-                Active Reservations
-              </h2>
-              <div className="space-y-4">
-                {activeReservations.map((reservation) => (
-                  <div
-                    key={reservation.id}
-                    className="rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-md"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {reservation.listing.title}
-                          </h3>
-                          <span
-                            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                              reservation.status === "CONFIRMED"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}
-                          >
-                            {reservation.status}
+            Active ({activeReservations.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("completed")}
+            className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium ${
+              activeTab === "completed"
+                ? "border-green-600 text-green-600"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+            }`}
+          >
+            Completed ({completedReservations.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("other")}
+            className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium ${
+              activeTab === "other"
+                ? "border-gray-600 text-gray-600"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+            }`}
+          >
+            Other ({otherReservations.length})
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === "active" ? (
+        <div className="rounded-lg bg-white shadow">
+          {reservationsLoading ? (
+            <div className="py-12 text-center">
+              <p className="text-gray-600">Loading reservations...</p>
+            </div>
+          ) : activeReservations.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="text-gray-600">No active reservations</p>
+              <Link
+                href="/"
+                className="mt-4 inline-block text-green-600 hover:text-green-700"
+              >
+                Browse listings →
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {activeReservations.map((reservation) => (
+                <div key={reservation.id} className="p-6 hover:bg-gray-50">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {reservation.listing.title}
+                        </h3>
+                        <span
+                          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                            reservation.status === "CONFIRMED"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {reservation.status}
+                        </span>
+                      </div>
+
+                      <div className="mt-2 space-y-1 text-sm text-gray-600">
+                        <p>
+                          <span className="font-medium">Seller:</span>{" "}
+                          {reservation.listing.seller?.name || reservation.listing.seller?.email || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Quantity:</span>{" "}
+                          {reservation.quantityReserved} units
+                        </p>
+                        <p>
+                          <span className="font-medium">Total Price:</span>{" "}
+                          ${reservation.totalPrice.toFixed(2)} CAD
+                        </p>
+                        <p>
+                          <span className="font-medium">Deposit Paid:</span>{" "}
+                          ${reservation.depositAmount.toFixed(2)} CAD
+                        </p>
+                        <p>
+                          <span className="font-medium">Balance Due:</span>{" "}
+                          <span className="text-lg font-bold text-green-600">
+                            ${(reservation.totalPrice - reservation.depositAmount).toFixed(2)} CAD
                           </span>
-                        </div>
-
-                        <div className="mt-3 grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
-                          <div>
-                            <span className="text-gray-600">Quantity:</span>
-                            <p className="font-medium text-gray-900">
-                              {reservation.quantityReserved} units
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Total Price:</span>
-                            <p className="font-medium text-gray-900">
-                              ${reservation.totalPrice.toFixed(2)} CAD
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Deposit Paid:</span>
-                            <p className="font-medium text-green-600">
-                              ${reservation.depositAmount.toFixed(2)} CAD
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Balance Due:</span>
-                            <p className="text-lg font-bold text-gray-900">
-                              $
-                              {(
-                                reservation.totalPrice -
-                                reservation.depositAmount
-                              ).toFixed(2)}{" "}
-                              CAD
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="mt-3 text-sm text-gray-600">
+                        </p>
+                        <p>
                           <span className="font-medium">Pickup by:</span>{" "}
                           {new Date(reservation.expiresAt).toLocaleString()}
+                        </p>
+                      </div>
+
+                      {reservation.status === "PENDING" && (
+                        <div className="mt-3 rounded-md bg-yellow-50 p-3">
+                          <p className="text-sm text-yellow-800">
+                            ⚠️ Payment pending - Complete your payment to confirm this reservation
+                          </p>
                         </div>
+                      )}
+                    </div>
 
-                        {reservation.status === "PENDING" && (
-                          <div className="mt-3 rounded-md bg-yellow-50 p-3">
-                            <p className="text-sm text-yellow-800">
-                              ⚠️ Payment pending - Complete your payment to confirm
-                              this reservation
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="ml-6 flex flex-col gap-2">
+                    <div className="ml-6 flex flex-col gap-2">
+                      <Link
+                        href={`/reservations/${reservation.id}`}
+                        className="whitespace-nowrap rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                      >
+                        View Details
+                      </Link>
+                      {reservation.status === "PENDING" && (
                         <Link
-                          href={`/reservations/${reservation.id}`}
-                          className="whitespace-nowrap rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                          href={`/payment/${reservation.id}`}
+                          className="whitespace-nowrap rounded-md border border-green-600 bg-white px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-50"
                         >
-                          View Details
+                          Pay Deposit
                         </Link>
-                        {reservation.status === "PENDING" && (
-                          <Link
-                            href={`/payment/${reservation.id}`}
-                            className="whitespace-nowrap rounded-md border border-green-600 bg-white px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-50"
-                          >
-                            Pay Deposit
-                          </Link>
-                        )}
-                      </div>
+                      )}
+                      {reservation.status === "CONFIRMED" && (
+                        <Link
+                          href={`/chat/${reservation.id}`}
+                          className="flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-green-600 bg-white px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-50"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                          Chat
+                        </Link>
+                      )}
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           )}
+        </div>
+      ) : activeTab === "completed" ? (
+        <div className="rounded-lg bg-white shadow">
+          {reservationsLoading ? (
+            <div className="py-12 text-center">
+              <p className="text-gray-600">Loading completed reservations...</p>
+            </div>
+          ) : completedReservations.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="text-gray-600">No completed reservations yet</p>
+              <p className="mt-2 text-sm text-gray-500">
+                Completed orders will appear here after successful pickup
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {completedReservations.map((reservation) => (
+                <div key={reservation.id} className="p-6 hover:bg-gray-50">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {reservation.listing.title}
+                        </h3>
+                        <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
+                          COMPLETED
+                        </span>
+                      </div>
 
-          {/* Completed Reservations */}
-          {completedReservations && completedReservations.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-xl font-semibold text-gray-900">
-                Completed
-              </h2>
-              <div className="space-y-4">
-                {completedReservations.map((reservation) => (
-                  <div
-                    key={reservation.id}
-                    className="rounded-lg bg-white p-6 shadow"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {reservation.listing.title}
-                          </h3>
-                          <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
-                            COMPLETED
+                      <div className="mt-2 space-y-1 text-sm text-gray-600">
+                        <p>
+                          <span className="font-medium">Seller:</span>{" "}
+                          {reservation.listing.seller?.name || reservation.listing.seller?.email || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Quantity:</span>{" "}
+                          {reservation.quantityReserved} units
+                        </p>
+                        <p>
+                          <span className="font-medium">Total Paid:</span>{" "}
+                          <span className="text-lg font-bold text-green-600">
+                            ${reservation.totalPrice.toFixed(2)} CAD
                           </span>
-                        </div>
-
-                        <div className="mt-3 text-sm text-gray-600">
-                          <span className="font-medium">Completed on:</span>{" "}
+                        </p>
+                        <p>
+                          <span className="font-medium">Completed:</span>{" "}
                           {reservation.completedAt
                             ? new Date(reservation.completedAt).toLocaleString()
                             : "N/A"}
-                        </div>
-
-                        <div className="mt-2 text-sm text-gray-600">
-                          <span className="font-medium">Total Paid:</span> $
-                          {reservation.totalPrice.toFixed(2)} CAD
-                        </div>
+                        </p>
                       </div>
+                    </div>
 
+                    <div className="ml-6 flex flex-col gap-2">
                       <Link
-                        href={`/reservations/${reservation.id}`}
-                        className="ml-6 whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        href={`/chat/${reservation.id}`}
+                        className="flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-green-600 bg-white px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-50"
                       >
-                        View Details
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        Chat
                       </Link>
+                      <span className="inline-flex items-center justify-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
+                        ✓ Delivered
+                      </span>
+                      <RatingButton
+                        reservationId={reservation.id}
+                        sellerName={reservation.listing.seller?.name || reservation.listing.seller?.email || "Seller"}
+                      />
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           )}
-
-          {/* Other Reservations (Cancelled, No-show, etc.) */}
-          {otherReservations && otherReservations.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-xl font-semibold text-gray-900">
-                Other
-              </h2>
-              <div className="space-y-4">
-                {otherReservations.map((reservation) => (
-                  <div
-                    key={reservation.id}
-                    className="rounded-lg bg-white p-6 shadow"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {reservation.listing.title}
-                          </h3>
-                          <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-800">
-                            {reservation.status}
-                          </span>
-                        </div>
-
-                        <div className="mt-2 text-sm text-gray-600">
-                          Created: {new Date(reservation.createdAt).toLocaleString()}
-                        </div>
+        </div>
+      ) : (
+        <div className="rounded-lg bg-white shadow">
+          {reservationsLoading ? (
+            <div className="py-12 text-center">
+              <p className="text-gray-600">Loading reservations...</p>
+            </div>
+          ) : otherReservations.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="text-gray-600">No other reservations</p>
+              <p className="mt-2 text-sm text-gray-500">
+                Cancelled or expired reservations will appear here
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {otherReservations.map((reservation) => (
+                <div key={reservation.id} className="p-6 hover:bg-gray-50">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {reservation.listing.title}
+                        </h3>
+                        <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-800">
+                          {reservation.status}
+                        </span>
                       </div>
 
+                      <div className="mt-2 space-y-1 text-sm text-gray-600">
+                        <p>
+                          <span className="font-medium">Seller:</span>{" "}
+                          {reservation.listing.seller?.name || reservation.listing.seller?.email || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Quantity:</span>{" "}
+                          {reservation.quantityReserved} units
+                        </p>
+                        <p>
+                          <span className="font-medium">Total Price:</span>{" "}
+                          ${reservation.totalPrice.toFixed(2)} CAD
+                        </p>
+                        <p>
+                          <span className="font-medium">Created:</span>{" "}
+                          {new Date(reservation.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="ml-6 flex flex-col gap-2">
                       <Link
                         href={`/reservations/${reservation.id}`}
-                        className="ml-6 whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                       >
                         View Details
                       </Link>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

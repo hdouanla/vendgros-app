@@ -242,7 +242,17 @@ export const reservationRouter = createTRPCRouter({
     const results = await ctx.db.query.reservation.findMany({
       where: (reservations, { eq }) => eq(reservations.buyerId, ctx.session.user.id),
       with: {
-        listing: true,
+        listing: {
+          with: {
+            seller: {
+              columns: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
       },
       orderBy: (reservations, { desc }) => [desc(reservations.createdAt)],
     });

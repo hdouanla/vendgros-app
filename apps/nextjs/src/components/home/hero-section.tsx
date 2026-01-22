@@ -20,10 +20,10 @@ export function HeroSection() {
           priority
         />
         {/* Overlay for readability */}
-        <div className="absolute inset-0 bg-[#FAF1E5]/70" />
+        <div className="absolute inset-0 bg-[#FAF1E5]/90" />
       </div>
 
-      <div className="relative mx-auto max-w-content px-4 py-12 md:py-22 lg:py-24">
+      <div className="relative mx-auto max-w-content px-4 pt-12 pb-26 md:py-22 lg:py-24">
         <div className="grid items-center gap-8 lg:grid-cols-2">
           {/* Left: Content */}
           <div>
@@ -41,7 +41,7 @@ export function HeroSection() {
             </p>
             <Link
               href="/listings/search"
-              className="inline-flex items-center rounded-md bg-[#0DAE09] px-6 py-3 text-lg font-semibold text-white shadow-lg transition-colors hover:bg-[#0B9507]"
+              className="inline-flex items-center rounded-md bg-[#0DAE09] px-6 py-3 my-4 text-lg font-semibold text-white shadow-lg transition-colors hover:bg-[#0B9507]"
             >
               {t("browseListings")}
             </Link>

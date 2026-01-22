@@ -60,12 +60,23 @@ export function Navbar() {
           {/* Logo and Desktop Navigation - Left Aligned */}
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center">
+              {/* Mobile: Icon */}
+              <Image
+                src="/vendgros-icon.jpg"
+                alt="VendGros"
+                width={40}
+                height={40}
+                priority
+                className="md:hidden"
+              />
+              {/* Desktop: Full logo */}
               <Image
                 src="/vendgros-logo-light.png"
                 alt="VendGros"
                 width={250}
                 height={71}
                 priority
+                className="hidden md:block"
               />
             </Link>
 

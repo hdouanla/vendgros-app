@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@acme/db/client";
 import { listing, reservation } from "@acme/db/schema";
-import { and, eq, lt, or, isNull } from "drizzle-orm";
+import { and, eq, lt, or, isNull } from "@acme/db";
 
 // Payment timeout in minutes (default 10)
 const PAYMENT_TIMEOUT_MINUTES = Number(process.env.NEXT_PUBLIC_RESERVATION_PAYMENT_TIMEOUT_MINUTES) || 10;

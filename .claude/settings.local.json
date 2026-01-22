@@ -49,7 +49,13 @@
       "Bash(POSTGRES_URL=\"postgresql://postgres:@127.0.0.1:5433/vendgros-app\" node:*)",
       "Bash(POSTGRES_URL=\"postgresql://postgres:@127.0.0.1:5433/vendgros-app\" pnpm --filter @acme/db drizzle-kit generate:*)",
       "Bash(POSTGRES_URL=\"postgresql://postgres:@127.0.0.1:5433/vendgros-app\" tsx:*)",
-      "Bash(xargs ls:*)"
+      "Bash(xargs ls:*)",
+      "Bash(git rebase:*)",
+      "Skill(ralph-loop:cancel-ralph)",
+      "WebFetch(domain:next-intl.dev)",
+      "Bash(dotenv -e ../../.env.local -- next dev:*)",
+      "WebSearch",
+      "Bash(npm view:*)"
     ]
   }
 }

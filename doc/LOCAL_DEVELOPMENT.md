@@ -74,7 +74,18 @@ docker run -d \
 
 ### Initialize Database
 
-For first-time setup, run the all-in-one initialization command:
+#### 1. Obtain Postal Code Data
+
+The postal code CSV is not tracked in git. Download from [ZipCodeSoft](https://www.zipcodesoft.com) and place it at:
+
+```bash
+mkdir -p data
+# Place your downloaded CSV at: data/canadian-postal-codes.csv
+```
+
+See `packages/db/README_POSTAL_CODES.md` for CSV format requirements.
+
+#### 2. Run Database Initialization
 
 ```bash
 cd packages/db
@@ -106,7 +117,7 @@ pnpm push
 # 2. Setup PostGIS (extension, triggers, spatial indexes, helper functions)
 pnpm setup-postgis
 
-# 3. Import Canadian postal codes (880K+ records, ~5 minutes)
+# 3. Import Canadian postal codes (880K+ records, ~2 minutes)
 pnpm import-postal-codes
 
 # 4. Seed sample data for development (optional)
@@ -119,7 +130,41 @@ pnpm db:seed
 |----------|---------|
 | Fresh database / new clone | `pnpm db:init` |
 | Schema changes only | `pnpm push` |
+| Update postal codes | `pnpm import-postal-codes` |
 | Reset everything | `pnpm db:reset && pnpm db:init` |
+
+#### Updating Schema (Day-to-Day Development)
+
+When you modify `packages/db/src/schema.ts`:
+
+```bash
+cd packages/db
+pnpm push
+```
+
+Drizzle's `push` command safely handles:
+- ✅ Adding new tables
+- ✅ Adding new columns
+- ✅ Adding indexes
+- ⚠️ Renaming columns (prompts for confirmation)
+- ⚠️ Changing column types (may require manual migration)
+
+> **Note:** PostGIS triggers and spatial indexes persist across schema pushes. You only need to run `setup-postgis` once per database.
+
+#### Updating Postal Codes
+
+When you receive updated postal code data from ZipCodeSoft:
+
+```bash
+# 1. Replace the CSV file
+cp ~/Downloads/canadian-postal-codes.csv data/canadian-postal-codes.csv
+
+# 2. Re-import (upserts - updates existing, adds new)
+cd packages/db
+pnpm import-postal-codes
+```
+
+See `packages/db/README_POSTAL_CODES.md` for details on postal code updates.
 
 ## Environment Variables
 

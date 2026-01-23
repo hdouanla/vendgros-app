@@ -5,219 +5,122 @@ This guide explains how to import Canadian postal codes into the database for pr
 ## Overview
 
 The postal code system enables:
-- ✅ Search listings by postal code + radius
-- ✅ Auto-complete postal code lookups
-- ✅ Distance calculations from postal code to listing
-- ✅ City/province detection from postal code
-- ✅ Fast geospatial queries using PostGIS
+- Search listings by postal code + radius
+- Auto-complete postal code lookups
+- Distance calculations from postal code to listing
+- City/province detection from postal code
+- Fast geospatial queries using PostGIS
 
 ## Prerequisites
 
-1. **PostgreSQL with PostGIS** extension enabled
-2. **Canadian postal code data** in CSV format
-3. **Database migrations** applied
+1. Database initialized with `pnpm db:init` (or at minimum `pnpm push && pnpm setup-postgis`)
+2. Canadian postal code data in CSV format from ZipCodeSoft
 
-## Step 1: Apply Database Migration
+## Step 1: Obtain Postal Code Data
 
-Run the spatial setup migration:
+Download from [ZipCodeSoft](https://www.zipcodesoft.com) - the most accurate and up-to-date Canadian postal code data:
 
-```bash
-# From packages/db directory
-psql $POSTGRES_URL -f migrations/postal_code_spatial_setup.sql
-```
-
-This creates:
-- ✅ Trigger to auto-populate PostGIS POINT geometry
-- ✅ GiST spatial index for fast proximity queries
-- ✅ Helper functions for searching
-- ✅ Indexes on province and city
-
-## Step 2: Obtain Postal Code Data
-
-### Option A: Download from Statistics Canada (Free, Official)
-
-Statistics Canada provides official postal code data:
-
-1. Visit: https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/index2021-eng.cfm
-2. Download: **Postal Code Conversion File (PCCF)**
-3. Extract and convert to CSV with columns:
-   - `postalcode` (e.g., "M5H 2N2")
-   - `city`
-   - `provincecode` (e.g., "ON")
-   - `latitude`
-   - `longitude`
-
-### Option B: Use GeoNames (Free, Less Complete)
-
-GeoNames provides Canadian postal codes:
-
-1. Visit: http://download.geonames.org/export/zip/
-2. Download: `CA.zip`
-3. Extract `CA.txt` and convert to CSV format
-4. Rename columns to match required format (see above)
-
-### Option C: Purchase from ZipCodeSoft (Commercial, Most Complete)
-
-For the most comprehensive and up-to-date data:
-
-1. Visit: https://www.zipcodesoft.com/products/canada/canada-zip-code-database.aspx
-2. Purchase: **Canadian Postal Code Database**
-3. Download CSV with required columns
-4. Place at: `data/canadian-postal-codes.csv`
-
-### Option D: Use Sample Data (Testing Only)
-
-For development/testing, we provide a sample file:
+1. Log in to your ZipCodeSoft customer area
+2. Download the Canadian Postal Code Database CSV
+3. Place at: `data/canadian-postal-codes.csv`
 
 ```bash
-# From project root
-cp packages/db/sample-postal-codes.csv data/canadian-postal-codes.csv
+mkdir -p data
+# Place your downloaded CSV at: data/canadian-postal-codes.csv
 ```
 
-**⚠️ Warning:** Sample data only includes ~100 codes from major cities.
+**Why ZipCodeSoft:**
+- Most accurate coordinates
+- Monthly updates available
+- Complete coverage of all Canadian postal codes (~880K)
+- Includes new postal codes as Canada Post adds them
 
-## Step 3: Prepare Data File
+Use the same data source for both local development and production.
 
-The CSV must have these columns (semicolon-delimited):
+## Step 2: CSV Format
+
+ZipCodeSoft CSV format (semicolon-delimited):
 
 ```csv
-postalcode;city;provincecode;latitude;longitude
-M5H 2N2;Toronto;ON;43.6532;-79.3832
-V6B 1A7;Vancouver;BC;49.2827;-123.1207
-H2Y 1C6;Montreal;QC;45.5017;-73.5673
+countrycode;postalcode;city;province;provincecode;timezone;daylightsaving;latitude;longitude
+CA;A0A 0A1;Avondale;Newfoundland;NL;GMT -03:30;Y;47.48721597;-53.0862281
 ```
 
-Required format:
-- **Delimiter:** Semicolon (`;`)
-- **Headers:** `postalcode;city;provincecode;latitude;longitude`
-- **Postal Code:** Format with space (e.g., "M5H 2N2")
-- **Province:** 2-letter code (ON, QC, BC, etc.)
-- **Coordinates:** Decimal degrees (WGS84)
+All columns are imported:
 
-Place the file at: `data/canadian-postal-codes.csv` (relative to project root)
+| CSV Column | Database Column | Description |
+|------------|-----------------|-------------|
+| `countrycode` | `country_code` | Country code (CA) |
+| `postalcode` | `code` | Postal code with space (M5H 2N2) |
+| `city` | `city` | City name |
+| `province` | `province_name` | Full province name (Ontario) |
+| `provincecode` | `province` | 2-letter code (ON) |
+| `timezone` | `timezone` | GMT offset (e.g., "GMT -05:00") |
+| `daylightsaving` | `daylight_saving` | Observes DST (Y/N → true/false) |
+| `latitude` | `latitude` | Decimal degrees |
+| `longitude` | `longitude` | Decimal degrees |
 
-## Step 4: Import Postal Codes
-
-From the project root:
+## Step 3: Import Postal Codes
 
 ```bash
-# Ensure .env.local has POSTGRES_URL configured
-pnpm --filter @acme/db import-postal-codes
+cd packages/db
+pnpm import-postal-codes
 ```
-
-The import script will:
-1. ✅ Read CSV data in batches of 10,000
-2. ✅ Validate postal code format (Canadian A1A 1A1)
-3. ✅ Insert with conflict handling (re-runnable)
-4. ✅ Auto-populate PostGIS POINT geometry via trigger
-5. ✅ Show progress and statistics
 
 Expected output:
 ```
 Starting Canadian postal codes import...
-✅ Imported 10000 postal codes (0 skipped)...
-✅ Imported 20000 postal codes (0 skipped)...
+✅ Imported 1003 postal codes (0 skipped, 3 deduped)...
+✅ Imported 2003 postal codes (0 skipped, 3 deduped)...
 ...
+✅ Imported 881393 postal codes (0 skipped, 1393 deduped)...
+
 🎉 Import complete!
-   Total imported: 876,445 postal codes
-   Skipped: 124 invalid entries
+   Total imported: 881637 postal codes
+   Skipped: 0 invalid entries
 ```
 
-## Step 5: Verify Import
-
-```sql
--- Count imported codes
-SELECT COUNT(*) FROM postal_code;
-
--- Sample data
-SELECT * FROM postal_code LIMIT 10;
-
--- Test proximity search (10km around Toronto downtown)
-SELECT * FROM find_postal_codes_near_point(43.6532, -79.3832, 10);
-
--- Test listing search by postal code (25km radius)
-SELECT * FROM find_listings_near_postal_code('M5H 2N2', 25);
-```
-
-## Database Schema
-
-```sql
-CREATE TABLE postal_code (
-  code VARCHAR(7) PRIMARY KEY,     -- e.g., "M5H 2N2"
-  city VARCHAR(100) NOT NULL,      -- "Toronto"
-  province VARCHAR(2) NOT NULL,    -- "ON"
-  latitude DOUBLE PRECISION NOT NULL,
-  longitude DOUBLE PRECISION NOT NULL,
-  location TEXT                    -- PostGIS POINT geometry
-);
-
--- Indexes
-CREATE INDEX postal_code_coords_idx ON postal_code(latitude, longitude);
-CREATE INDEX postal_code_location_gist_idx ON postal_code USING GIST (ST_GeomFromText(location, 4326));
-CREATE INDEX postal_code_province_idx ON postal_code(province);
-CREATE INDEX postal_code_city_idx ON postal_code(city);
-```
-
-## Usage in Application
-
-### tRPC Endpoint Example
-
-```typescript
-// Search listings by postal code
-searchByPostalCode: publicProcedure
-  .input(
-    z.object({
-      postalCode: z.string().regex(/^[A-Z]\d[A-Z] \d[A-Z]\d$/),
-      radius: z.number().min(1).max(100).default(25), // km
-    })
-  )
-  .query(async ({ ctx, input }) => {
-    const results = await ctx.db.execute(sql`
-      SELECT * FROM find_listings_near_postal_code(
-        ${input.postalCode},
-        ${input.radius}
-      )
-    `);
-    return results;
-  });
-```
-
-### Direct SQL Query
-
-```typescript
-// Get postal code details
-const postalCode = await db.query.postalCode.findFirst({
-  where: eq(schema.postalCode.code, "M5H 2N2"),
-});
-
-// Find nearby postal codes using raw SQL
-const nearby = await db.execute(sql`
-  SELECT * FROM find_postal_codes_near_point(
-    ${latitude},
-    ${longitude},
-    ${radiusKm}
-  )
-`);
-```
-
-## Performance
-
-With 876,445 Canadian postal codes:
-- **Storage:** ~100 MB
-- **Import Time:** 2-3 minutes
-- **Proximity Query:** < 50ms (with spatial index)
-- **Exact Lookup:** < 1ms (primary key)
+> **Note:** The "deduped" count shows duplicate postal codes in the CSV that were merged (later entries override earlier ones).
 
 ## Updating Data
 
-The import script is idempotent (can be re-run):
+The import script uses **upsert**, so you can safely re-run it with new data:
 
 ```bash
-# Re-import to update data
-pnpm --filter @acme/db import-postal-codes
+# 1. Download fresh CSV from ZipCodeSoft customer area
+# 2. Replace the data file
+cp ~/Downloads/canadian-postal-codes.csv data/canadian-postal-codes.csv
+
+# 3. Re-import (updates existing, adds new)
+cd packages/db
+pnpm import-postal-codes
 ```
 
-Uses `ON CONFLICT DO NOTHING` to avoid duplicates.
+**For production server:**
+```bash
+# Upload new CSV to server
+scp canadian-postal-codes.csv forge@vendgros.ca:/home/forge/vendgros.ca/current/data/
+
+# SSH and re-import
+ssh forge@vendgros.ca
+cd /home/forge/vendgros.ca/current/packages/db
+pnpm import-postal-codes
+```
+
+**What happens during update:**
+- **New postal codes** → Inserted
+- **Existing postal codes** → City, province, and coordinates updated
+- **Removed postal codes** → Remain in database (not deleted)
+
+**Recommended update frequency:** Quarterly or when ZipCodeSoft releases updates.
+
+## Performance
+
+With ~880K Canadian postal codes:
+- **Storage:** ~100 MB
+- **Import Time:** ~2 minutes (batches of 1,000 records)
+- **Proximity Query:** < 50ms (with GiST spatial index)
+- **Exact Lookup:** < 1ms (primary key)
 
 ## Troubleshooting
 
@@ -226,53 +129,26 @@ Uses `ON CONFLICT DO NOTHING` to avoid duplicates.
 - Check path from project root
 
 ### Error: "POSTGRES_URL not set"
-- Configure `.env` with database connection string
-- Example: `POSTGRES_URL="postgresql://user:pass@localhost:5432/vendgros"`
+- Configure `.env.local` with database connection string
 
 ### Error: "PostGIS extension not found"
-- Run migrations first: `pnpm db:push`
-- Or manually: `CREATE EXTENSION IF NOT EXISTS postgis;`
-
-### Slow Import
-- Normal for 876k+ records (2-3 minutes)
-- Batch size: 10,000 (configurable in script)
-- Indexes created after import for speed
+- Run `pnpm setup-postgis` first
 
 ### Invalid Postal Codes Skipped
 - Only Canadian format accepted: `A1A 1A1`
 - Check CSV format (semicolon-delimited)
 - Verify headers match required columns
 
-## Data Sources Comparison
+### Error: "parse error - invalid geometry"
+- Run `pnpm setup-postgis` to ensure triggers use correct WKT format
+- The trigger must use `ST_AsText()` to produce WKT format compatible with spatial indexes
 
-| Source | Cost | Coverage | Update Frequency | Accuracy |
-|--------|------|----------|-----------------|----------|
-| Statistics Canada | Free | 100% | Quarterly | ⭐⭐⭐⭐⭐ |
-| GeoNames | Free | ~90% | Monthly | ⭐⭐⭐⭐ |
-| ZipCodeSoft | $$ | 100% | Monthly | ⭐⭐⭐⭐⭐ |
-| Sample (Testing) | Free | <1% | Never | ⭐⭐⭐ |
-
-**Recommendation:** Use Statistics Canada for production (free + official).
+### Error: "MAX_PARAMETERS_EXCEEDED"
+- This is handled automatically with batch size of 1,000 records
+- PostgreSQL has a 65,534 parameter limit per query
 
 ## License
 
-Postal code data sourced from:
-- **Statistics Canada:** Open Government License
-- **GeoNames:** Creative Commons Attribution 4.0
-- **ZipCodeSoft:** Commercial license required
+Postal code data sourced from **ZipCodeSoft** (commercial license).
 
-Ensure compliance with data source terms of use.
-
-## Support
-
-For issues with postal code import:
-1. Check logs for specific errors
-2. Verify CSV format matches requirements
-3. Test with sample data first
-4. Check PostGIS extension is enabled
-5. Open GitHub issue with error details
-
----
-
-**Last Updated:** January 2026
-**Canadian Postal Codes:** ~876,000 active codes
+Ensure compliance with ZipCodeSoft terms of use for your subscription tier.

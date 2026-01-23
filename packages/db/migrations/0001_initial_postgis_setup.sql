@@ -25,7 +25,7 @@ CREATE OR REPLACE FUNCTION update_listing_location()
 RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.latitude IS NOT NULL AND NEW.longitude IS NOT NULL THEN
-    NEW.location = ST_SetSRID(ST_MakePoint(NEW.longitude, NEW.latitude), 4326)::text;
+    NEW.location = ST_AsText(ST_SetSRID(ST_MakePoint(NEW.longitude, NEW.latitude), 4326));
   END IF;
   RETURN NEW;
 END;
@@ -36,7 +36,7 @@ CREATE OR REPLACE FUNCTION update_postal_code_location()
 RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.latitude IS NOT NULL AND NEW.longitude IS NOT NULL THEN
-    NEW.location = ST_SetSRID(ST_MakePoint(NEW.longitude, NEW.latitude), 4326)::text;
+    NEW.location = ST_AsText(ST_SetSRID(ST_MakePoint(NEW.longitude, NEW.latitude), 4326));
   END IF;
   RETURN NEW;
 END;
@@ -205,14 +205,14 @@ $$ LANGUAGE plpgsql STABLE;
 
 -- Update any listings that have lat/lng but no location
 UPDATE listing
-SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::text
+SET location = ST_AsText(ST_SetSRID(ST_MakePoint(longitude, latitude), 4326))
 WHERE location IS NULL
   AND latitude IS NOT NULL
   AND longitude IS NOT NULL;
 
 -- Update any postal codes that have lat/lng but no location
 UPDATE postal_code
-SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::text
+SET location = ST_AsText(ST_SetSRID(ST_MakePoint(longitude, latitude), 4326))
 WHERE location IS NULL
   AND latitude IS NOT NULL
   AND longitude IS NOT NULL;

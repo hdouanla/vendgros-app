@@ -47,13 +47,16 @@ pnpm install --frozen-lockfile
 # Build all packages
 pnpm build
 
-# Run database migrations
+# Run database schema updates
 cd packages/db
 pnpm push
 
 # Restart PM2
+cd /home/forge/vendgros.ca/current
 pm2 restart vendgros || pm2 start ecosystem.config.js
 ```
+
+> **Important:** This deployment script handles **subsequent deployments** only. For **first deployment**, you must also run `pnpm setup-postgis` and `pnpm import-postal-codes` manually after the initial deploy. See [First Deployment](#first-deployment-full-initialization) below.
 
 ### 3. Create PM2 Ecosystem File
 
@@ -180,9 +183,26 @@ openssl rand -base64 32
 
 ## Database Setup
 
-### First Deployment (Full Initialization)
+### First Deployment (Full Initialization) {#first-deployment-full-initialization}
 
-For initial production deployment, run the all-in-one command:
+#### 1. Upload Postal Code Data
+
+The postal code CSV is not tracked in git. Upload it to the server manually:
+
+1. Download the latest Canadian postal codes from [ZipCodeSoft](https://www.zipcodesoft.com) (customer area)
+2. Upload to server:
+
+```bash
+# On server: create data directory
+ssh forge@vendgros.ca "mkdir -p /home/forge/vendgros.ca/current/data"
+
+# From local machine: upload CSV
+scp canadian-postal-codes.csv forge@vendgros.ca:/home/forge/vendgros.ca/current/data/
+```
+
+See `packages/db/README_POSTAL_CODES.md` for CSV format requirements.
+
+#### 2. Initialize Database
 
 ```bash
 cd /home/forge/vendgros.ca/current/packages/db
@@ -214,20 +234,53 @@ pnpm push
 # 2. Setup PostGIS (extension, triggers, spatial indexes, helper functions)
 pnpm setup-postgis
 
-# 3. Import Canadian postal codes (880K+ records, ~5 minutes)
+# 3. Import Canadian postal codes (880K+ records, ~2 minutes)
 pnpm import-postal-codes
 ```
 
 ### Subsequent Deployments
 
-For schema updates after the initial deployment:
+#### Schema Updates
+
+Schema changes are applied automatically during deployment via the deployment script. For manual updates:
 
 ```bash
 cd /home/forge/vendgros.ca/current/packages/db
 pnpm push
 ```
 
-> **Note:** `pnpm push` uses Drizzle's push strategy which safely adds new columns/tables without data loss. PostGIS setup and postal codes only need to run once - they persist across deployments.
+> **Note:** `pnpm push` uses Drizzle's push strategy which safely adds new columns/tables without data loss. PostGIS setup only needs to run once - triggers and spatial indexes persist across deployments.
+
+#### Updating Postal Codes
+
+When ZipCodeSoft releases updated postal code data (recommended: quarterly):
+
+```bash
+# 1. Upload new CSV to server
+scp canadian-postal-codes.csv forge@vendgros.ca:/home/forge/vendgros.ca/current/data/
+
+# 2. SSH and re-import (upserts - updates existing, adds new)
+ssh forge@vendgros.ca
+cd /home/forge/vendgros.ca/current/packages/db
+pnpm import-postal-codes
+```
+
+The import is non-destructive:
+- **New postal codes** → Inserted
+- **Existing postal codes** → Updated (city, coordinates, etc.)
+- **Removed postal codes** → Remain in database
+
+See `packages/db/README_POSTAL_CODES.md` for details.
+
+### Server Update Summary
+
+| Scenario | What to Run | When |
+|----------|-------------|------|
+| **First deployment** | `pnpm db:init` (or push + setup-postgis + import-postal-codes) | Once per new server/database |
+| **Code deployment** | Automatic via Forge (runs `pnpm push`) | Every git push |
+| **Schema changes** | Automatic via deployment script | Every deployment |
+| **Postal code update** | Manual: scp CSV + `pnpm import-postal-codes` | Quarterly (or when data updated) |
+| **PostGIS changes** | Manual: `pnpm setup-postgis` | Only if triggers/functions change |
 
 ## PM2 Management
 

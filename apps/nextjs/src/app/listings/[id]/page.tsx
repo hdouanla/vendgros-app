@@ -22,6 +22,7 @@ export default function ListingDetailPage({
 
   const [quantityToReserve, setQuantityToReserve] = useState(1);
   const [showReserveModal, setShowReserveModal] = useState(false);
+  const [showMinDepositModal, setShowMinDepositModal] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
   const [reservationError, setReservationError] = useState<string | null>(null);
@@ -440,7 +441,13 @@ export default function ListingDetailPage({
                 )}
 
                 <button
-                  onClick={() => setShowReserveModal(true)}
+                  onClick={() => {
+                    if (depositAmount < 1) {
+                      setShowMinDepositModal(true);
+                      return;
+                    }
+                    setShowReserveModal(true);
+                  }}
                   disabled={
                     listing.status !== "PUBLISHED" ||
                     listing.quantityAvailable === 0 ||
@@ -536,6 +543,43 @@ export default function ListingDetailPage({
                   : tCommon("confirm")}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Minimum Deposit Modal */}
+      {showMinDepositModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100">
+                <svg
+                  className="h-6 w-6 text-yellow-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+            </div>
+            <h2 className="mb-2 text-center text-xl font-semibold">
+              {tReservation("minimumDepositTitle")}
+            </h2>
+            <p className="mb-6 text-center text-gray-600">
+              {tReservation("minimumDepositRequired")}
+            </p>
+            <button
+              onClick={() => setShowMinDepositModal(false)}
+              className="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+            >
+              {tCommon("ok")}
+            </button>
           </div>
         </div>
       )}

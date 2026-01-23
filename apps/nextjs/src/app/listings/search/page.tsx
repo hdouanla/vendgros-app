@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
@@ -37,6 +37,9 @@ export default function SearchListingsPage() {
   const [longitude, setLongitude] = useState<number | null>(urlLng ? parseFloat(urlLng) : null);
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
   const [activePostalCode, setActivePostalCode] = useState<string>(urlPostalCode);
+  const [isAutoLocating, setIsAutoLocating] = useState(false);
+  const [autoLocationError, setAutoLocationError] = useState<string | null>(null);
+  const autoLocationAttemptedRef = useRef(false);
 
   // Update state when URL params change
   useEffect(() => {
@@ -55,21 +58,56 @@ export default function SearchListingsPage() {
     }
   }, [urlPostalCode, urlLat, urlLng, urlRadius, urlCategory, urlSortBy, urlMinPrice, urlMaxPrice]);
 
-  // Get user location
-  const getUserLocation = () => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLatitude(position.coords.latitude);
-          setLongitude(position.coords.longitude);
-          setActivePostalCode(""); // Clear postal code when using location
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-        },
-      );
-    }
+  // Check if URL has search filters but no location
+  const hasFiltersWithoutLocation = () => {
+    const hasFilters = urlCategory || urlMinPrice || urlMaxPrice ||
+                       urlRadius !== "50" || urlSortBy !== "distance";
+    const hasLocation = urlPostalCode || (urlLat && urlLng);
+    return hasFilters && !hasLocation;
   };
+
+  // Get user location
+  const getUserLocation = (isAutomatic = false) => {
+    if (!("geolocation" in navigator)) {
+      if (isAutomatic) {
+        setAutoLocationError(t("geoNotSupported"));
+        setIsAutoLocating(false);
+      }
+      return;
+    }
+
+    if (isAutomatic) {
+      setIsAutoLocating(true);
+      setAutoLocationError(null);
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+        setActivePostalCode(""); // Clear postal code when using location
+        if (isAutomatic) {
+          setIsAutoLocating(false);
+        }
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        if (isAutomatic) {
+          setAutoLocationError(t("unableToLocate"));
+          setIsAutoLocating(false);
+        }
+      },
+    );
+  };
+
+  // Auto-trigger geolocation when URL has filters but no location
+  useEffect(() => {
+    if (autoLocationAttemptedRef.current) return;
+    if (hasFiltersWithoutLocation()) {
+      autoLocationAttemptedRef.current = true;
+      getUserLocation(true);
+    }
+  }, []);
 
   // Handle search from SearchFilters component
   const handleSearch = (values: SearchFiltersValues) => {
@@ -176,7 +214,12 @@ export default function SearchListingsPage() {
 
       {/* Results */}
       <div>
-        {isLoading ? (
+        {isAutoLocating ? (
+          <div className="py-12 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-green-600 border-t-transparent mb-4"></div>
+            <p className="text-gray-600">{t("locating")}</p>
+          </div>
+        ) : isLoading ? (
           <div className="py-12 text-center">
             <p className="text-gray-600">{tCommon("loading")}</p>
           </div>
@@ -194,6 +237,9 @@ export default function SearchListingsPage() {
           </div>
         ) : !latitude && !longitude && !activePostalCode ? (
           <div className="rounded-lg bg-blue-50 p-8 text-center">
+            {autoLocationError && (
+              <p className="text-red-600 mb-4">{autoLocationError}</p>
+            )}
             <p className="text-gray-700">
               {t("enterPostalCodePrompt")}
             </p>

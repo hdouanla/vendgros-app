@@ -8,6 +8,7 @@
     "success": "Éxito",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
+    "ok": "OK",
     "save": "Guardar",
     "delete": "Eliminar",
     "edit": "Editar",
@@ -230,6 +231,7 @@
     "pleaseSignIn": "Por favor inicia sesión para hacer una reserva",
     "reservationFailed": "Error al crear la reserva",
     "minimumDepositRequired": "El depósito mínimo de reserva es de $1.00 CAD. Por favor aumenta la cantidad.",
+    "minimumDepositTitle": "Depósito mínimo requerido",
     "pickupBy": "Recoger antes del {date}",
     "expiresIn": "Expira en {hours} horas",
     "status": {

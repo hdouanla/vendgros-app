@@ -33,9 +33,11 @@
     "with-env": "dotenv -e ../../.env.local --",
     "setup-sample-data": "bash scripts/setup-sample-data.sh",
     "import-postal-codes": "pnpm with-env tsx src/scripts/import-postal-codes.ts",
+    "setup-postgis": "pnpm with-env tsx src/scripts/setup-postgis.ts",
     "db:reset": "pnpm with-env tsx src/scripts/reset-database.ts",
     "db:create-tables": "pnpm with-env tsx src/scripts/create-all-tables.ts",
-    "db:seed": "pnpm with-env tsx src/scripts/seed-homepage-data.ts"
+    "db:seed": "pnpm with-env tsx src/scripts/seed-homepage-data.ts",
+    "db:init": "pnpm push && pnpm setup-postgis && pnpm import-postal-codes"
   },
   "dependencies": {
     "@vercel/postgres": "^0.10.0",

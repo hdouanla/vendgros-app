@@ -180,32 +180,54 @@ openssl rand -base64 32
 
 ## Database Setup
 
-### 1. Enable PostGIS Extension
+### First Deployment (Full Initialization)
 
-Connect to your PostgreSQL database and run:
+For initial production deployment, run the all-in-one command:
 
-```sql
-CREATE EXTENSION IF NOT EXISTS postgis;
-CREATE EXTENSION IF NOT EXISTS postgis_topology;
+```bash
+cd /home/forge/vendgros.ca/current/packages/db
+
+# Full database initialization
+pnpm db:init
 ```
 
-### 2. Push Schema
+#### What `db:init` Does
 
-After deployment, run:
+The `db:init` command runs three steps in sequence:
+
+| Step | Command | What It Does |
+|------|---------|--------------|
+| 1 | `pnpm push` | Creates all database tables from Drizzle schema |
+| 2 | `pnpm setup-postgis` | Installs PostGIS extension, creates triggers for auto-populating location columns, adds spatial indexes (GiST), and creates helper functions (`find_listings_near_point()`, etc.) |
+| 3 | `pnpm import-postal-codes` | Imports 880K+ Canadian postal codes for geolocation features |
+
+#### Running Steps Individually
+
+If you need more control or are troubleshooting:
+
+```bash
+cd /home/forge/vendgros.ca/current/packages/db
+
+# 1. Push Drizzle schema (creates all tables)
+pnpm push
+
+# 2. Setup PostGIS (extension, triggers, spatial indexes, helper functions)
+pnpm setup-postgis
+
+# 3. Import Canadian postal codes (880K+ records, ~5 minutes)
+pnpm import-postal-codes
+```
+
+### Subsequent Deployments
+
+For schema updates after the initial deployment:
 
 ```bash
 cd /home/forge/vendgros.ca/current/packages/db
 pnpm push
 ```
 
-### 3. Import Postal Codes
-
-First deployment only:
-
-```bash
-cd /home/forge/vendgros.ca/current/packages/db
-pnpm import-postal-codes
-```
+> **Note:** `pnpm push` uses Drizzle's push strategy which safely adds new columns/tables without data loss. PostGIS setup and postal codes only need to run once - they persist across deployments.
 
 ## PM2 Management
 

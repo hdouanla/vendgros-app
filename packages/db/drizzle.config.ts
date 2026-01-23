@@ -11,4 +11,6 @@ export default {
   dialect: "postgresql",
   dbCredentials: { url: nonPoolingUrl },
   casing: "snake_case",
+  // Exclude PostGIS system tables from schema introspection
+  extensionsFilters: ["postgis"],
 } satisfies Config;

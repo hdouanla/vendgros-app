@@ -61,7 +61,7 @@ async function importPostalCodes() {
       province: row.provincecode.toUpperCase(),
       latitude: parseFloat(row.latitude),
       longitude: parseFloat(row.longitude),
-      location: null, // Will be set by trigger
+      // location is auto-populated by PostGIS trigger from lat/lng
     });
 
     count++;

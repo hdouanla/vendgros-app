@@ -72,19 +72,54 @@ docker run -d \
   postgis/postgis:16-3.4
 ```
 
-### Push Schema & Seed Data
+### Initialize Database
+
+For first-time setup, run the all-in-one initialization command:
 
 ```bash
-# Push schema to database
-pnpm db:push
-
-# Import Canadian postal codes (880K+ records)
 cd packages/db
+
+# Full database initialization (recommended)
+pnpm db:init
+```
+
+#### What `db:init` Does
+
+The `db:init` command runs three steps in sequence:
+
+| Step | Command | What It Does |
+|------|---------|--------------|
+| 1 | `pnpm push` | Creates all database tables from Drizzle schema |
+| 2 | `pnpm setup-postgis` | Installs PostGIS extension, creates triggers for auto-populating location columns, adds spatial indexes, and creates helper functions for proximity searches |
+| 3 | `pnpm import-postal-codes` | Imports 880K+ Canadian postal codes for geolocation features |
+
+#### Running Steps Individually
+
+If you need more control, run each step separately:
+
+```bash
+cd packages/db
+
+# 1. Push Drizzle schema to database (creates tables)
+pnpm push
+
+# 2. Setup PostGIS (extension, triggers, spatial indexes, helper functions)
+pnpm setup-postgis
+
+# 3. Import Canadian postal codes (880K+ records, ~5 minutes)
 pnpm import-postal-codes
 
-# Seed sample data for development
+# 4. Seed sample data for development (optional)
 pnpm db:seed
 ```
+
+#### When to Re-run
+
+| Scenario | Command |
+|----------|---------|
+| Fresh database / new clone | `pnpm db:init` |
+| Schema changes only | `pnpm push` |
+| Reset everything | `pnpm db:reset && pnpm db:init` |
 
 ## Environment Variables
 
@@ -174,8 +209,11 @@ vendgros-app/
 
 | Command | Description |
 |---------|-------------|
-| `pnpm import-postal-codes` | Import Canadian postal codes |
-| `pnpm db:seed` | Seed homepage data |
+| `pnpm db:init` | Full initialization (push + PostGIS + postal codes) |
+| `pnpm push` | Push Drizzle schema changes to database |
+| `pnpm setup-postgis` | Setup PostGIS triggers, indexes, and helper functions |
+| `pnpm import-postal-codes` | Import Canadian postal codes (880K+ records) |
+| `pnpm db:seed` | Seed homepage sample data |
 | `pnpm db:reset` | Reset database (destructive) |
 
 ## Testing

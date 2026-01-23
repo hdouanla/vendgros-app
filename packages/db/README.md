@@ -1,97 +1,124 @@
-# Vendgros - Community Bulk Sales Marketplace
+# @acme/db - Vendgros Database Package
 
-A community-driven marketplace for bulk sales of surplus items (groceries, clothing, electronics, etc.) connecting sellers with nearby buyers. Built with the T3 Stack.
-
-## Features
-
-### Core Functionality
-- **Dual Verification**: Email + SMS OTP authentication for all users
-- **Geospatial Search**: Find listings within specified radius using PostGIS
-- **5% Deposit System**: Buyers pay 5% deposit via Stripe, 95% balance at pickup
-- **QR Code Verification**: Secure pickup verification with QR codes and backup PIN
-- **Blind Rating System**: Bi-directional ratings hidden until both parties submit
-- **Multi-Channel Notifications**: Email, SMS, and push notifications for all key events
-- **Admin Moderation**: Listing approval/rejection and user management
-
-### Tech Stack
-- **Frontend (Web)**: Next.js 15 with App Router, shadcn/ui, TailwindCSS
-- **Frontend (Mobile)**: React Native/Expo with NativeWind
-- **API**: tRPC v11 for type-safe API
-- **Database**: PostgreSQL 16 with PostGIS for geospatial queries
-- **ORM**: Drizzle ORM with automatic migrations
-- **Auth**: better-auth with OTP plugin
-- **Payments**: Stripe for deposit processing
-- **Notifications**: Resend (email), Twilio (SMS), Expo Push (mobile)
-- **Monorepo**: Turborepo for workspace management
-
-## Prerequisites
-
-- **Node.js**: v20+ (LTS recommended)
-- **pnpm**: v10+ (\`npm install -g pnpm\`)
-- **PostgreSQL**: 16+ with PostGIS extension
-
-### Required API Keys
-- **Stripe**: For payment processing
-- **Resend**: For email OTP and notifications
-- **Twilio**: For SMS OTP
+Database schema, migrations, and scripts for Vendgros.
 
 ## Quick Start
 
-1. **Clone and install**:
-   \`\`\`bash
-   git clone <repository-url>
-   cd vendgros-app
-   pnpm install
-   \`\`\`
+```bash
+# Full database initialization (recommended for first-time setup)
+pnpm db:init
+```
 
-2. **Configure environment**:
-   \`\`\`bash
-   cp .env.example .env
-   # Edit .env with your database and API credentials
-   \`\`\`
+This single command runs all three setup steps in order:
+1. `pnpm push` - Creates all tables via Drizzle schema
+2. `pnpm setup-postgis` - Sets up PostGIS features (triggers, indexes, functions)
+3. `pnpm import-postal-codes` - Imports 880K+ Canadian postal codes
 
-3. **Set up database**:
-   \`\`\`bash
-   # Run migrations
-   pnpm --filter @acme/db db:migrate
+## Commands Reference
 
-   # Import sample postal codes for development
-   # (See packages/db/README_POSTAL_CODES.md for production setup)
-   mkdir -p data
-   cp packages/db/sample-postal-codes.csv data/canadian-postal-codes.csv
-   pnpm --filter @acme/db import-postal-codes
-   \`\`\`
+| Command | Description |
+|---------|-------------|
+| `pnpm db:init` | **Full initialization** - Run this for new databases |
+| `pnpm push` | Push Drizzle schema changes to database |
+| `pnpm setup-postgis` | Setup PostGIS triggers, indexes, and helper functions |
+| `pnpm import-postal-codes` | Import Canadian postal codes (~5 min) |
+| `pnpm db:seed` | Seed sample data for development |
+| `pnpm db:reset` | Reset database (destructive - drops all data) |
+| `pnpm studio` | Open Drizzle Studio (database GUI) |
 
-4. **Start development**:
-   \`\`\`bash
-   pnpm dev
-   \`\`\`
+## Database Architecture
 
-Visit http://localhost:3000 for the web app.
+### Schema Management: Drizzle ORM
 
-## Documentation
+Tables are defined in `src/schema.ts` and pushed to the database using:
 
-- **Setup Guide**: See `.env.example` for required environment variables
-- **Postal Codes Setup**: See `packages/db/README_POSTAL_CODES.md` for importing Canadian postal codes
-- **Project Plan**: See `doc/PROJECT_PLAN.md` for implementation roadmap
-- **API Documentation**: All routes in `packages/api/src/router/`
+```bash
+pnpm push
+```
 
-## Development
+This uses Drizzle's "push" strategy which:
+- Creates new tables and columns automatically
+- Safely handles schema changes without data loss
+- Does NOT require migration files for development
 
-### Database Migrations
+### PostGIS Features
 
-\`\`\`bash
-pnpm --filter @acme/db db:generate  # Generate migration
-pnpm --filter @acme/db db:migrate   # Apply migration
-\`\`\`
+PostGIS features that Drizzle cannot handle are managed separately in `migrations/0001_initial_postgis_setup.sql`:
 
-### Testing Stripe
+| Feature | Purpose |
+|---------|---------|
+| PostGIS Extension | Enables spatial data types and functions |
+| Trigger Functions | Auto-populate `location` POINT column from lat/lng |
+| Triggers | Run on INSERT/UPDATE for `listing` and `postal_code` tables |
+| GiST Indexes | Fast spatial queries for proximity searches |
+| Helper Functions | `find_listings_near_point()`, `find_postal_codes_near_point()`, etc. |
 
-\`\`\`bash
-stripe listen --forward-to localhost:3000/api/webhooks/stripe
-# Use test card: 4242 4242 4242 4242
-\`\`\`
+Run PostGIS setup with:
 
-## License
+```bash
+pnpm setup-postgis
+```
 
-MIT
+## When to Run Each Command
+
+### New Database (First Time)
+
+```bash
+pnpm db:init  # Does everything
+```
+
+### After Schema Changes
+
+```bash
+pnpm push     # Just update the schema
+```
+
+### After Cloning/Fresh Install
+
+```bash
+pnpm db:init  # Full setup needed
+```
+
+### Re-importing Postal Codes
+
+```bash
+pnpm import-postal-codes  # Safe to re-run (uses upsert)
+```
+
+## Files Structure
+
+```
+packages/db/
+├── src/
+│   ├── schema.ts              # Drizzle table definitions
+│   ├── schema-extensions.ts   # Extended schemas with relations
+│   ├── client.ts              # Database client
+│   └── scripts/
+│       ├── setup-postgis.ts   # PostGIS setup script
+│       ├── import-postal-codes.ts
+│       ├── seed-homepage-data.ts
+│       └── reset-database.ts
+├── migrations/
+│   └── 0001_initial_postgis_setup.sql  # PostGIS setup SQL
+└── drizzle.config.ts          # Drizzle configuration
+```
+
+## Troubleshooting
+
+### Check PostGIS is Installed
+
+```bash
+psql -d vendgros-app -c "SELECT PostGIS_Version();"
+```
+
+### Verify Spatial Indexes
+
+```bash
+psql -d vendgros-app -c "\di *gist*"
+```
+
+### Test Proximity Search
+
+```sql
+SELECT * FROM find_postal_codes_near_point(43.65, -79.38, 10);
+```

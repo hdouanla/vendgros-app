@@ -436,13 +436,20 @@ export const reservationRouter = createTRPCRouter({
         with: {
           listing: {
             columns: {
+              id: true,
               sellerId: true,
+              title: true,
+              description: true,
+              category: true,
+              pricePerPiece: true,
+              photos: true,
             },
           },
           buyer: {
             columns: {
               email: true,
               phone: true,
+              name: true,
             },
           },
         },
@@ -462,6 +469,16 @@ export const reservationRouter = createTRPCRouter({
         buyerInfo: result.buyer,
         quantity: result.quantityReserved,
         balanceDue: result.totalPrice - result.depositAmount,
+        totalPrice: result.totalPrice,
+        depositPaid: result.depositAmount,
+        pricePerPiece: result.listing.pricePerPiece,
+        listing: {
+          id: result.listing.id,
+          title: result.listing.title,
+          description: result.listing.description,
+          category: result.listing.category,
+          image: result.listing.photos?.[0] ?? null,
+        },
       };
     }),
 

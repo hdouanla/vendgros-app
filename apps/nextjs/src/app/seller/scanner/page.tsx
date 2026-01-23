@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { api } from "~/trpc/react";
 import Link from "next/link";
 
@@ -151,52 +152,125 @@ export default function QRScannerPage() {
 
       {/* Verification Result */}
       {scanResult && (
-        <div className="mt-8 rounded-lg bg-green-50 p-6 shadow-md">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-green-900">
-              ✓ Valid Reservation
-            </h2>
-            <span className="rounded-full bg-green-200 px-3 py-1 text-xs font-medium text-green-900">
-              VERIFIED
-            </span>
+        <div className="mt-8 space-y-4">
+          {/* Valid Reservation Header */}
+          <div className="rounded-lg bg-green-50 p-4 shadow-md">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-green-900">
+                ✓ Valid Reservation
+              </h2>
+              <span className="rounded-full bg-green-200 px-3 py-1 text-xs font-medium text-green-900">
+                VERIFIED
+              </span>
+            </div>
           </div>
 
-          <div className="space-y-3 text-sm">
-            <div>
-              <span className="font-medium text-gray-700">Buyer:</span>
-              <p className="mt-1 text-gray-900">{scanResult.buyerInfo.email}</p>
+          {/* Listing Details */}
+          {scanResult.listing && (
+            <div className="rounded-lg bg-white p-4 shadow-md">
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                Product Details
+              </h3>
+              <div className="flex gap-4">
+                {scanResult.listing.image && (
+                  <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg">
+                    <Image
+                      src={scanResult.listing.image}
+                      alt={scanResult.listing.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <h4 className="text-lg font-semibold text-gray-900">
+                    {scanResult.listing.title}
+                  </h4>
+                  {scanResult.listing.description && (
+                    <p className="mt-1 line-clamp-2 text-sm text-gray-600">
+                      {scanResult.listing.description}
+                    </p>
+                  )}
+                  <p className="mt-2 text-sm text-gray-700">
+                    <span className="font-medium">${Number(scanResult.pricePerPiece).toFixed(2)}</span>
+                    {" "}per piece
+                  </p>
+                  {scanResult.listing.category && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      Category: {scanResult.listing.category}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Order Summary */}
+          <div className="rounded-lg bg-white p-4 shadow-md">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+              Order Summary
+            </h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Quantity:</span>
+                <span className="font-medium text-gray-900">
+                  {scanResult.quantity} {scanResult.quantity === 1 ? "piece" : "pieces"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Total Price:</span>
+                <span className="font-medium text-gray-900">
+                  ${Number(scanResult.totalPrice).toFixed(2)} CAD
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Deposit Paid (5%):</span>
+                <span className="font-medium text-green-600">
+                  -${Number(scanResult.depositPaid).toFixed(2)} CAD
+                </span>
+              </div>
+              <div className="flex justify-between border-t pt-2">
+                <span className="font-semibold text-gray-900">Balance Due:</span>
+                <span className="text-xl font-bold text-green-700">
+                  ${Number(scanResult.balanceDue).toFixed(2)} CAD
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Buyer Information */}
+          <div className="rounded-lg bg-white p-4 shadow-md">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+              Buyer Information
+            </h3>
+            <div className="space-y-1 text-sm">
+              {scanResult.buyerInfo.name && (
+                <p className="font-medium text-gray-900">{scanResult.buyerInfo.name}</p>
+              )}
+              <p className="text-gray-700">{scanResult.buyerInfo.email}</p>
               {scanResult.buyerInfo.phone && (
-                <p className="text-gray-900">{scanResult.buyerInfo.phone}</p>
+                <p className="text-gray-700">{scanResult.buyerInfo.phone}</p>
               )}
             </div>
-
-            <div>
-              <span className="font-medium text-gray-700">Quantity:</span>
-              <p className="mt-1 text-gray-900">{scanResult.quantity} units</p>
-            </div>
-
-            <div className="border-t border-green-200 pt-3">
-              <span className="font-medium text-gray-700">Balance Due (Cash):</span>
-              <p className="mt-1 text-2xl font-bold text-green-900">
-                ${scanResult.balanceDue.toFixed(2)} CAD
-              </p>
-            </div>
           </div>
 
-          <div className="mt-6 rounded-lg bg-yellow-50 p-4">
+          {/* Cash Payment Warning */}
+          <div className="rounded-lg bg-yellow-50 p-4 shadow-md">
             <p className="text-sm font-medium text-yellow-900">
               ⚠️ Collect Cash Payment
             </p>
             <p className="mt-1 text-xs text-yellow-800">
-              Ensure you've received the balance payment in cash before
-              completing the pickup.
+              Ensure you've received the balance payment of{" "}
+              <strong>${Number(scanResult.balanceDue).toFixed(2)} CAD</strong> in cash
+              before completing the pickup.
             </p>
           </div>
 
+          {/* Complete Pickup Button */}
           <button
             onClick={handleCompletePickup}
             disabled={completePickupMutation.isPending}
-            className="mt-6 w-full rounded-md bg-green-600 px-6 py-3 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-md bg-green-600 px-6 py-4 text-lg font-semibold text-white shadow-md hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {completePickupMutation.isPending
               ? "Completing..."

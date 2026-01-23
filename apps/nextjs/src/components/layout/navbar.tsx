@@ -54,7 +54,7 @@ export function Navbar() {
 
   return (
     <nav className="border-b border-gray-200 bg-white shadow-sm">
-      <div className="mx-auto max-w-content px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-content px-4">
         <div className="flex h-20 items-center justify-between">
           {/* Logo */}
           {/* Logo and Desktop Navigation - Left Aligned */}
@@ -62,7 +62,7 @@ export function Navbar() {
             <Link href="/" className="flex items-center">
               {/* Mobile: Icon */}
               <Image
-                src="/vendgros-icon.jpg"
+                src="/vendgros-icon.png"
                 alt="VendGros"
                 width={40}
                 height={40}

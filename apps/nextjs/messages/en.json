@@ -8,6 +8,7 @@
     "success": "Success",
     "cancel": "Cancel",
     "confirm": "Confirm",
+    "ok": "OK",
     "save": "Save",
     "delete": "Delete",
     "edit": "Edit",
@@ -229,6 +230,8 @@
     "balanceDue": "Balance Due at Pickup",
     "pleaseSignIn": "Please sign in to make a reservation",
     "reservationFailed": "Failed to create reservation",
+    "minimumDepositRequired": "The minimum reservation deposit is $1.00 CAD. Please increase your quantity.",
+    "minimumDepositTitle": "Minimum Deposit Required",
     "pickupBy": "Pickup by {date}",
     "expiresIn": "Expires in {hours} hours",
     "status": {

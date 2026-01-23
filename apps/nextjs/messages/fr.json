@@ -65,7 +65,22 @@
     "failedToSignUpWithDiscord": "Échec de l'inscription avec Discord",
     "signInToAccount": "Connectez-vous à votre compte",
     "createNewAccount": "Créer un nouveau compte",
-    "orWord": "Ou"
+    "orWord": "Ou",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "enterEmailForReset": "Entrez votre email pour recevoir un code de réinitialisation",
+    "sendResetCode": "Envoyer le code",
+    "sending": "Envoi en cours...",
+    "codeSent": "Code envoyé! Vérifiez votre email.",
+    "failedToSendCode": "Échec de l'envoi du code",
+    "enterResetCode": "Entrez le code envoyé à",
+    "newPassword": "Nouveau mot de passe",
+    "confirmNewPassword": "Confirmer le mot de passe",
+    "resetPasswordButton": "Réinitialiser",
+    "resettingPassword": "Réinitialisation...",
+    "passwordResetSuccess": "Mot de passe réinitialisé! Redirection vers la connexion...",
+    "failedToResetPassword": "Échec de la réinitialisation",
+    "backToSignIn": "Retour à la connexion",
+    "changeEmail": "Utiliser un autre email"
   },
   "nav": {
     "home": "Accueil",

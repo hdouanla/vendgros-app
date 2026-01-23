@@ -117,58 +117,6 @@ interface ListingTemplate {
 }
 
 const categoryTemplates: Record<string, ListingTemplate[]> = {
-  GROCERIES: [
-    {
-      titleTemplate: "Organic {item} - Bulk Box ({size})",
-      descriptionTemplate: "Farm-fresh organic {item}, perfect for restaurants and large families. Grown locally without pesticides. Premium quality produce that's bursting with flavor. Available for immediate pickup.",
-      minPrice: 1.5, maxPrice: 5.0, minQuantity: 100, maxQuantity: 500,
-      photoUrls: ["https://images.unsplash.com/photo-1542838132-92c53300491e?w=800", "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800"],
-    },
-    {
-      titleTemplate: "Premium {item} - {size} Bags",
-      descriptionTemplate: "High-quality {item} imported from trusted sources. Perfect for restaurants, caterers, or bulk home cooking. Stock up and save on this pantry essential.",
-      minPrice: 10, maxPrice: 30, minQuantity: 50, maxQuantity: 200,
-      photoUrls: ["https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800", "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800"],
-    },
-    {
-      titleTemplate: "Canned {item} - Case of {size}",
-      descriptionTemplate: "Premium canned {item} with long shelf life. All cans within 18 months of expiry. Perfect for food service, emergency preparedness, or stocking your pantry.",
-      minPrice: 0.75, maxPrice: 2.5, minQuantity: 200, maxQuantity: 1000,
-      photoUrls: ["https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=800"],
-    },
-    {
-      titleTemplate: "{item} Oil - Case of 12 Bottles",
-      descriptionTemplate: "Premium cold-pressed {item} oil from quality sources. First harvest, perfect for cooking or health-conscious consumers. Each bottle is 750ml.",
-      minPrice: 60, maxPrice: 120, minQuantity: 20, maxQuantity: 100,
-      photoUrls: ["https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=800"],
-    },
-  ],
-  CLOTHING: [
-    {
-      titleTemplate: "Cotton {item} Pack - {size} Assorted",
-      descriptionTemplate: "High-quality 100% cotton {item} in assorted sizes and colors. Perfect for printing, uniforms, or resale. Pre-shrunk and double-stitched for durability.",
-      minPrice: 3, maxPrice: 8, minQuantity: 50, maxQuantity: 200,
-      photoUrls: ["https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=800", "https://images.unsplash.com/photo-1562157873-818bc0726f68?w=800"],
-    },
-    {
-      titleTemplate: "Athletic {item} Bundle - {size} Pairs",
-      descriptionTemplate: "Premium athletic {item} in bulk. Cushioned, moisture-wicking material. Mix of styles and sizes. Ideal for gyms, sports teams, or retailers.",
-      minPrice: 1.5, maxPrice: 4, minQuantity: 100, maxQuantity: 500,
-      photoUrls: ["https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=800"],
-    },
-    {
-      titleTemplate: "Kids {item} Lot - Mixed Ages",
-      descriptionTemplate: "Assorted children's {item} including various styles and sizes. Name brands, gently used condition. Perfect for consignment shops or large families.",
-      minPrice: 2, maxPrice: 5, minQuantity: 75, maxQuantity: 300,
-      photoUrls: ["https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=800"],
-    },
-    {
-      titleTemplate: "Winter {item} Collection - {size} Pieces",
-      descriptionTemplate: "Warm winter {item} perfect for cold Canadian weather. Mix of styles and sizes. Great for retailers or donation drives.",
-      minPrice: 8, maxPrice: 25, minQuantity: 30, maxQuantity: 150,
-      photoUrls: ["https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=800"],
-    },
-  ],
   ELECTRONICS: [
     {
       titleTemplate: "Phone {item} - Box of {size}",
@@ -195,7 +143,33 @@ const categoryTemplates: Record<string, ListingTemplate[]> = {
       photoUrls: ["https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?w=800"],
     },
   ],
-  HOME_GOODS: [
+  FASHION: [
+    {
+      titleTemplate: "Cotton {item} Pack - {size} Assorted",
+      descriptionTemplate: "High-quality 100% cotton {item} in assorted sizes and colors. Perfect for printing, uniforms, or resale. Pre-shrunk and double-stitched for durability.",
+      minPrice: 3, maxPrice: 8, minQuantity: 50, maxQuantity: 200,
+      photoUrls: ["https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=800", "https://images.unsplash.com/photo-1562157873-818bc0726f68?w=800"],
+    },
+    {
+      titleTemplate: "Athletic {item} Bundle - {size} Pairs",
+      descriptionTemplate: "Premium athletic {item} in bulk. Cushioned, moisture-wicking material. Mix of styles and sizes. Ideal for gyms, sports teams, or retailers.",
+      minPrice: 1.5, maxPrice: 4, minQuantity: 100, maxQuantity: 500,
+      photoUrls: ["https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=800"],
+    },
+    {
+      titleTemplate: "Kids {item} Lot - Mixed Ages",
+      descriptionTemplate: "Assorted children's {item} including various styles and sizes. Name brands, gently used condition. Perfect for consignment shops or large families.",
+      minPrice: 2, maxPrice: 5, minQuantity: 75, maxQuantity: 300,
+      photoUrls: ["https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=800"],
+    },
+    {
+      titleTemplate: "Winter {item} Collection - {size} Pieces",
+      descriptionTemplate: "Warm winter {item} perfect for cold Canadian weather. Mix of styles and sizes. Great for retailers or donation drives.",
+      minPrice: 8, maxPrice: 25, minQuantity: 30, maxQuantity: 150,
+      photoUrls: ["https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=800"],
+    },
+  ],
+  HOME_GARDEN: [
     {
       titleTemplate: "Kitchen {item} Set - {size} Sets",
       descriptionTemplate: "Professional-grade kitchen {item}. Durable construction, dishwasher safe. Perfect for restaurants, caterers, or home chefs who demand quality.",
@@ -209,10 +183,10 @@ const categoryTemplates: Record<string, ListingTemplate[]> = {
       photoUrls: ["https://images.unsplash.com/photo-1631049035182-249067d7618e?w=800"],
     },
     {
-      titleTemplate: "Storage {item} - {size} Piece Lot",
-      descriptionTemplate: "Food-safe storage {item} with secure lids. Various sizes for all your organization needs. BPA-free, microwave and dishwasher safe.",
-      minPrice: 1, maxPrice: 3, minQuantity: 100, maxQuantity: 500,
-      photoUrls: ["https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=800"],
+      titleTemplate: "Garden {item} - {size} Piece Set",
+      descriptionTemplate: "Quality garden {item} for outdoor enthusiasts. Durable materials designed to last. Perfect for landscapers or home gardeners.",
+      minPrice: 5, maxPrice: 20, minQuantity: 50, maxQuantity: 200,
+      photoUrls: ["https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800"],
     },
     {
       titleTemplate: "Bedding {item} - Queen/King Sets",
@@ -221,27 +195,7 @@ const categoryTemplates: Record<string, ListingTemplate[]> = {
       photoUrls: ["https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=800"],
     },
   ],
-  TOYS: [
-    {
-      titleTemplate: "Board {item} Collection - {size} Titles",
-      descriptionTemplate: "Assorted popular board {item} for all ages. Complete with pieces and instructions. Great for game cafes, daycares, or family entertainment.",
-      minPrice: 10, maxPrice: 25, minQuantity: 25, maxQuantity: 100,
-      photoUrls: ["https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=800"],
-    },
-    {
-      titleTemplate: "Art {item} Kit - Classroom Pack",
-      descriptionTemplate: "Complete art {item} kits for creative activities. Includes crayons, pencils, markers, and more. Perfect for schools, camps, or after-school programs.",
-      minPrice: 6, maxPrice: 15, minQuantity: 30, maxQuantity: 150,
-      photoUrls: ["https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800"],
-    },
-    {
-      titleTemplate: "Building {item} Set - {size} Pieces",
-      descriptionTemplate: "Educational building {item} that inspire creativity. Compatible with major brands. Hours of constructive play for children.",
-      minPrice: 15, maxPrice: 40, minQuantity: 20, maxQuantity: 80,
-      photoUrls: ["https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=800"],
-    },
-  ],
-  SPORTS: [
+  SPORTS_HOBBIES: [
     {
       titleTemplate: "Stainless Steel {item} - {size} Pack",
       descriptionTemplate: "Double-wall insulated stainless steel {item}. Keeps drinks cold or hot for hours. Leak-proof design. Perfect for corporate gifts or retail.",
@@ -255,33 +209,79 @@ const categoryTemplates: Record<string, ListingTemplate[]> = {
       photoUrls: ["https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800"],
     },
     {
-      titleTemplate: "Yoga {item} - Premium Quality",
-      descriptionTemplate: "High-density yoga {item} for comfort and support. Non-slip surface, easy to clean. Ideal for studios, gyms, or home practice.",
-      minPrice: 12, maxPrice: 30, minQuantity: 25, maxQuantity: 100,
-      photoUrls: ["https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800"],
+      titleTemplate: "Art {item} Kit - Classroom Pack",
+      descriptionTemplate: "Complete art {item} kits for creative activities. Includes crayons, pencils, markers, and more. Perfect for schools, camps, or after-school programs.",
+      minPrice: 6, maxPrice: 15, minQuantity: 30, maxQuantity: 150,
+      photoUrls: ["https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800"],
+    },
+    {
+      titleTemplate: "Board {item} Collection - {size} Titles",
+      descriptionTemplate: "Assorted popular board {item} for all ages. Complete with pieces and instructions. Great for game cafes, daycares, or family entertainment.",
+      minPrice: 10, maxPrice: 25, minQuantity: 25, maxQuantity: 100,
+      photoUrls: ["https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=800"],
     },
   ],
-  BOOKS: [
+  HEALTH_BEAUTY: [
     {
-      titleTemplate: "Bestseller {item} Collection - {size} Books",
-      descriptionTemplate: "Assorted bestselling {item} from recent years. Mix of genres including fiction, thriller, and romance. Good to excellent condition.",
-      minPrice: 2, maxPrice: 6, minQuantity: 50, maxQuantity: 300,
-      photoUrls: ["https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800"],
+      titleTemplate: "Premium {item} - {size} Pack",
+      descriptionTemplate: "High-quality {item} for personal care. Gentle formulas suitable for all skin types. Perfect for spas, salons, or retail.",
+      minPrice: 3, maxPrice: 12, minQuantity: 50, maxQuantity: 200,
+      photoUrls: ["https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800"],
     },
     {
-      titleTemplate: "College {item} - Business Studies",
-      descriptionTemplate: "Used college {item} for business and economics courses. Recent editions with minimal highlighting. Save significantly off retail prices.",
-      minPrice: 15, maxPrice: 35, minQuantity: 20, maxQuantity: 80,
-      photoUrls: ["https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=800"],
+      titleTemplate: "Organic {item} Set - {size} Units",
+      descriptionTemplate: "Natural and organic {item} made with premium ingredients. Cruelty-free and eco-friendly. Ideal for health-conscious consumers.",
+      minPrice: 8, maxPrice: 25, minQuantity: 30, maxQuantity: 100,
+      photoUrls: ["https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=800"],
     },
     {
-      titleTemplate: "Children's {item} Bundle - {size} Books",
-      descriptionTemplate: "Assorted children's {item} for various reading levels. Educational and entertaining content. Perfect for schools, libraries, or daycares.",
-      minPrice: 1, maxPrice: 4, minQuantity: 100, maxQuantity: 500,
-      photoUrls: ["https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800"],
+      titleTemplate: "Wellness {item} Bundle - {size} Items",
+      descriptionTemplate: "Complete wellness {item} bundle for self-care enthusiasts. High-quality products at bulk prices. Perfect for gift baskets or resale.",
+      minPrice: 15, maxPrice: 40, minQuantity: 20, maxQuantity: 80,
+      photoUrls: ["https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=800"],
     },
   ],
-  OTHER: [
+  GROCERIES: [
+    {
+      titleTemplate: "Organic {item} - Bulk Box ({size})",
+      descriptionTemplate: "Farm-fresh organic {item}, perfect for restaurants and large families. Grown locally without pesticides. Premium quality produce that's bursting with flavor.",
+      minPrice: 1.5, maxPrice: 5.0, minQuantity: 100, maxQuantity: 500,
+      photoUrls: ["https://images.unsplash.com/photo-1542838132-92c53300491e?w=800", "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800"],
+    },
+    {
+      titleTemplate: "Premium {item} - {size} Bags",
+      descriptionTemplate: "High-quality {item} imported from trusted sources. Perfect for restaurants, caterers, or bulk home cooking. Stock up and save on this pantry essential.",
+      minPrice: 10, maxPrice: 30, minQuantity: 50, maxQuantity: 200,
+      photoUrls: ["https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800", "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800"],
+    },
+    {
+      titleTemplate: "Canned {item} - Case of {size}",
+      descriptionTemplate: "Premium canned {item} with long shelf life. All cans within 18 months of expiry. Perfect for food service, emergency preparedness, or stocking your pantry.",
+      minPrice: 0.75, maxPrice: 2.5, minQuantity: 200, maxQuantity: 1000,
+      photoUrls: ["https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=800"],
+    },
+    {
+      titleTemplate: "{item} Oil - Case of 12 Bottles",
+      descriptionTemplate: "Premium cold-pressed {item} oil from quality sources. First harvest, perfect for cooking or health-conscious consumers. Each bottle is 750ml.",
+      minPrice: 60, maxPrice: 120, minQuantity: 20, maxQuantity: 100,
+      photoUrls: ["https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=800"],
+    },
+  ],
+  SERVICES: [
+    {
+      titleTemplate: "Professional {item} - {size} Sessions",
+      descriptionTemplate: "Expert {item} services at bulk rates. Certified professionals with years of experience. Perfect for businesses or event organizers.",
+      minPrice: 50, maxPrice: 150, minQuantity: 10, maxQuantity: 50,
+      photoUrls: ["https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800"],
+    },
+    {
+      titleTemplate: "Group {item} Package - {size} People",
+      descriptionTemplate: "Discounted group rates for {item}. Flexible scheduling available. Ideal for corporate events, team building, or community groups.",
+      minPrice: 25, maxPrice: 80, minQuantity: 20, maxQuantity: 100,
+      photoUrls: ["https://images.unsplash.com/photo-1552664730-d307ca884978?w=800"],
+    },
+  ],
+  GENERAL: [
     {
       titleTemplate: "Mixed {item} - Moving Sale Lot",
       descriptionTemplate: "Assorted {item} from estate clearance. Includes various household goods and miscellaneous items. All items clean and functional.",
@@ -297,43 +297,58 @@ const categoryTemplates: Record<string, ListingTemplate[]> = {
   ],
 };
 
-const groceryItems = ["Tomatoes", "Potatoes", "Apples", "Oranges", "Carrots", "Onions", "Peppers", "Lettuce"];
-const groceryBulkItems = ["Rice", "Flour", "Sugar", "Pasta", "Beans", "Lentils", "Oats", "Quinoa"];
-const cannedItems = ["Tomatoes", "Corn", "Beans", "Peas", "Soup", "Tuna", "Fruit", "Vegetables"];
-const oilTypes = ["Olive", "Coconut", "Avocado", "Sunflower", "Canola", "Vegetable"];
-const clothingItems = ["T-Shirts", "Polo Shirts", "Hoodies", "Sweaters", "Jeans", "Shorts"];
-const athleticItems = ["Socks", "Shorts", "Headbands", "Wristbands", "Leggings"];
-const kidsClothingItems = ["Clothing", "Outfits", "Pajamas", "Dresses", "Shirts"];
-const winterItems = ["Jackets", "Coats", "Gloves", "Scarves", "Hats", "Boots"];
+// Electronics items
 const phoneAccessories = ["Cases", "Screen Protectors", "Chargers", "Cables", "Holders"];
 const usbItems = ["Cables", "Adapters", "Hubs", "Chargers"];
 const bluetoothItems = ["Speakers", "Earbuds", "Headphones", "Receivers"];
 const ledItems = ["Bulbs", "Strip Lights", "Desk Lamps", "Flashlights"];
+
+// Fashion items
+const clothingItems = ["T-Shirts", "Polo Shirts", "Hoodies", "Sweaters", "Jeans", "Shorts"];
+const athleticItems = ["Socks", "Shorts", "Headbands", "Wristbands", "Leggings"];
+const kidsClothingItems = ["Clothing", "Outfits", "Pajamas", "Dresses", "Shirts"];
+const winterItems = ["Jackets", "Coats", "Gloves", "Scarves", "Hats", "Boots"];
+
+// Home & Garden items
 const kitchenItems = ["Utensils", "Cookware", "Bakeware", "Knives", "Gadgets"];
 const bathItems = ["Towels", "Mats", "Accessories", "Organizers"];
-const storageItems = ["Containers", "Bins", "Baskets", "Boxes"];
+const gardenItems = ["Tools", "Planters", "Seeds", "Gloves", "Fertilizer"];
 const beddingItems = ["Sheets", "Comforters", "Pillows", "Blankets"];
-const boardItems = ["Games", "Puzzles"];
-const artItems = ["Supplies", "Materials", "Kits"];
-const buildingItems = ["Blocks", "Bricks", "Sets"];
+
+// Sports & Hobbies items
 const sportsBottles = ["Water Bottles", "Shaker Bottles", "Tumblers"];
 const resistanceItems = ["Bands", "Tubes", "Loops"];
-const yogaItems = ["Mats", "Blocks", "Straps", "Wheels"];
-const novelItems = ["Novels", "Fiction", "Paperbacks"];
-const textbookItems = ["Textbooks", "Study Guides", "Workbooks"];
-const childrenBooks = ["Books", "Stories", "Picture Books"];
+const artItems = ["Supplies", "Materials", "Kits"];
+const boardItems = ["Games", "Puzzles"];
+
+// Health & Beauty items
+const skincareItems = ["Skincare", "Moisturizer", "Cleanser", "Serum", "Sunscreen"];
+const organicBeauty = ["Beauty Products", "Face Masks", "Body Lotion", "Hair Care"];
+const wellnessItems = ["Supplements", "Essential Oils", "Aromatherapy", "Vitamins"];
+
+// Groceries items
+const groceryItems = ["Tomatoes", "Potatoes", "Apples", "Oranges", "Carrots", "Onions", "Peppers", "Lettuce"];
+const groceryBulkItems = ["Rice", "Flour", "Sugar", "Pasta", "Beans", "Lentils", "Oats", "Quinoa"];
+const cannedItems = ["Tomatoes", "Corn", "Beans", "Peas", "Soup", "Tuna", "Fruit", "Vegetables"];
+const oilTypes = ["Olive", "Coconut", "Avocado", "Sunflower", "Canola", "Vegetable"];
+
+// Services items
+const serviceItems = ["Cleaning", "Photography", "Catering", "Consulting", "Training"];
+const groupServiceItems = ["Training", "Workshops", "Classes", "Tours", "Events"];
+
+// General items
 const miscItems = ["Household Items", "Goods", "Supplies", "Products"];
 const officeItems = ["Supplies", "Equipment", "Furniture", "Accessories"];
 
 const categoryItemMap: Record<string, string[][]> = {
-  GROCERIES: [groceryItems, groceryBulkItems, cannedItems, oilTypes],
-  CLOTHING: [clothingItems, athleticItems, kidsClothingItems, winterItems],
   ELECTRONICS: [phoneAccessories, usbItems, bluetoothItems, ledItems],
-  HOME_GOODS: [kitchenItems, bathItems, storageItems, beddingItems],
-  TOYS: [boardItems, artItems, buildingItems],
-  SPORTS: [sportsBottles, resistanceItems, yogaItems],
-  BOOKS: [novelItems, textbookItems, childrenBooks],
-  OTHER: [miscItems, officeItems],
+  FASHION: [clothingItems, athleticItems, kidsClothingItems, winterItems],
+  HOME_GARDEN: [kitchenItems, bathItems, gardenItems, beddingItems],
+  SPORTS_HOBBIES: [sportsBottles, resistanceItems, artItems, boardItems],
+  HEALTH_BEAUTY: [skincareItems, organicBeauty, wellnessItems],
+  GROCERIES: [groceryItems, groceryBulkItems, cannedItems, oilTypes],
+  SERVICES: [serviceItems, groupServiceItems],
+  GENERAL: [miscItems, officeItems],
 };
 
 const sizes = ["25", "50", "100", "150", "200", "10kg", "20kg", "25 lbs", "50 lbs", "12", "24", "36", "48"];
@@ -446,16 +461,16 @@ async function seedHomepageData() {
 
     const categories = Object.keys(categoryTemplates);
 
-    // Distribution: more GROCERIES and CLOTHING, fewer OTHER
+    // Distribution: weighted by category popularity
     const categoryWeights: Record<string, number> = {
-      GROCERIES: 200,
-      CLOTHING: 180,
-      ELECTRONICS: 150,
-      HOME_GOODS: 150,
-      TOYS: 100,
-      SPORTS: 100,
-      BOOKS: 80,
-      OTHER: 40,
+      ELECTRONICS: 180,
+      FASHION: 170,
+      HOME_GARDEN: 150,
+      SPORTS_HOBBIES: 130,
+      HEALTH_BEAUTY: 120,
+      GROCERIES: 120,
+      SERVICES: 80,
+      GENERAL: 50,
     };
 
     let listingIndex = 0;

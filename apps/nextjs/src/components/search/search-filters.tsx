@@ -69,14 +69,14 @@ export function SearchFilters({
 
   const categories = [
     { value: "ALL", label: t("allCategories") },
-    { value: "GROCERIES", label: t("groceries") },
-    { value: "CLOTHING", label: t("clothing") },
     { value: "ELECTRONICS", label: t("electronics") },
-    { value: "HOME_GOODS", label: t("homeGoods") },
-    { value: "TOYS", label: t("toys") },
-    { value: "SPORTS", label: t("sports") },
-    { value: "BOOKS", label: t("books") },
-    { value: "OTHER", label: t("other") },
+    { value: "FASHION", label: t("fashion") },
+    { value: "HOME_GARDEN", label: t("homeGarden") },
+    { value: "SPORTS_HOBBIES", label: t("sportsHobbies") },
+    { value: "HEALTH_BEAUTY", label: t("healthBeauty") },
+    { value: "GROCERIES", label: t("groceries") },
+    { value: "SERVICES", label: t("services") },
+    { value: "GENERAL", label: t("general") },
   ];
 
   const sortOptions = [

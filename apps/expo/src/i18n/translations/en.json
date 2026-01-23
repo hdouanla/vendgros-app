@@ -212,5 +212,16 @@
     "paymentSuccessful": "Payment successful",
     "ratingSubmitted": "Rating submitted successfully",
     "profileUpdated": "Profile updated successfully"
+  },
+  "categories": {
+    "allCategories": "All Categories",
+    "electronics": "Electronics & Tech",
+    "fashion": "Fashion & Apparel",
+    "homeGarden": "Home & Garden",
+    "sportsHobbies": "Sports & Hobbies",
+    "healthBeauty": "Health & Beauty",
+    "groceries": "Groceries & Food",
+    "services": "Services",
+    "general": "General"
   }
 }

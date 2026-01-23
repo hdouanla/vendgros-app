@@ -16,14 +16,14 @@ interface ListingFormProps {
 }
 
 const CATEGORIES = [
-  "GROCERIES",
-  "CLOTHING",
   "ELECTRONICS",
-  "HOME_GOODS",
-  "TOYS",
-  "SPORTS",
-  "BOOKS",
-  "OTHER",
+  "FASHION",
+  "HOME_GARDEN",
+  "SPORTS_HOBBIES",
+  "HEALTH_BEAUTY",
+  "GROCERIES",
+  "SERVICES",
+  "GENERAL",
 ];
 
 // Simple translation stub - replace with actual translations later

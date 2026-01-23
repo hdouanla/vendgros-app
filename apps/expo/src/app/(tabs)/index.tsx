@@ -19,14 +19,14 @@ import { trpc } from "~/utils/api";
 
 const CATEGORIES = [
   "All",
-  "GROCERIES",
-  "CLOTHING",
   "ELECTRONICS",
-  "HOME_GOODS",
-  "TOYS",
-  "SPORTS",
-  "BOOKS",
-  "OTHER",
+  "FASHION",
+  "HOME_GARDEN",
+  "SPORTS_HOBBIES",
+  "HEALTH_BEAUTY",
+  "GROCERIES",
+  "SERVICES",
+  "GENERAL",
 ];
 
 export default function BrowseScreen() {

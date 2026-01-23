@@ -229,6 +229,7 @@
     "balanceDue": "Solde dû au ramassage",
     "pleaseSignIn": "Veuillez vous connecter pour faire une réservation",
     "reservationFailed": "Échec de la création de la réservation",
+    "minimumDepositRequired": "Le dépôt minimum de réservation est de 1,00 $ CAD. Veuillez augmenter la quantité.",
     "pickupBy": "Ramassage avant le {date}",
     "expiresIn": "Expire dans {hours} heures",
     "status": {

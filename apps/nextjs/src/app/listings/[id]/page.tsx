@@ -440,7 +440,13 @@ export default function ListingDetailPage({
                 )}
 
                 <button
-                  onClick={() => setShowReserveModal(true)}
+                  onClick={() => {
+                    if (depositAmount < 1) {
+                      alert(tReservation("minimumDepositRequired"));
+                      return;
+                    }
+                    setShowReserveModal(true);
+                  }}
                   disabled={
                     listing.status !== "PUBLISHED" ||
                     listing.quantityAvailable === 0 ||

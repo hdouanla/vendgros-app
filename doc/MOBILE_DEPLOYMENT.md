@@ -1,4 +1,8 @@
-# Vendgros - Mobile App Deployment Guide
+[← Production Deployment](./PRODUCTION_DEPLOYMENT.md) | [Back to Documentation](./README.md)
+
+---
+
+# Mobile App Deployment Guide
 
 This guide covers deploying the Vendgros mobile app to iOS (TestFlight) and Android (Internal Testing) using Expo and EAS Build.
 

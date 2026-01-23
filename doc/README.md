@@ -1,3 +1,7 @@
+[← Back to Project Root](../README.md)
+
+---
+
 # Vendgros Documentation
 
 ## Guides

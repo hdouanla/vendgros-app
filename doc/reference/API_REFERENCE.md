@@ -1,3 +1,7 @@
+[← Back to Documentation](../README.md) | [User Guide →](./USER_GUIDE.md)
+
+---
+
 # Vendgros API Reference
 
 Complete API documentation for the Vendgros marketplace tRPC API.

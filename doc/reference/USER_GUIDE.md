@@ -1,3 +1,7 @@
+[← Back to Documentation](../README.md) | [API Reference](./API_REFERENCE.md)
+
+---
+
 # Vendgros User Guide
 
 Welcome to Vendgros! This guide will help you buy and sell bulk items in your local community.

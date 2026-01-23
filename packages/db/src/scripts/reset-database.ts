@@ -72,9 +72,7 @@ async function resetDatabase() {
 
     console.log("\n✅ Database reset complete!");
     console.log("\nNext steps:");
-    console.log("1. Run: pnpm push (from packages/db)");
-    console.log("2. Run: pnpm import-postal-codes (from packages/db)");
-    console.log("3. Run: pnpm setup-sample-data (from packages/db)");
+    console.log("Run: pnpm db:init (from packages/db)");
 
     await sql.end();
     process.exit(0);

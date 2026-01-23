@@ -356,8 +356,8 @@ async function createAllTables() {
 
     console.log("\n✅ All tables created successfully!");
     console.log("\nNext steps:");
-    console.log("1. Run: pnpm import-postal-codes");
-    console.log("2. Run: pnpm setup-sample-data");
+    console.log("1. Run: pnpm setup-postgis");
+    console.log("2. Run: pnpm import-postal-codes");
 
     await sql.end();
     process.exit(0);

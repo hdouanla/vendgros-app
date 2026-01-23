@@ -589,8 +589,12 @@ export const postalCode = pgTable(
   "postal_code",
   (t) => ({
     code: t.varchar({ length: 7 }).primaryKey(), // e.g., "M5H 2N2"
+    countryCode: t.varchar({ length: 2 }).notNull().default("CA"),
     city: t.varchar({ length: 100 }).notNull(),
-    province: t.varchar({ length: 2 }).notNull(), // ON, QC, etc.
+    provinceName: t.varchar({ length: 100 }), // Full name: "Ontario"
+    province: t.varchar({ length: 2 }).notNull(), // Code: "ON"
+    timezone: t.varchar({ length: 20 }), // e.g., "GMT -05:00"
+    daylightSaving: t.boolean(), // Observes DST
     latitude: t.doublePrecision().notNull(),
     longitude: t.doublePrecision().notNull(),
     // PostGIS geometry column

@@ -173,6 +173,7 @@
     "category": "Category",
     "minPrice": "Min Price (CAD)",
     "maxPrice": "Max Price (CAD)",
+    "resetFilters": "Reset Filters",
     "allCategories": "All Categories",
     "electronics": "Electronics & Tech",
     "fashion": "Fashion & Apparel",

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, SlidersHorizontal, ChevronUp } from "lucide-react";
+import { MapPin, SlidersHorizontal, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@acme/ui/button";
@@ -153,6 +153,24 @@ export function SearchFilters({
     }
   };
 
+  const handleReset = () => {
+    const defaultValues: SearchFiltersValues = {
+      postalCode: "",
+      category: "ALL",
+      radius: "50",
+      sortBy: "distance",
+      minPrice: "",
+      maxPrice: "",
+    };
+    setValues(defaultValues);
+    setPostalCodeError(null);
+    onChange?.(defaultValues);
+
+    if (redirectOnSearch) {
+      router.push("/listings/search");
+    }
+  };
+
   const handleUseLocation = () => {
     if (onUseLocation) {
       onUseLocation();
@@ -291,7 +309,7 @@ export function SearchFilters({
 
       {/* Advanced Filters (hidden in compact mode until expanded) */}
       {showAdvancedFilters && (
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
           {/* Radius */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
@@ -377,6 +395,20 @@ export function SearchFilters({
               className={inputClassName}
               min={0}
             />
+          </div>
+
+          {/* Reset Filters */}
+          <div className="flex items-end">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 w-full whitespace-nowrap rounded-lg border-gray-300 font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800"
+              onClick={handleReset}
+              disabled={!hasActiveFilters && !values.postalCode}
+            >
+              <X className="mr-2 h-4 w-4" />
+              {t("resetFilters")}
+            </Button>
           </div>
         </div>
       )}

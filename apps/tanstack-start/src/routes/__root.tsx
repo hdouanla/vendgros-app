@@ -11,7 +11,7 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import type { AppRouter } from "@acme/api";
-import { ThemeProvider, ThemeToggle } from "@acme/ui/theme";
+import { ThemeProvider } from "@acme/ui/theme";
 import { Toaster } from "@acme/ui/toast";
 
 import appCss from "~/styles.css?url";
@@ -43,9 +43,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         </head>
         <body className="bg-background text-foreground min-h-screen font-sans antialiased">
           {children}
-          <div className="absolute right-4 bottom-12">
-            <ThemeToggle />
-          </div>
           <Toaster />
           <TanStackRouterDevtools position="bottom-right" />
           <Scripts />

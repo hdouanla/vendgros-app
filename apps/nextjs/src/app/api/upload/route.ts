@@ -19,6 +19,11 @@ function createS3Client() {
   });
 }
 
+// Get storage environment (production, staging, development)
+function getStorageEnv(): string {
+  return process.env.DO_SPACES_ENV || process.env.VERCEL_ENV || "development";
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
@@ -60,10 +65,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate unique key for the file
+    // Generate unique key for the file with environment segregation
     const fileExtension = file.name.split('.').pop() || 'jpg';
     const uniqueFileName = `${randomUUID()}.${fileExtension}`;
-    const key = `listings/${session.user.id}/${uniqueFileName}`;
+    const storageEnv = getStorageEnv();
+    const key = `vendgros/${storageEnv}/listings/${session.user.id}/${uniqueFileName}`;
 
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer();

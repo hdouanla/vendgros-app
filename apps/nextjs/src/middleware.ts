@@ -18,7 +18,10 @@ export async function middleware(request: NextRequest) {
   const isVerifyEmailPage = pathname === "/auth/verify-email";
 
   // Get session token from cookie
-  const sessionToken = request.cookies.get("better-auth.session_token");
+  // Note: better-auth uses __Secure- prefix on HTTPS (production)
+  const sessionToken =
+    request.cookies.get("__Secure-better-auth.session_token") ||
+    request.cookies.get("better-auth.session_token");
 
   if (!sessionToken) {
     // No session token

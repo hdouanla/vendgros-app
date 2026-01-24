@@ -4,14 +4,11 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
 import { cn } from "@acme/ui";
-import { ThemeProvider, ThemeToggle } from "@acme/ui/theme";
-import { Toaster } from "@acme/ui/toast";
+import { ThemeProvider } from "@acme/ui/theme";
 
 import { env } from "~/env";
 import { TRPCReactProvider } from "~/trpc/react";
-import { Navbar } from "~/components/layout/navbar";
-import { UserNav } from "~/components/layout/user-nav";
-import { FooterWrapper } from "~/components/layout/footer-wrapper";
+import { AppShell } from "~/components/layout/app-shell";
 
 import "./styles.css";
 
@@ -80,16 +77,9 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
         <ThemeProvider>
           <NextIntlClientProvider messages={messages}>
             <TRPCReactProvider>
-              <Navbar />
-              <UserNav />
-              <main>{props.children}</main>
-              <FooterWrapper />
+              <AppShell>{props.children}</AppShell>
             </TRPCReactProvider>
           </NextIntlClientProvider>
-          <div className="absolute right-4 bottom-4">
-            <ThemeToggle />
-          </div>
-          <Toaster />
         </ThemeProvider>
       </body>
     </html>

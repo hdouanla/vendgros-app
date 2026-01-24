@@ -20,6 +20,11 @@ function createS3Client() {
   });
 }
 
+// Get storage environment (production, staging, development)
+function getStorageEnv(): string {
+  return process.env.DO_SPACES_ENV || process.env.VERCEL_ENV || "development";
+}
+
 export const uploadRouter = createTRPCRouter({
   /**
    * Generates a pre-signed URL for direct image upload to DigitalOcean Spaces
@@ -40,10 +45,11 @@ export const uploadRouter = createTRPCRouter({
       // Create S3 client with current environment variables
       const s3Client = createS3Client();
 
-      // Generate unique key for the file
+      // Generate unique key for the file with environment segregation
       const fileExtension = input.fileName.split('.').pop() || 'jpg';
       const uniqueFileName = `${randomUUID()}.${fileExtension}`;
-      const key = `listings/${ctx.session.user.id}/${uniqueFileName}`;
+      const storageEnv = getStorageEnv();
+      const key = `vendgros/${storageEnv}/listings/${ctx.session.user.id}/${uniqueFileName}`;
 
       // Create PUT command for S3
       const command = new PutObjectCommand({
@@ -81,7 +87,11 @@ export const uploadRouter = createTRPCRouter({
       const key = url.pathname.substring(1); // Remove leading slash
 
       // Security check: only allow deleting own images
-      if (!key.startsWith(`listings/${ctx.session.user.id}/`)) {
+      // Support both old path (listings/{userId}/) and new path (vendgros/{env}/listings/{userId}/)
+      const userId = ctx.session.user.id;
+      const isOldPath = key.startsWith(`listings/${userId}/`);
+      const isNewPath = key.match(new RegExp(`^vendgros/[^/]+/listings/${userId}/`));
+      if (!isOldPath && !isNewPath) {
         throw new Error("Unauthorized to delete this image");
       }
 

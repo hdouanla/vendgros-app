@@ -83,6 +83,9 @@ services:
       - key: DO_SPACES_URL
         scope: RUN_TIME
         value: https://vendgros.tor1.digitaloceanspaces.com
+      - key: DO_SPACES_ENV
+        scope: RUN_TIME
+        value: production
       - key: NEXT_PUBLIC_MAPBOX_TOKEN
         scope: RUN_TIME
         type: SECRET

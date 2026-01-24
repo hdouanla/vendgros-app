@@ -9,7 +9,7 @@ export function CTASection() {
   const t = useTranslations("home");
 
   return (
-    <section className="bg-gray-100 py-12 md:py-16">
+    <section className="bg-[#FFE9A1] py-12 md:py-16">
       <div className="mx-auto max-w-content px-4">
         <div className="rounded-2xl bg-[#0B4D26] px-8 py-10 md:px-12 md:py-12">
           <div className="flex flex-col items-center justify-between gap-6 md:flex-row">

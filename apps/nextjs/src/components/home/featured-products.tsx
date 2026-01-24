@@ -81,9 +81,11 @@ interface FeaturedCardProps {
 }
 
 function FeaturedCard({ listing, size, t }: FeaturedCardProps) {
+  const tListing = useTranslations("listing");
   const rating = listing.seller?.sellerRatingAverage
     ? parseFloat(listing.seller.sellerRatingAverage)
     : 4.9;
+  const ratingCount = listing.seller?.sellerRatingCount ?? 0;
 
   const imageUrl =
     listing.photos[0] ??
@@ -106,41 +108,50 @@ function FeaturedCard({ listing, size, t }: FeaturedCardProps) {
       />
 
       {/* Dark gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
       {/* Content - all at bottom */}
       <div className={`absolute inset-x-0 bottom-0 ${size === "large" ? "p-5" : "p-3"}`}>
-        {/* Price and Rating row */}
-        <div className="mb-2 flex items-center justify-between">
-          <div>
-            <span className={`font-bold text-[#0DAE09] ${size === "large" ? "text-xl" : "text-base"}`}>
-              ${formatPrice(listing.pricePerPiece)}
-            </span>
-            <span className={`text-white/70 ${size === "large" ? "text-sm" : "text-xs"}`}>{t("perSet")}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-medium text-white">{rating.toFixed(1)}</span>
-          </div>
-        </div>
-
         {/* Title */}
         <h3 className={`font-bold text-white ${size === "large" ? "text-xl mb-2" : "text-sm mb-1"}`}>
           {listing.title}
         </h3>
 
-        {/* Description (large card only) */}
-        {listing.description && size === "large" && (
-          <p className="mb-3 line-clamp-2 text-sm text-white/70">
-            {listing.description}
+        {/* Description left, Price badge right */}
+        <div className={`mb-3 flex items-center justify-between gap-3 ${size === "large" ? "" : "mb-2"}`}>
+          <p
+            className={`line-clamp-2 text-white/70 ${
+              size === "large" ? "text-sm" : "text-xs"
+            }`}
+          >
+            {listing.description ?? t("featuredSubtitle")}
           </p>
-        )}
-
-        {/* Availability and Button row */}
-        <div className="flex items-center justify-between">
-          <span className={`text-white/70 ${size === "large" ? "text-sm" : "text-xs"}`}>
-            {t("available", { count: listing.quantityAvailable })}
+          <span
+            className={`shrink-0 font-semibold text-white ${
+              size === "large" ? "text-base" : "text-xs"
+            }`}
+          >
+            ${formatPrice(listing.pricePerPiece)}
+            <span className="ml-1 text-white/80">{tListing("perPiece")}</span>
           </span>
+        </div>
+
+        {/* Rating + Availability left, Button right */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1 text-white/80">
+            <div className="flex items-center gap-2">
+              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+              <span className={`font-medium text-white ${size === "large" ? "text-sm" : "text-xs"}`}>
+                {rating.toFixed(1)}
+              </span>
+              <span className={`text-white/70 ${size === "large" ? "text-sm" : "text-xs"}`}>
+                · {ratingCount} {tListing("reviews")}
+              </span>
+            </div>
+            <span className={`text-white/70 ${size === "large" ? "text-sm" : "text-xs"}`}>
+              {t("available", { count: listing.quantityAvailable })}
+            </span>
+          </div>
           <Button
             size="sm"
             className="bg-[#0DAE09] text-white hover:bg-[#0B9507]"

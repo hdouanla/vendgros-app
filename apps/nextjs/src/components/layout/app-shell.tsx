@@ -4,7 +4,6 @@ import { useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 
 import { Toaster } from "@acme/ui/toast";
-import { ThemeToggle } from "@acme/ui/theme";
 
 import { FooterWrapper } from "~/components/layout/footer-wrapper";
 import { Navbar } from "~/components/layout/navbar";
@@ -44,9 +43,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <UserNav />
       <main>{children}</main>
       <FooterWrapper />
-      <div className="absolute right-4 bottom-4">
-        <ThemeToggle />
-      </div>
       <Toaster />
     </>
   );

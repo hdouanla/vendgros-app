@@ -60,7 +60,6 @@ export function VerifyEmailForm({ userEmail }: { userEmail: string }) {
         setError(result.error.message || "Failed to resend code");
       } else {
         setEmailSent(true);
-        alert("Verification code sent! Check your email.");
       }
     } catch (err) {
       setError("Failed to resend code");

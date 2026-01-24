@@ -6,27 +6,29 @@ import { and, eq, lt, or, isNull } from "@acme/db";
 // Payment timeout in minutes (default 10)
 const PAYMENT_TIMEOUT_MINUTES = Number(process.env.NEXT_PUBLIC_RESERVATION_PAYMENT_TIMEOUT_MINUTES) || 10;
 
-// Verify the request is from Vercel Cron or has valid authorization
+// Verify the request is from Vercel Cron (Authorization: Bearer CRON_SECRET)
 function verifyRequest(request: NextRequest): { valid: boolean; error?: string } {
-  // Vercel Cron requests include this header
-  const isVercelCron = request.headers.get("x-vercel-cron") === "1";
-  if (isVercelCron) {
-    return { valid: true };
-  }
-
-  // Fallback to Bearer token authorization for manual triggers
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
+  // Log for debugging (remove in production if needed)
+  console.log("Cron auth check - has auth header:", !!authHeader, "has CRON_SECRET env:", !!cronSecret);
+
   if (!cronSecret) {
+    console.error("CRON_SECRET environment variable is not set");
     return { valid: false, error: "CRON_SECRET not configured" };
   }
 
+  if (!authHeader) {
+    return { valid: false, error: "Missing authorization header" };
+  }
+
+  // Vercel sends: Authorization: Bearer {CRON_SECRET}
   if (authHeader === `Bearer ${cronSecret}`) {
     return { valid: true };
   }
 
-  return { valid: false, error: "Unauthorized" };
+  return { valid: false, error: "Invalid authorization" };
 }
 
 // Main handler for cancelling expired reservations

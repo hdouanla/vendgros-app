@@ -150,7 +150,7 @@ export function Navbar() {
                     className="fixed inset-0 z-10"
                     onClick={() => setShowLanguageMenu(false)}
                   />
-                  <div className="absolute right-0 z-20 mt-2 w-36 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
+                  <div className="absolute right-0 z-20 mt-2 w-36 overflow-hidden rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
                     {locales.map((locale) => (
                       <button
                         key={locale}
@@ -202,7 +202,7 @@ export function Navbar() {
                       className="fixed inset-0 z-10"
                       onClick={() => setShowUserMenu(false)}
                     />
-                    <div className="absolute right-0 z-20 mt-2 w-48 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
+                    <div className="absolute right-0 z-20 mt-2 w-48 overflow-hidden rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
                       <div className="border-b border-gray-100 px-4 py-2">
                         <p className="text-sm font-medium text-gray-900">
                           {session.user.name || "User"}

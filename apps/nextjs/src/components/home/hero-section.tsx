@@ -24,19 +24,18 @@ export function HeroSection() {
       </div>
 
       <div className="relative mx-auto max-w-content px-4 pt-12 pb-26 md:py-22 lg:py-24">
-        <div className="grid items-center gap-8 lg:grid-cols-2">
+        <div className="grid items-center gap-8 md:gap-[106px] lg:grid-cols-2">
           {/* Left: Content */}
           <div>
             <p className="mb-2 text-base font-semibold uppercase tracking-wider text-[#0DAE09]">
               {t("heroSubtitle")}
             </p>
-            <h1 className="mb-4 text-4xl font-bold tracking-tight text-[#0B1D14] md:text-6xl lg:text-8xl">
+            <h1 className="mb-6 text-4xl font-bold tracking-tight text-[#0B1D14] md:text-4xl lg:text-6xl">
               {t("heroTitle")}{" "}
-              <span className="text-[#0DAE09]"><br />{t("heroTitleHighlight")}</span>
-              <br />
+              <span className="text-[#0DAE09]">{t("heroTitleHighlight")}{" "}</span>
               {t("heroTitleEnd")}
             </h1>
-            <p className="mb-6 text-lg text-gray-600">
+            <p className="mb-4 text-lg text-gray-600">
               {t("heroDescription")}
             </p>
             <Link

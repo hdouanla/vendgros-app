@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 import { ImageUpload } from "./image-upload";
 
@@ -24,7 +25,21 @@ const CATEGORIES = [
   "GROCERIES",
   "SERVICES",
   "GENERAL",
-];
+] as const;
+
+type CategoryId = (typeof CATEGORIES)[number];
+
+// Map category IDs to translation keys
+const categoryTranslationKeys: Record<CategoryId, string> = {
+  ELECTRONICS: "electronics",
+  FASHION: "fashion",
+  HOME_GARDEN: "homeGarden",
+  SPORTS_HOBBIES: "sportsHobbies",
+  HEALTH_BEAUTY: "healthBeauty",
+  GROCERIES: "groceries",
+  SERVICES: "services",
+  GENERAL: "general",
+};
 
 // Simple translation stub - replace with actual translations later
 const t = (key: string, params?: any) => {
@@ -59,6 +74,7 @@ export function ListingForm({
 }: ListingFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const tSearch = useTranslations("search");
 
   const [formData, setFormData] = useState({
     title: initialData?.title ?? "",
@@ -372,7 +388,9 @@ export function ListingForm({
             </div>
             <div>
               <span className="font-medium text-gray-700">Category:</span>
-              <p className="text-gray-900">{initialData?.category}</p>
+              <p className="text-gray-900">
+                {initialData?.category && tSearch(categoryTranslationKeys[initialData.category as CategoryId])}
+              </p>
             </div>
             <div>
               <span className="font-medium text-gray-700">Price:</span>
@@ -459,7 +477,7 @@ export function ListingForm({
           <option value="">{t("common.select")}</option>
           {CATEGORIES.map((cat) => (
             <option key={cat} value={cat}>
-              {cat}
+              {tSearch(categoryTranslationKeys[cat])}
             </option>
           ))}
         </select>

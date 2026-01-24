@@ -56,7 +56,7 @@ export function CategoryGrid({ categoryCounts }: CategoryGridProps) {
                 <div className="absolute inset-0 bg-black/40 transition-opacity group-hover:bg-black/50" />
 
                 {/* Green left bar */}
-                <div className="absolute bottom-0 left-0 top-0 w-1 bg-[#0DAE09]" />
+                {false && <div className="absolute bottom-0 left-0 top-0 w-1 bg-[#0DAE09]" />}
 
                 {/* Content */}
                 <div className="absolute inset-0 flex items-center justify-center p-4 text-center">

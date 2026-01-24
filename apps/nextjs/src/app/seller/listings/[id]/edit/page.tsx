@@ -66,7 +66,7 @@ export default function EditListingPage({
   // Delete listing mutation
   const deleteMutation = api.listing.delete.useMutation({
     onSuccess: () => {
-      router.push("/seller/dashboard");
+      router.push("/seller");
     },
     onError: (error) => {
       alert(`Error: ${error.message}`);

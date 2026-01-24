@@ -23,6 +23,26 @@ export default function EditProfilePage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [originalPhone, setOriginalPhone] = useState("");
+
+  // Format phone number as (555) 555-5555
+  const formatPhoneNumber = (value: string): string => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, "");
+
+    // Limit to 10 digits
+    const limited = digits.slice(0, 10);
+
+    // Format based on length
+    if (limited.length === 0) return "";
+    if (limited.length <= 3) return `(${limited}`;
+    if (limited.length <= 6) return `(${limited.slice(0, 3)}) ${limited.slice(3)}`;
+    return `(${limited.slice(0, 3)}) ${limited.slice(3, 6)}-${limited.slice(6)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setPhone(formatted);
+  };
   const [languagePreference, setLanguagePreference] = useState<"en" | "fr" | "es">("en");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -31,8 +51,11 @@ export default function EditProfilePage() {
   useEffect(() => {
     if (currentUser) {
       setName(currentUser.name);
-      setPhone(currentUser.phone ?? "");
-      setOriginalPhone(currentUser.phone ?? "");
+      // Convert +1XXXXXXXXXX to (XXX) XXX-XXXX for display
+      const phoneDigits = currentUser.phone?.replace(/\D/g, "").slice(-10) ?? "";
+      const formattedPhone = formatPhoneNumber(phoneDigits);
+      setPhone(formattedPhone);
+      setOriginalPhone(formattedPhone);
       setLanguagePreference(currentUser.languagePreference as "en" | "fr" | "es");
     }
   }, [currentUser]);
@@ -257,14 +280,20 @@ export default function EditProfilePage() {
                 </span>
               )}
             </div>
-            <input
-              type="tel"
-              id="phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
-              placeholder="(555) 555-5555"
-            />
+            <div className="mt-1 flex">
+              <span className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-gray-500 sm:text-sm">
+                +1
+              </span>
+              <input
+                type="tel"
+                id="phone"
+                value={phone}
+                onChange={handlePhoneChange}
+                className="block w-full rounded-r-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                placeholder="(555) 555-5555"
+                maxLength={14}
+              />
+            </div>
             <p className="mt-1 text-xs text-gray-500">
               Canadian phone number format. Used for SMS notifications.
             </p>

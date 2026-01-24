@@ -143,7 +143,7 @@ export default function ProfilePage() {
 
             <div className="space-y-3">
               <button
-                onClick={() => router.push("/seller/dashboard")}
+                onClick={() => router.push("/seller")}
                 className="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
               >
                 {t("goToSellerDashboard")}

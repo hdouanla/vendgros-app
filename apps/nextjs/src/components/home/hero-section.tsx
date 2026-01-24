@@ -48,16 +48,15 @@ export function HeroSection() {
 
           {/* Right: Map Illustration */}
           <div className="relative hidden lg:block">
-            <div className="relative h-[400px] w-full">
-              <Image
-                src="/map-with-pointers.png"
-                alt="VendGros Map"
-                fill
-                className="object-contain"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                priority
-              />
-            </div>
+            <Image
+              src="/flat-map-with-pointers.png"
+              alt="VendGros Map"
+              width={1200}
+              height={800}
+              className="h-auto w-full"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              priority
+            />
           </div>
         </div>
       </div>

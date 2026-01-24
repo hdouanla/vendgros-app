@@ -58,7 +58,7 @@ export function Navbar() {
         <div className="flex h-20 items-center justify-between">
           {/* Logo */}
           {/* Logo and Desktop Navigation - Left Aligned */}
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-[96px]">
             <Link href="/" className="flex items-center">
               {/* Mobile: Icon */}
               <Image
@@ -73,8 +73,8 @@ export function Navbar() {
               <Image
                 src="/vendgros-logo-light.png"
                 alt="VendGros"
-                width={250}
-                height={71}
+                width={182}
+                height={38}
                 priority
                 className="hidden md:block"
               />
@@ -112,7 +112,7 @@ export function Navbar() {
             <div className="relative hidden sm:block">
               <button
                 onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-md font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
               >
                 <svg
                   className="h-4 w-4"
@@ -127,7 +127,7 @@ export function Navbar() {
                     d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
                   />
                 </svg>
-                <span>{localeNames[currentLocale]}</span>
+                <span className='text-md font-medium'>{localeNames[currentLocale]}</span>
                 <svg
                   className={`h-3 w-3 transition-transform ${showLanguageMenu ? "rotate-180" : ""}`}
                   fill="none"
@@ -239,13 +239,13 @@ export function Navbar() {
               <div className="flex items-center space-x-2">
                 <Link
                   href="/auth/signin"
-                  className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                  className="rounded-md px-4 py-2 font-medium text-md text-gray-700 hover:bg-gray-100"
                 >
                   {t("signIn")}
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                  className="rounded-md bg-green-600 px-4 py-2 text-md font-medium text-white hover:bg-green-700"
                 >
                   {t("signUp")}
                 </Link>

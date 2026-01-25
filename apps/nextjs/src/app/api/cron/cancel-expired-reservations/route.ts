@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@acme/db/client";
-import { listing, reservation } from "@acme/db/schema";
+import { reservation } from "@acme/db/schema";
 import { and, eq, lt, or, isNull } from "@acme/db";
 
 // Payment timeout in minutes (default 10)
@@ -65,9 +65,6 @@ async function handleCancelExpiredReservations(request: NextRequest) {
           )
         )
       ),
-      with: {
-        listing: true,
-      },
     });
 
     console.log(`Found ${expiredReservations.length} expired/unpaid reservations (payment timeout: ${PAYMENT_TIMEOUT_MINUTES}min)`);
@@ -80,39 +77,26 @@ async function handleCancelExpiredReservations(request: NextRequest) {
       });
     }
 
-    // Cancel each expired reservation and return quantity to listing
+    // Delete each expired PENDING reservation
+    // Note: PENDING reservations never decremented quantityAvailable (that only happens on payment),
+    // so we simply delete them rather than trying to "return" inventory
     const results = await Promise.all(
       expiredReservations.map(async (res) => {
         try {
-          // Determine reason for cancellation
+          // Determine reason for deletion (for logging)
           const isPaymentTimeout = res.createdAt < paymentDeadline &&
             (!res.stripePaymentIntentId || res.stripePaymentIntentId === "");
           const reason = isPaymentTimeout ? "payment_timeout" : "pickup_expired";
 
-          await db.transaction(async (tx) => {
-            // Update reservation status to CANCELLED
-            await tx
-              .update(reservation)
-              .set({
-                status: "CANCELLED",
-                completedAt: new Date(),
-              })
-              .where(eq(reservation.id, res.id));
+          // Simply delete the expired PENDING reservation
+          await db
+            .delete(reservation)
+            .where(eq(reservation.id, res.id));
 
-            // Return quantity to listing
-            await tx
-              .update(listing)
-              .set({
-                quantityAvailable:
-                  res.listing.quantityAvailable + res.quantityReserved,
-              })
-              .where(eq(listing.id, res.listingId));
-          });
-
-          console.log(`Cancelled reservation ${res.id} (reason: ${reason})`);
+          console.log(`Deleted expired reservation ${res.id} (reason: ${reason})`);
           return { id: res.id, success: true, reason };
         } catch (error) {
-          console.error(`Failed to cancel reservation ${res.id}:`, error);
+          console.error(`Failed to delete reservation ${res.id}:`, error);
           return { id: res.id, success: false, error };
         }
       })

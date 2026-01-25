@@ -10,15 +10,15 @@ export function VerificationGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const checkVerification = async () => {
-      const session = await authClient.getSession();
+      const result = await authClient.getSession();
 
-      if (!session?.user) {
+      if (!result.data?.user) {
         // Not logged in, redirect to signin
         router.push("/auth/signin");
         return;
       }
 
-      if (session.user.accountStatus !== "ACTIVE") {
+      if (!result.data.user.emailVerified) {
         // Email not verified, redirect to verification page
         router.push("/auth/verify-email");
         return;

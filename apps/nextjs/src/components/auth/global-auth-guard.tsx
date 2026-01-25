@@ -41,17 +41,17 @@ export function GlobalAuthGuard({ children }: { children: React.ReactNode }) {
       setIsChecking(true);
       setShouldRender(false);
 
-      const data = await authClient.getSession();
+      const result = await authClient.getSession();
 
       // If not logged in, allow access to public and auth pages
-      if (!data?.user) {
+      if (!result.data?.user) {
         setIsChecking(false);
         setShouldRender(true);
         return;
       }
 
-      // User is logged in
-      const isVerified = data.user.accountStatus === "ACTIVE";
+      // User is logged in - check emailVerified since accountStatus isn't in the session user type
+      const isVerified = result.data.user.emailVerified;
       const isOnVerifyPage = pathname === "/auth/verify-email";
       const isOnAuthPage = pathname === "/auth/signin" || pathname === "/auth/signup";
 

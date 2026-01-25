@@ -147,9 +147,9 @@ export function ReservationCard({ reservation, variant }: ReservationCardProps) 
 
             {/* Rate buyer button for completed reservations */}
             {!isPending && (
-              ratingStatus?.myRating ? (
+              ratingStatus?.ownRating ? (
                 <span className="inline-flex items-center justify-center rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
-                  ✓ Rated ({ratingStatus.myRating.score}/5)
+                  ✓ Rated ({ratingStatus.ownRating.score}/5)
                 </span>
               ) : (
                 <button

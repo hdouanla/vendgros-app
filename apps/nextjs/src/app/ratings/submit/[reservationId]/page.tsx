@@ -87,7 +87,7 @@ export default function SubmitRatingPage({
     );
   }
 
-  if (existingRating?.myRating) {
+  if (existingRating?.ownRating) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-8">
         <div className="rounded-lg bg-white p-8 text-center shadow-md">

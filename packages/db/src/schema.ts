@@ -255,6 +255,9 @@ export const listing = pgTable(
     // View tracking
     viewCount: t.integer().notNull().default(0),
 
+    // Featured listing (admin-controlled)
+    isFeatured: t.boolean().notNull().default(false),
+
     createdAt: t.timestamp().notNull().defaultNow(),
     updatedAt: t
       .timestamp({ mode: "date", withTimezone: true })
@@ -266,6 +269,7 @@ export const listing = pgTable(
     statusIdx: index("listing_status_idx").on(table.status),
     categoryIdx: index("listing_category_idx").on(table.category),
     coordsIdx: index("listing_coords_idx").on(table.latitude, table.longitude),
+    featuredIdx: index("listing_featured_idx").on(table.isFeatured),
   }),
 );
 

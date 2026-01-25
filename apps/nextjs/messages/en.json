@@ -172,7 +172,8 @@
     "reserveNow": "Reserve Now",
     "redirectToPayment": "You'll be redirected to payment to secure your reservation. The remaining {amount} CAD will be paid at pickup.",
     "goToSignIn": "Go to Sign In",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "publishedAt": "Published"
   },
   "search": {
     "searchNearbyListings": "Search Nearby Listings",

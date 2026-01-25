@@ -273,7 +273,6 @@ export const listingRouter = createTRPCRouter({
               sellerRatingCount: true,
               buyerRatingAverage: true,
               buyerRatingCount: true,
-              createdAt: true,
             },
           },
         },
@@ -543,13 +542,14 @@ export const listingRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  // Get featured listings (sorted by view count, for homepage)
+  // Get featured listings (admin-selected, sorted by publishedAt)
   getFeatured: publicProcedure
     .input(z.object({ limit: z.number().default(8) }))
     .query(async ({ ctx, input }) => {
       const results = await ctx.db.query.listing.findMany({
-        where: (listings, { eq }) => eq(listings.status, "PUBLISHED"),
-        orderBy: (listings, { desc }) => [desc(listings.viewCount)],
+        where: (listings, { eq, and }) =>
+          and(eq(listings.status, "PUBLISHED"), eq(listings.isFeatured, true)),
+        orderBy: (listings, { desc }) => [desc(listings.publishedAt)],
         limit: input.limit,
         with: {
           seller: {

@@ -258,10 +258,6 @@ export default function AdminModerationPage() {
                         <span className="font-medium">Status:</span>{" "}
                         {listing.seller.accountStatus}
                       </div>
-                      <div>
-                        <span className="font-medium">Member since:</span>{" "}
-                        {new Date(listing.seller.createdAt).toLocaleDateString()}
-                      </div>
                     </div>
                   </div>
 

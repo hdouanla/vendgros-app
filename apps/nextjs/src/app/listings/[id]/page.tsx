@@ -272,14 +272,18 @@ export default function ListingDetailPage({
                 ⭐ {listing.seller.sellerRatingAverage?.toFixed(1) ?? "—"} (
                 {listing.seller.sellerRatingCount} {tListing("sellerReviews")})
               </div>
-              <div>
-                <span className="font-medium text-gray-600">
-                  {tProfile("memberSince", { date: "" })}
-                </span>{" "}
-                {new Date(listing.seller.createdAt).toLocaleDateString()}
-              </div>
             </div>
           </div>
+
+          {/* Listing Information */}
+          {listing.publishedAt && (
+            <div className="rounded-lg bg-white p-6 shadow-md">
+              <div className="text-sm text-gray-600">
+                <span className="font-medium">{tListing("publishedAt")}:</span>{" "}
+                {new Date(listing.publishedAt).toLocaleDateString()}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column - Purchase Card */}

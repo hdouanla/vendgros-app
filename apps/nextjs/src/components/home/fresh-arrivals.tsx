@@ -9,14 +9,15 @@ interface Listing {
   id: string;
   title: string;
   description: string | null;
-  pricePerPiece: string;
+  pricePerPiece: number;
   photos: string[];
   quantityAvailable: number;
+  publishedAt?: Date | string | null;
   seller: {
     id: string;
     name: string | null;
     verificationBadge: string | null;
-    sellerRatingAverage: string | null;
+    sellerRatingAverage: number | null;
     sellerRatingCount: number | null;
   } | null;
 }

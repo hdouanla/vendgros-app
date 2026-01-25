@@ -318,94 +318,161 @@ export function ListingForm({
     }
   };
 
-  // Show locked message if in edit mode with reservations
+  // Handle pickup instructions update for listings with reservations
+  const handlePickupInstructionsUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+
+    if (listingId) {
+      await updateListing.mutateAsync({
+        listingId,
+        data: {
+          pickupInstructions: formData.pickupInstructions || undefined,
+        },
+      });
+
+      router.push(`/listings/${listingId}`);
+    }
+  };
+
+  // Show pickup instructions edit form if in edit mode with reservations
   if (mode === "edit" && hasReservations) {
     return (
       <div className="space-y-6">
-        <div className="rounded-lg border-2 border-yellow-200 bg-yellow-50 p-6">
+        {/* Locked Banner */}
+        <div className="rounded-lg border-2 border-yellow-200 bg-yellow-50 p-4">
           <div className="flex items-start gap-3">
-            <span className="text-2xl">🔒</span>
+            <span className="text-xl">🔒</span>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-yellow-900">
-                Editing Locked
+              <h3 className="text-sm font-semibold text-yellow-900">
+                Listing Details Locked
               </h3>
-              <p className="mt-2 text-sm text-yellow-800">
-                This listing has active or completed reservations. To maintain
-                commitment to your buyers, you cannot edit the listing details.
+              <p className="mt-1 text-sm text-yellow-800">
+                This listing has reservations. You can only edit pickup instructions.
+                To change other details, create a copy of this listing.
               </p>
-              <div className="mt-4 space-y-2">
-                <p className="text-sm font-medium text-yellow-900">
-                  Your options:
-                </p>
-                <ul className="ml-4 list-disc space-y-1 text-sm text-yellow-800">
-                  <li>
-                    Deactivate this listing to prevent new reservations
-                  </li>
-                  <li>
-                    Contact support if you need to make changes to existing
-                    reservations
-                  </li>
-                  <li>
-                    Create a copy of this listing with updated details
-                  </li>
-                </ul>
-              </div>
             </div>
-          </div>
-        </div>
-
-        {(onDuplicate || onViewAsBuyer) && (
-          <div className="flex justify-end gap-3">
-            {onViewAsBuyer && (
-              <button
-                type="button"
-                onClick={onViewAsBuyer}
-                className="rounded-md border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                👁️ View as Buyer
-              </button>
-            )}
             {onDuplicate && (
               <button
                 type="button"
                 onClick={onDuplicate}
-                className="rounded-md bg-green-600 px-6 py-3 text-sm font-medium text-white hover:bg-green-700"
+                className="rounded-md bg-yellow-600 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-700"
               >
-                📋 Copy This Listing
+                📋 Copy Listing
               </button>
             )}
           </div>
-        )}
+        </div>
 
-        {/* Show current listing details in read-only mode */}
+        {/* Read-only Listing Details */}
         <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-6">
-          <h3 className="font-semibold text-gray-900">Current Listing Details</h3>
+          <h3 className="font-semibold text-gray-900">Listing Details (Read-only)</h3>
 
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
             <div>
-              <span className="font-medium text-gray-700">Title:</span>
+              <span className="font-medium text-gray-600">Title:</span>
               <p className="text-gray-900">{initialData?.title}</p>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Category:</span>
+              <span className="font-medium text-gray-600">Category:</span>
               <p className="text-gray-900">
                 {initialData?.category && tSearch(categoryTranslationKeys[initialData.category as CategoryId])}
               </p>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Price:</span>
-              <p className="text-gray-900">${initialData?.pricePerPiece} CAD</p>
+              <span className="font-medium text-gray-600">Price:</span>
+              <p className="text-gray-900">${initialData?.pricePerPiece} CAD per piece</p>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Quantity:</span>
+              <span className="font-medium text-gray-600">Quantity:</span>
               <p className="text-gray-900">{initialData?.quantityTotal} units</p>
             </div>
-            <div className="col-span-2">
-              <span className="font-medium text-gray-700">Pickup Address:</span>
+            <div className="md:col-span-2">
+              <span className="font-medium text-gray-600">Description:</span>
+              <p className="text-gray-900 whitespace-pre-wrap">{initialData?.description}</p>
+            </div>
+            <div>
+              <span className="font-medium text-gray-600">Pickup Address:</span>
               <p className="text-gray-900">{initialData?.pickupAddress}</p>
             </div>
+            <div>
+              <span className="font-medium text-gray-600">Postal Code:</span>
+              <p className="text-gray-900">{initialData?.postalCode}</p>
+            </div>
+            {initialData?.photos && initialData.photos.length > 0 && (
+              <div className="md:col-span-2">
+                <span className="font-medium text-gray-600">Photos:</span>
+                <div className="mt-2 flex gap-2 flex-wrap">
+                  {initialData.photos.slice(0, 4).map((photo: string, idx: number) => (
+                    <img
+                      key={idx}
+                      src={photo}
+                      alt={`Photo ${idx + 1}`}
+                      className="h-16 w-16 rounded object-cover"
+                    />
+                  ))}
+                  {initialData.photos.length > 4 && (
+                    <span className="flex h-16 w-16 items-center justify-center rounded bg-gray-200 text-sm text-gray-600">
+                      +{initialData.photos.length - 4}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Editable Pickup Instructions */}
+        <form onSubmit={handlePickupInstructionsUpdate} className="space-y-4 rounded-lg border border-green-200 bg-green-50 p-6">
+          <h3 className="font-semibold text-gray-900">Pickup Instructions (Editable)</h3>
+
+          {/* Pickup Instructions */}
+          <div>
+            <label htmlFor="pickupInstructions" className="block text-sm font-medium">
+              {t("listing.pickupInstructions")}
+            </label>
+            <textarea
+              id="pickupInstructions"
+              name="pickupInstructions"
+              value={formData.pickupInstructions}
+              onChange={handleChange}
+              rows={3}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+              placeholder="e.g., Ring doorbell, pickup from side door"
+            />
+          </div>
+
+          {/* Submit Error */}
+          {errors.submit && (
+            <div className="rounded-md bg-red-50 p-4">
+              <p className="text-sm text-red-600">{errors.submit}</p>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            {onViewAsBuyer && (
+              <button
+                type="button"
+                onClick={onViewAsBuyer}
+                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                👁️ View as Buyer
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={updateListing.isPending || isGeocoding}
+              className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+            >
+              {isGeocoding
+                ? "Geocoding..."
+                : updateListing.isPending
+                  ? "Saving..."
+                  : "Update Pickup Instructions"}
+            </button>
+          </div>
+        </form>
       </div>
     );
   }

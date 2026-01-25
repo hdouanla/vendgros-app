@@ -5,6 +5,7 @@ import { TRPCError } from "@trpc/server";
 import {
   insertListingSchema,
   listing,
+  reservation,
   selectListingSchema,
 } from "@acme/db/schema";
 
@@ -279,7 +280,32 @@ export const listingRouter = createTRPCRouter({
         },
       });
 
-      return result;
+      if (!result) return null;
+
+      // Calculate pending reservations quantity (not yet paid)
+      const pendingReservations = await ctx.db
+        .select({
+          totalPending: sql<number>`COALESCE(SUM(${reservation.quantityReserved}), 0)::int`,
+        })
+        .from(reservation)
+        .where(
+          and(
+            eq(reservation.listingId, input.id),
+            eq(reservation.status, "PENDING")
+          )
+        );
+
+      const pendingQuantity = pendingReservations[0]?.totalPending ?? 0;
+
+      // Return listing with effective available quantity
+      return {
+        ...result,
+        // Subtract pending reservations from available quantity
+        quantityAvailable: Math.max(0, result.quantityAvailable - pendingQuantity),
+        // Also expose the raw values for transparency
+        quantityAvailableRaw: result.quantityAvailable,
+        quantityPending: pendingQuantity,
+      };
     }),
 
   // Get my listings (protected)
@@ -568,7 +594,38 @@ export const listingRouter = createTRPCRouter({
               },
             },
           });
-          return results;
+
+          if (results.length === 0) return results;
+
+          // Get pending reservation counts for all listings
+          const listingIds = results.map((l) => l.id);
+          const pendingCounts = await ctx.db
+            .select({
+              listingId: reservation.listingId,
+              totalPending: sql<number>`COALESCE(SUM(${reservation.quantityReserved}), 0)::int`,
+            })
+            .from(reservation)
+            .where(
+              and(
+                sql`${reservation.listingId} IN (${sql.join(listingIds.map(id => sql`${id}`), sql`, `)})`,
+                eq(reservation.status, "PENDING")
+              )
+            )
+            .groupBy(reservation.listingId);
+
+          // Create a map for quick lookup
+          const pendingMap = new Map(
+            pendingCounts.map((p) => [p.listingId, p.totalPending])
+          );
+
+          // Adjust quantityAvailable for each listing
+          return results.map((listing) => ({
+            ...listing,
+            quantityAvailable: Math.max(
+              0,
+              listing.quantityAvailable - (pendingMap.get(listing.id) ?? 0)
+            ),
+          }));
         },
         { ttl: cacheTTL.LONG },
       );
@@ -598,7 +655,38 @@ export const listingRouter = createTRPCRouter({
               },
             },
           });
-          return results;
+
+          if (results.length === 0) return results;
+
+          // Get pending reservation counts for all listings
+          const listingIds = results.map((l) => l.id);
+          const pendingCounts = await ctx.db
+            .select({
+              listingId: reservation.listingId,
+              totalPending: sql<number>`COALESCE(SUM(${reservation.quantityReserved}), 0)::int`,
+            })
+            .from(reservation)
+            .where(
+              and(
+                sql`${reservation.listingId} IN (${sql.join(listingIds.map(id => sql`${id}`), sql`, `)})`,
+                eq(reservation.status, "PENDING")
+              )
+            )
+            .groupBy(reservation.listingId);
+
+          // Create a map for quick lookup
+          const pendingMap = new Map(
+            pendingCounts.map((p) => [p.listingId, p.totalPending])
+          );
+
+          // Adjust quantityAvailable for each listing
+          return results.map((listing) => ({
+            ...listing,
+            quantityAvailable: Math.max(
+              0,
+              listing.quantityAvailable - (pendingMap.get(listing.id) ?? 0)
+            ),
+          }));
         },
         { ttl: cacheTTL.MEDIUM },
       );

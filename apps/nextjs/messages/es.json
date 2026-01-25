@@ -187,7 +187,10 @@
     "saved": "Guardado",
     "addToFavorites": "Agregar a favoritos",
     "removeFromFavorites": "Quitar de favoritos",
-    "browseListings": "Ver anuncios"
+    "browseListings": "Ver anuncios",
+    "moreFromSeller": "Mas de este vendedor",
+    "viewAllListings": "Ver todos los anuncios",
+    "verified": "Vendedor Verificado"
   },
   "search": {
     "searchNearbyListings": "Buscar anuncios cercanos",
@@ -321,6 +324,8 @@
     "ratingAverage": "Calificación promedio"
   },
   "seller": {
+    "sellerListings": "Anuncios del vendedor",
+    "noListings": "Este vendedor no tiene anuncios activos",
     "sellerDashboard": "Panel de vendedor",
     "manageListingsAndReservations": "Gestiona tus anuncios y reservas",
     "activeListings": "Anuncios activos",

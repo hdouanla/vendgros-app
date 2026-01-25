@@ -19,7 +19,9 @@
     "search": "Rechercher",
     "filter": "Filtrer",
     "sort": "Trier",
-    "select": "Sélectionner...","viewDetails": "Voir les détails"
+    "select": "Sélectionner...",
+    "viewDetails": "Voir les détails",
+    "loadMore": "Charger plus"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -99,7 +101,11 @@
     "chats": "Messages",
     "analytics": "Analytique",
     "howItWorks": "Comment ça marche",
-    "language": "Langue"
+    "language": "Langue",
+    "myFavorites": "Mes favoris",
+    "myLikes": "Mes likes",
+    "liked": "Aimés",
+    "saved": "Sauvegardés"
   },
   "footer": {
     "tagline": "Le marché de référence au Canada pour les offres en vrac locales. Connecter les entreprises et les acheteurs pour des solutions d'inventaire plus intelligentes.",
@@ -173,7 +179,15 @@
     "redirectToPayment": "Vous serez redirigé vers le paiement pour sécuriser votre réservation. Le montant restant de {amount} CAD sera payé au ramassage.",
     "goToSignIn": "Aller à la connexion",
     "inactive": "Inactif",
-    "publishedAt": "Publié"
+    "publishedAt": "Publié",
+    "like": "J'aime",
+    "liked": "Aimé",
+    "unlike": "Je n'aime plus",
+    "save": "Sauvegarder",
+    "saved": "Sauvegardé",
+    "addToFavorites": "Ajouter aux favoris",
+    "removeFromFavorites": "Retirer des favoris",
+    "browseListings": "Parcourir les annonces"
   },
   "search": {
     "searchNearbyListings": "Rechercher des annonces à proximité",
@@ -427,7 +441,17 @@
     "phoneVerificationRequired": "Vérification du téléphone requise",
     "phoneVerificationAlertMessage": "Vous devez vérifier votre numéro de téléphone avant de pouvoir créer des annonces sur VendGros.",
     "verifyNow": "Vérifier maintenant",
-    "addPhoneFirst": "Veuillez ajouter votre numéro de téléphone ci-dessous et sauvegarder, puis le vérifier."
+    "addPhoneFirst": "Veuillez ajouter votre numéro de téléphone ci-dessous et sauvegarder, puis le vérifier.",
+    "viewMyLikes": "Voir mes likes",
+    "viewMyFavorites": "Voir mes favoris",
+    "myLikes": "Mes likes",
+    "myFavorites": "Mes favoris",
+    "likesCount": "{count} annonces aimées",
+    "favoritesCount": "{count} annonces sauvegardées",
+    "noLikesYet": "Aucune annonce aimée",
+    "noLikesDescription": "Lorsque vous aimez des annonces, elles apparaîtront ici pour un accès facile.",
+    "noFavoritesYet": "Aucune annonce sauvegardée",
+    "noFavoritesDescription": "Sauvegardez les annonces qui vous intéressent pour les retrouver facilement."
   },
   "settings": {
     "settings": "Paramètres",
@@ -504,6 +528,8 @@
     "ctaTitle": "Prêt à écouler votre inventaire?",
     "ctaDescription": "Rejoignez des milliers d'entreprises locales qui vendent des produits en vrac sur VendGros aujourd'hui.",
     "startSelling": "Commencer à vendre",
-    "learnMore": "En savoir plus"
+    "learnMore": "En savoir plus",
+    "recentlyViewed": "Vus récemment",
+    "clearHistory": "Effacer l'historique"
   }
 }

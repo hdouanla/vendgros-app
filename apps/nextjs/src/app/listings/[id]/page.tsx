@@ -6,6 +6,9 @@ import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 import { ListingMap } from "~/components/map/listing-map";
 import { ImageLightbox } from "~/components/ui/image-lightbox";
+import { LikeButton } from "~/components/listings/like-button";
+import { FavoriteButton } from "~/components/listings/favorite-button";
+import { useLastVisited } from "~/hooks/use-last-visited";
 
 export default function ListingDetailPage({
   params,
@@ -38,6 +41,7 @@ export default function ListingDetailPage({
   });
 
   const trackView = api.listing.trackView.useMutation();
+  const { addVisited } = useLastVisited();
 
   const createReservation = api.reservation.create.useMutation({
     onSuccess: (data) => {
@@ -53,12 +57,13 @@ export default function ListingDetailPage({
     },
   });
 
-  // Track view when component mounts
+  // Track view when component mounts and add to recently visited
   useEffect(() => {
     if (id && listing) {
       trackView.mutate({ listingId: id });
+      addVisited(id);
     }
-  }, [id, listing]); // Only track once when listing loads
+  }, [id, listing, addVisited]); // Only track once when listing loads
 
   // Keyboard navigation is now handled by the ImageLightbox component
 
@@ -292,6 +297,20 @@ export default function ListingDetailPage({
             <h1 className="mb-2 text-2xl font-bold text-gray-900">
               {listing.title}
             </h1>
+
+            {/* Engagement buttons */}
+            <div className="mb-4 flex items-center gap-3">
+              <LikeButton
+                listingId={listing.id}
+                initialLikesCount={listing.likesCount ?? 0}
+                showCount={true}
+                variant="button"
+              />
+              <FavoriteButton
+                listingId={listing.id}
+                variant="button"
+              />
+            </div>
 
             <div className="mb-4 flex items-center gap-2">
               <span className="inline-block rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">

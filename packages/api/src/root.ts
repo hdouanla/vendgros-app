@@ -6,7 +6,9 @@ import { apiIntegrationsRouter } from "./router/api-integrations";
 import { authRouter } from "./router/auth";
 import { bulkImportRouter } from "./router/bulk-import";
 import { chatRouter } from "./router/chat";
+import { favoriteRouter } from "./router/favorite";
 import { internationalRouter } from "./router/international";
+import { likeRouter } from "./router/like";
 import { listingRouter } from "./router/listing";
 import { messagingRouter } from "./router/messaging";
 import { moderationRouter } from "./router/moderation";
@@ -47,6 +49,8 @@ export const appRouter = createTRPCRouter({
   whiteLabel: whiteLabelRouter as typeof whiteLabelRouter,
   international: internationalRouter as typeof internationalRouter,
   user: userRouter as typeof userRouter,
+  like: likeRouter as typeof likeRouter,
+  favorite: favoriteRouter as typeof favoriteRouter,
 });
 
 // export type definition of API

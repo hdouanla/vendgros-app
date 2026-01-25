@@ -43,6 +43,8 @@ export function UserNav() {
       badge: unreadCount && unreadCount > 0 ? unreadCount : undefined,
     },
     { href: "/seller/analytics", label: t("analytics") },
+    { href: "/profile/likes", label: t("liked") },
+    { href: "/profile/favorites", label: t("saved") },
   ];
 
   return (

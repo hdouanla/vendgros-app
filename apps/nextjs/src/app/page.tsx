@@ -8,6 +8,7 @@ import {
   TrustBadges,
   FeaturedProducts,
   FreshArrivals,
+  RecentlyViewed,
   CTASection,
 } from "~/components/home";
 
@@ -30,6 +31,9 @@ export default function HomePage() {
 
       {/* Trust Badges */}
       <TrustBadges />
+
+      {/* Recently Viewed (client-side rendered based on cookie) */}
+      <RecentlyViewed />
 
       {/* Featured Products */}
       <FeaturedProducts listings={featuredListings} />

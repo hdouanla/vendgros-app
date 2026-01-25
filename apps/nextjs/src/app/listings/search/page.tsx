@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 import { ListingMap } from "~/components/map/listing-map";
 import { SearchFilters, type SearchFiltersValues } from "~/components/search";
+import { ListingCard } from "~/components/listings/listing-card";
 
 export default function SearchListingsPage() {
   const router = useRouter();
@@ -305,67 +306,22 @@ export default function SearchListingsPage() {
             {viewMode === "grid" && (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {listings.map((item: any) => (
-                  <div
+                  <ListingCard
                     key={item.listing.id}
-                    className="cursor-pointer overflow-hidden rounded-lg bg-white shadow-md transition-shadow hover:shadow-lg"
-                    onClick={() => router.push(`/listings/${item.listing.id}`)}
-                  >
-                    {/* Image */}
-                    <div className="aspect-video bg-gray-200">
-                      {item.listing.photos && item.listing.photos.length > 0 ? (
-                        <img
-                          src={item.listing.photos[0]}
-                          alt={item.listing.title}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-gray-400">
-                          {tListing("noPhoto")}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-4">
-                      <div className="mb-2 flex items-start justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {item.listing.title}
-                        </h3>
-                        {item.distance && (
-                          <span className="ml-2 flex-shrink-0 text-sm text-gray-500">
-                            {item.distance.toFixed(1)} km
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mb-2 flex items-center gap-2">
-                        <span className="inline-block rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
-                          {item.listing.category}
-                        </span>
-                        <span className="inline-block rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-                          {item.listing.status}
-                        </span>
-                      </div>
-
-                      <p className="mb-3 line-clamp-2 text-sm text-gray-600">
-                        {item.listing.description}
-                      </p>
-
-                      <div className="flex items-baseline justify-between">
-                        <div>
-                          <span className="text-2xl font-bold text-green-600">
-                            ${item.listing.pricePerPiece.toFixed(2)}
-                          </span>
-                          <span className="ml-1 text-sm text-gray-600">
-                            {tListing("perPiece")}
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {item.listing.quantityAvailable} {tListing("quantityAvailable").toLowerCase()}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    listing={{
+                      id: item.listing.id,
+                      title: item.listing.title,
+                      description: item.listing.description,
+                      category: item.listing.category,
+                      pricePerPiece: item.listing.pricePerPiece,
+                      quantityAvailable: item.listing.quantityAvailable,
+                      photos: item.listing.photos ?? [],
+                      distance: item.distance,
+                      likesCount: item.listing.likesCount ?? 0,
+                      status: item.listing.status,
+                      seller: item.listing.seller,
+                    }}
+                  />
                 ))}
               </div>
             )}

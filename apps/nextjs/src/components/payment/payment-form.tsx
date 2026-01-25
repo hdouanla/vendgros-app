@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   PaymentElement,
   useStripe,
@@ -81,13 +82,26 @@ export function PaymentForm({ reservationId, amount }: PaymentFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Secure Payment Badge */}
+      <div className="flex justify-center">
+        <Image
+          src="/images/secure-stripe-payment-logo.png"
+          alt="Secure Payments - Powered by Stripe - SSL Encrypted"
+          width={400}
+          height={60}
+          className="h-auto w-full max-w-md"
+          priority
+        />
+      </div>
+
       <div>
         <h3 className="mb-4 text-lg font-semibold">
           {t("payment.paymentMethod")}
         </h3>
         <PaymentElement
           options={{
-            layout: "tabs",
+            layout: "accordion",
+            paymentMethodOrder: ["card"],
           }}
         />
       </div>

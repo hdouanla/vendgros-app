@@ -11,14 +11,15 @@ interface Listing {
   id: string;
   title: string;
   description: string | null;
-  pricePerPiece: string;
+  pricePerPiece: number;
   photos: string[];
   quantityAvailable: number;
+  publishedAt?: Date | string | null;
   seller: {
     id: string;
     name: string | null;
     verificationBadge: string | null;
-    sellerRatingAverage: string | null;
+    sellerRatingAverage: number | null;
     sellerRatingCount: number | null;
   } | null;
 }
@@ -136,7 +137,7 @@ function FeaturedCard({ listing, size, t }: FeaturedCardProps) {
           </span>
         </div>
 
-        {/* Rating + Availability left, Button right */}
+        {/* Rating + Availability + Published Date left, Button right */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-1 text-white/80">
             <div className="flex items-center gap-2">
@@ -148,9 +149,16 @@ function FeaturedCard({ listing, size, t }: FeaturedCardProps) {
                 · {ratingCount} {tListing("reviews")}
               </span>
             </div>
-            <span className={`text-white/70 ${size === "large" ? "text-sm" : "text-xs"}`}>
-              {t("available", { count: listing.quantityAvailable })}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className={`text-white/70 ${size === "large" ? "text-sm" : "text-xs"}`}>
+                {t("available", { count: listing.quantityAvailable })}
+              </span>
+              {listing.publishedAt && (
+                <span className={`text-white/70 ${size === "large" ? "text-sm" : "text-xs"}`}>
+                  · {new Date(listing.publishedAt).toLocaleDateString()}
+                </span>
+              )}
+            </div>
           </div>
           <Button
             size="sm"

@@ -12,6 +12,7 @@ async function AdminSidebar({ currentPath }: { currentPath?: string }) {
   const navItems = [
     { href: "/admin", label: "Dashboard", icon: "📊" },
     { href: "/admin/moderation", label: "Moderation Queue", icon: "📝" },
+    { href: "/admin/listings", label: "All Listings", icon: "📦" },
     { href: "/admin/moderation-ai", label: "AI Moderation", icon: "🤖" },
     { href: "/admin/users", label: "User Management", icon: "👥" },
     { href: "/admin/trust-safety", label: "Trust & Safety", icon: "🛡️" },

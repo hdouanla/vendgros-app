@@ -13,6 +13,7 @@ interface ListingCardProps {
     quantityAvailable: number;
     photos: string[];
     distance?: number;
+    publishedAt?: Date | string | null;
     seller: {
       ratingAverage: number | null;
       ratingCount: number;
@@ -91,11 +92,16 @@ export function ListingCard({ listing }: ListingCardProps) {
           </span>
         </div>
 
-        {/* Category Badge */}
-        <div className="mt-3">
+        {/* Category Badge and Published Date */}
+        <div className="mt-3 flex items-center justify-between">
           <span className="inline-block rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
             {listing.category}
           </span>
+          {listing.publishedAt && (
+            <span className="text-xs text-gray-500">
+              {new Date(listing.publishedAt).toLocaleDateString()}
+            </span>
+          )}
         </div>
       </div>
     </Link>

@@ -29,9 +29,12 @@ import * as schemaExtensions from "./schema-extensions";
 // Get database URL from environment
 const connectionString = process.env.POSTGRES_URL!;
 
-// Create postgres client
+// Create postgres client optimized for serverless
 const client = postgres(connectionString, {
-  max: 10, // Maximum number of connections in the pool
+  max: 1,              // Single connection per serverless instance
+  prepare: false,      // Required for connection poolers (DO, Supabase, etc.)
+  idle_timeout: 20,    // Close idle connections after 20 seconds
+  connect_timeout: 10, // Fail fast if connection takes too long
 });
 
 export const db = drizzle(client, {

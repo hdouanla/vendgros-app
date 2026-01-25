@@ -4,9 +4,11 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
+import Link from "next/link";
 import { ImageLightbox } from "~/components/ui/image-lightbox";
 import { LikeButton } from "~/components/listings/like-button";
 import { FavoriteButton } from "~/components/listings/favorite-button";
+import { ListingCard } from "~/components/listings/listing-card";
 import { useLastVisited } from "~/hooks/use-last-visited";
 
 export default function ListingDetailPage({
@@ -38,6 +40,16 @@ export default function ListingDetailPage({
   const { data: listing, isLoading } = api.listing.getById.useQuery({
     id,
   });
+
+  // Get more listings from the same seller
+  const { data: sellerListings } = api.listing.getBySellerId.useQuery(
+    {
+      sellerId: listing?.sellerId ?? "",
+      excludeListingId: id,
+      limit: 4,
+    },
+    { enabled: !!listing?.sellerId }
+  );
 
   const trackView = api.listing.trackView.useMutation();
   const { addVisited } = useLastVisited();
@@ -216,28 +228,6 @@ export default function ListingDetailPage({
             <p className="whitespace-pre-wrap text-gray-700">
               {listing.description}
             </p>
-          </div>
-
-          {/* Seller Information */}
-          <div className="rounded-lg bg-white p-6 shadow-md">
-            <h2 className="mb-4 text-xl font-semibold">
-              {tListing("seller")}
-            </h2>
-            <div className="space-y-2 text-sm">
-              <div>
-                <span className="font-medium text-gray-600">
-                  {tListing("verification")}:
-                </span>{" "}
-                {listing.seller.verificationBadge === "NONE" ? tListing("standard") : listing.seller.verificationBadge}
-              </div>
-              <div>
-                <span className="font-medium text-gray-600">
-                  {tListing("rating")}:
-                </span>{" "}
-                ⭐ {listing.seller.sellerRatingAverage?.toFixed(1) ?? "—"} (
-                {listing.seller.sellerRatingCount} {tListing("sellerReviews")})
-              </div>
-            </div>
           </div>
 
           {/* Listing Information */}
@@ -457,6 +447,32 @@ export default function ListingDetailPage({
           </div>
         </div>
       </div>
+
+      {/* More from this seller */}
+      {sellerListings && sellerListings.length > 0 && (
+        <div className="mt-12">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900">
+              {tListing("moreFromSeller")}
+            </h2>
+            <Link
+              href={`/sellers/${listing.sellerId}`}
+              className="text-sm font-medium text-green-600 hover:text-green-700"
+            >
+              {tListing("viewAllListings")} →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+            {sellerListings.map((sellerListing) => (
+              <ListingCard
+                key={sellerListing.id}
+                listing={sellerListing}
+                variant="compact"
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Reservation Confirmation Modal */}
       {showReserveModal && (

@@ -778,4 +778,82 @@ export const listingRouter = createTRPCRouter({
       { ttl: cacheTTL.LONG },
     );
   }),
+
+  // Get published listings by seller ID (public - for seller profile and "more from this seller")
+  getBySellerId: publicProcedure
+    .input(
+      z.object({
+        sellerId: z.string(),
+        excludeListingId: z.string().optional(),
+        limit: z.number().default(4),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const results = await ctx.db.query.listing.findMany({
+        where: (listings, { eq, and, ne }) =>
+          and(
+            eq(listings.sellerId, input.sellerId),
+            eq(listings.status, "PUBLISHED"),
+            eq(listings.isActive, true),
+            input.excludeListingId
+              ? ne(listings.id, input.excludeListingId)
+              : undefined,
+          ),
+        orderBy: (listings, { desc }) => [desc(listings.createdAt)],
+        limit: input.limit,
+        with: {
+          seller: {
+            columns: {
+              id: true,
+              name: true,
+              verificationBadge: true,
+              sellerRatingAverage: true,
+              sellerRatingCount: true,
+            },
+          },
+        },
+      });
+
+      return results;
+    }),
+
+  // Get seller public profile info
+  getSellerProfile: publicProcedure
+    .input(z.object({ sellerId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const seller = await ctx.db.query.user.findFirst({
+        where: (users, { eq }) => eq(users.id, input.sellerId),
+        columns: {
+          id: true,
+          name: true,
+          verificationBadge: true,
+          sellerRatingAverage: true,
+          sellerRatingCount: true,
+          createdAt: true,
+        },
+      });
+
+      if (!seller) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Seller not found",
+        });
+      }
+
+      // Count total published listings
+      const listingCountResult = await ctx.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(listing)
+        .where(
+          and(
+            eq(listing.sellerId, input.sellerId),
+            eq(listing.status, "PUBLISHED"),
+          ),
+        );
+
+      return {
+        ...seller,
+        listingCount: listingCountResult[0]?.count ?? 0,
+      };
+    }),
 });

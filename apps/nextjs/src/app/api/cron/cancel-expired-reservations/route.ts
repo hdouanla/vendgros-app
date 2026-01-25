@@ -48,21 +48,17 @@ async function handleCancelExpiredReservations(request: NextRequest) {
 
     // Find all PENDING reservations that have either:
     // 1. Expired (pickup deadline passed)
-    // 2. Payment timeout reached (created more than X minutes ago and no payment)
+    // 2. Payment timeout reached (created more than X minutes ago)
+    // Note: Having a stripePaymentIntentId doesn't mean payment succeeded -
+    // if status is still PENDING after timeout, payment was never completed
     const expiredReservations = await db.query.reservation.findMany({
       where: and(
         eq(reservation.status, "PENDING"),
         or(
           // Pickup deadline expired
           lt(reservation.expiresAt, now),
-          // Payment timeout: created before deadline AND no Stripe payment
-          and(
-            lt(reservation.createdAt, paymentDeadline),
-            or(
-              isNull(reservation.stripePaymentIntentId),
-              eq(reservation.stripePaymentIntentId, "")
-            )
-          )
+          // Payment timeout: created before deadline (regardless of payment intent)
+          lt(reservation.createdAt, paymentDeadline)
         )
       ),
     });

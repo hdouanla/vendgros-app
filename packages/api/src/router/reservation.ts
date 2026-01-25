@@ -5,6 +5,28 @@ import { TRPCError } from "@trpc/server";
 
 import { conversation, listing, rating, reservation, user } from "@acme/db/schema";
 
+// Helper to calculate effective available quantity (minus pending reservations)
+async function getEffectiveAvailableQuantity(
+  db: any,
+  listingId: string,
+  quantityAvailable: number
+): Promise<number> {
+  const pendingReservations = await db
+    .select({
+      totalPending: sql<number>`COALESCE(SUM(${reservation.quantityReserved}), 0)::int`,
+    })
+    .from(reservation)
+    .where(
+      and(
+        eq(reservation.listingId, listingId),
+        eq(reservation.status, "PENDING")
+      )
+    );
+
+  const pendingQuantity = pendingReservations[0]?.totalPending ?? 0;
+  return Math.max(0, quantityAvailable - pendingQuantity);
+}
+
 import { notifyReservationCreated, notifyPickupComplete } from "../lib/notifications";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
@@ -54,7 +76,14 @@ export const reservationRouter = createTRPCRouter({
         });
       }
 
-      if (input.quantity > targetListing.quantityAvailable) {
+      // Calculate effective available (minus pending reservations)
+      const effectiveAvailable = await getEffectiveAvailableQuantity(
+        ctx.db,
+        input.listingId,
+        targetListing.quantityAvailable
+      );
+
+      if (input.quantity > effectiveAvailable) {
         throw new Error("Insufficient quantity available");
       }
 

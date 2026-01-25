@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { z } from "zod/v4";
-import { and, eq, desc, lte } from "drizzle-orm";
+import { and, eq, desc, lte } from "@acme/db";
 
 import {
   apiKey,

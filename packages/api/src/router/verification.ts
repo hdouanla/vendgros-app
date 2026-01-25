@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { and, desc, eq, gte } from "drizzle-orm";
+import { and, desc, eq, gte } from "@acme/db";
 
 import { listing, rating, reservation, user } from "@acme/db/schema";
 

@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { eq, inArray, desc } from "drizzle-orm";
+import { eq, inArray, desc } from "@acme/db";
 
 import { listing, bulkImport } from "@acme/db/schema";
 

@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { eq } from "drizzle-orm";
+import { eq } from "@acme/db";
 
 import { webhook, webhookDelivery } from "@acme/db/schema-extensions";
 

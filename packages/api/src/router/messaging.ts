@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { and, desc, eq, or } from "drizzle-orm";
+import { and, desc, eq, or } from "@acme/db";
 
 import { conversation, listing, message, user } from "@acme/db/schema";
 

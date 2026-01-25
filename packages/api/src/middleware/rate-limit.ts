@@ -1,59 +1,89 @@
 import { TRPCError } from "@trpc/server";
-import { Redis } from "ioredis";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
-const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
+// Create Redis client - uses HTTP, no connection overhead
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null;
 
-interface RateLimitConfig {
-  windowMs: number; // Time window in milliseconds
-  maxRequests: number; // Maximum requests per window
-  message?: string;
+// Check if Redis is configured
+const isRedisConfigured = redis !== null;
+
+/**
+ * Create an Upstash rate limiter with sliding window algorithm
+ */
+function createUpstashRateLimiter(config: {
+  requests: number;
+  window: `${number} s` | `${number} m` | `${number} h`;
+  prefix: string;
+}) {
+  if (!redis) return null;
+
+  return new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(config.requests, config.window),
+    prefix: `ratelimit:${config.prefix}`,
+    analytics: true,
+  });
+}
+
+// Pre-configured rate limiters
+const strictLimiter = createUpstashRateLimiter({
+  requests: 10,
+  window: "1 m",
+  prefix: "strict",
+});
+
+const standardLimiter = createUpstashRateLimiter({
+  requests: 60,
+  window: "1 m",
+  prefix: "standard",
+});
+
+const generousLimiter = createUpstashRateLimiter({
+  requests: 300,
+  window: "1 m",
+  prefix: "generous",
+});
+
+const publicLimiter = createUpstashRateLimiter({
+  requests: 100,
+  window: "1 m",
+  prefix: "public",
+});
+
+interface RateLimitMiddlewareOpts {
+  ctx: { session?: { user?: { id?: string } }; req?: { headers?: Record<string, string>; ip?: string } };
+  next: () => Promise<unknown>;
 }
 
 /**
- * Rate limiting middleware using Redis sliding window
- *
- * @param config - Rate limit configuration
- * @returns Middleware function that enforces rate limits
+ * Create rate limit middleware using Upstash Ratelimit
  */
-export function createRateLimiter(config: RateLimitConfig) {
-  return async (opts: { ctx: any; next: () => Promise<unknown> }) => {
+function createRateLimitMiddleware(
+  limiter: Ratelimit | null,
+  getMessage: (limit: number) => string,
+) {
+  return async (opts: RateLimitMiddlewareOpts) => {
     const userId = opts.ctx.session?.user?.id;
 
-    // Skip rate limiting for unauthenticated requests (handled separately)
-    if (!userId) {
+    // Skip if no user or Redis not configured
+    if (!userId || !limiter) {
       return opts.next();
     }
 
-    const key = `rate-limit:${userId}`;
-    const now = Date.now();
-    const windowStart = now - config.windowMs;
-
     try {
-      // Use Redis sorted set with timestamps as scores
-      await redis
-        .multi()
-        // Remove old entries outside the window
-        .zremrangebyscore(key, 0, windowStart)
-        // Add current request
-        .zadd(key, now, `${now}`)
-        // Count requests in current window
-        .zcard(key)
-        // Set expiry on the key
-        .expire(key, Math.ceil(config.windowMs / 1000))
-        .exec();
+      const { success, limit, remaining, reset } = await limiter.limit(userId);
 
-      // Get count from the multi results
-      const multi = await redis
-        .multi()
-        .zcard(key)
-        .exec();
-
-      const count = multi?.[0]?.[1] as number || 0;
-
-      if (count > config.maxRequests) {
+      if (!success) {
         throw new TRPCError({
           code: "TOO_MANY_REQUESTS",
-          message: config.message || `Rate limit exceeded. Maximum ${config.maxRequests} requests per ${config.windowMs / 1000} seconds.`,
+          message: getMessage(limit),
         });
       }
 
@@ -63,7 +93,7 @@ export function createRateLimiter(config: RateLimitConfig) {
         throw error;
       }
 
-      // If Redis fails, log error but allow request (fail open)
+      // Fail open if Redis errors
       console.error("Rate limit check failed:", error);
       return opts.next();
     }
@@ -71,92 +101,68 @@ export function createRateLimiter(config: RateLimitConfig) {
 }
 
 /**
- * Stricter rate limit for sensitive operations
+ * Stricter rate limit for sensitive operations (10 req/min)
  */
-export const strictRateLimit = createRateLimiter({
-  windowMs: 60 * 1000, // 1 minute
-  maxRequests: 10,
-  message: "Too many requests. Please try again in a minute.",
-});
+export const strictRateLimit = createRateLimitMiddleware(
+  strictLimiter,
+  (limit) => `Too many requests. Maximum ${limit} requests per minute.`,
+);
 
 /**
- * Standard rate limit for normal operations
+ * Standard rate limit for normal operations (60 req/min)
  */
-export const standardRateLimit = createRateLimiter({
-  windowMs: 60 * 1000, // 1 minute
-  maxRequests: 60,
-  message: "Rate limit exceeded. Please slow down.",
-});
+export const standardRateLimit = createRateLimitMiddleware(
+  standardLimiter,
+  (limit) => `Rate limit exceeded. Maximum ${limit} requests per minute.`,
+);
 
 /**
- * Generous rate limit for read operations
+ * Generous rate limit for read operations (300 req/min)
  */
-export const generousRateLimit = createRateLimiter({
-  windowMs: 60 * 1000, // 1 minute
-  maxRequests: 300,
-});
+export const generousRateLimit = createRateLimitMiddleware(
+  generousLimiter,
+  (limit) => `Rate limit exceeded. Maximum ${limit} requests per minute.`,
+);
 
 /**
  * IP-based rate limiting for unauthenticated endpoints
  */
-export function createIpRateLimiter(config: RateLimitConfig) {
-  return async (opts: {
-    ctx: any;
-    next: () => Promise<unknown>;
-  }) => {
-    // Get IP from headers (behind proxy) or direct connection
-    const ip =
-      opts.ctx.req?.headers?.["x-forwarded-for"]?.split(",")[0] ||
-      opts.ctx.req?.ip ||
-      "unknown";
+export const publicRateLimit = async (opts: RateLimitMiddlewareOpts) => {
+  if (!publicLimiter) {
+    return opts.next();
+  }
 
-    if (ip === "unknown") {
-      return opts.next();
+  // Get IP from headers (behind proxy) or direct connection
+  const ip =
+    opts.ctx.req?.headers?.["x-forwarded-for"]?.split(",")[0] ||
+    opts.ctx.req?.ip ||
+    "unknown";
+
+  if (ip === "unknown") {
+    return opts.next();
+  }
+
+  try {
+    const { success, limit } = await publicLimiter.limit(ip);
+
+    if (!success) {
+      throw new TRPCError({
+        code: "TOO_MANY_REQUESTS",
+        message: `Too many requests from your IP. Maximum ${limit} requests per minute.`,
+      });
     }
 
-    const key = `rate-limit:ip:${ip}`;
-    const now = Date.now();
-    const windowStart = now - config.windowMs;
-
-    try {
-      await redis
-        .multi()
-        .zremrangebyscore(key, 0, windowStart)
-        .zadd(key, now, `${now}`)
-        .zcard(key)
-        .expire(key, Math.ceil(config.windowMs / 1000))
-        .exec();
-
-      const multi = await redis.multi().zcard(key).exec();
-      const count = (multi?.[0]?.[1] as number) || 0;
-
-      if (count > config.maxRequests) {
-        throw new TRPCError({
-          code: "TOO_MANY_REQUESTS",
-          message:
-            config.message ||
-            `Rate limit exceeded. Maximum ${config.maxRequests} requests per ${config.windowMs / 1000} seconds.`,
-        });
-      }
-
-      return opts.next();
-    } catch (error) {
-      if (error instanceof TRPCError) {
-        throw error;
-      }
-
-      // Fail open if Redis is unavailable
-      console.error("IP rate limit check failed:", error);
-      return opts.next();
+    return opts.next();
+  } catch (error) {
+    if (error instanceof TRPCError) {
+      throw error;
     }
-  };
-}
 
-/**
- * Aggressive rate limit for public/unauthenticated endpoints
- */
-export const publicRateLimit = createIpRateLimiter({
-  windowMs: 60 * 1000, // 1 minute
-  maxRequests: 100,
-  message: "Too many requests from your IP. Please try again later.",
-});
+    // Fail open if Redis errors
+    console.error("IP rate limit check failed:", error);
+    return opts.next();
+  }
+};
+
+// Export for checking if rate limiting is active
+export { isRedisConfigured };

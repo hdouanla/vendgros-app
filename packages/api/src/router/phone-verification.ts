@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { eq, and, gt } from "drizzle-orm";
+import { eq, and, gt } from "@acme/db";
 import { TRPCError } from "@trpc/server";
 
 import { user, verification } from "@acme/db/schema";

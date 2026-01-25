@@ -333,7 +333,7 @@ export default function AdminListingsPage() {
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm">
                     <Link
-                      href={`/listing/${listing.id}`}
+                      href={`/listings/${listing.id}`}
                       className="text-green-600 hover:text-green-900"
                       target="_blank"
                     >

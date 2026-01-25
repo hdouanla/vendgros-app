@@ -187,7 +187,10 @@
     "saved": "Saved",
     "addToFavorites": "Add to favorites",
     "removeFromFavorites": "Remove from favorites",
-    "browseListings": "Browse Listings"
+    "browseListings": "Browse Listings",
+    "moreFromSeller": "More from this seller",
+    "viewAllListings": "View all listings",
+    "verified": "Verified Seller"
   },
   "search": {
     "searchNearbyListings": "Search Nearby Listings",
@@ -321,6 +324,8 @@
     "ratingAverage": "Average Rating"
   },
   "seller": {
+    "sellerListings": "Seller's Listings",
+    "noListings": "This seller has no active listings",
     "sellerDashboard": "Seller Dashboard",
     "manageListingsAndReservations": "Manage your listings and reservations",
     "activeListings": "Active Listings",

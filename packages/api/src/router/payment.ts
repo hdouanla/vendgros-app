@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { eq } from "drizzle-orm";
+import { eq } from "@acme/db";
 import Stripe from "stripe";
 
 import { listing, reservation } from "@acme/db/schema";

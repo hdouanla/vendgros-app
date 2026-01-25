@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "@acme/db";
 
 import { rating, reservation, user } from "@acme/db/schema";
 

@@ -1,8 +1,6 @@
 import { z } from "zod/v4";
-import { and, eq, desc } from "drizzle-orm";
 
-import { user } from "@acme/db/schema";
-import { tenant } from "@acme/db/schema-extensions";
+import { and, eq, desc, user, tenant } from "@acme/db";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 

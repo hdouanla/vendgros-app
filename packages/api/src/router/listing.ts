@@ -53,6 +53,15 @@ export const listingRouter = createTRPCRouter({
         });
       }
 
+      // Validate minimum quantity
+      const MIN_LISTING_QUANTITY = parseInt(process.env.MIN_LISTING_QUANTITY || "5", 10);
+      if (input.quantityTotal < MIN_LISTING_QUANTITY) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Minimum quantity is ${MIN_LISTING_QUANTITY} units`,
+        });
+      }
+
       // Create listing with DRAFT status
       const [newListing] = await ctx.db
         .insert(listing)
@@ -162,14 +171,25 @@ export const listingRouter = createTRPCRouter({
 
       // Prevent editing if there are reservations (extra backend protection)
       if (hasReservations) {
-        // Allow only status and isActive changes
-        const hasNonStatusChanges = Object.keys(input.data).some(
-          (key) => key !== "status" && key !== "isActive"
+        // Allow only status, isActive, and pickupInstructions changes
+        const hasNonAllowedChanges = Object.keys(input.data).some(
+          (key) => key !== "status" && key !== "isActive" && key !== "pickupInstructions"
         );
-        if (hasNonStatusChanges) {
+        if (hasNonAllowedChanges) {
           throw new Error(
             "Cannot edit listing with reservations. Please create a copy instead."
           );
+        }
+      }
+
+      // Validate minimum quantity if quantityTotal is being updated
+      if (input.data.quantityTotal !== undefined) {
+        const MIN_LISTING_QUANTITY = parseInt(process.env.MIN_LISTING_QUANTITY || "5", 10);
+        if (input.data.quantityTotal < MIN_LISTING_QUANTITY) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Minimum quantity is ${MIN_LISTING_QUANTITY} units`,
+          });
         }
       }
 

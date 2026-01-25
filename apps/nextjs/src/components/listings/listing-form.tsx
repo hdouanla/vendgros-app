@@ -41,6 +41,9 @@ const categoryTranslationKeys: Record<CategoryId, string> = {
   GENERAL: "general",
 };
 
+// Minimum quantity for listings (configurable via env, defaults to 5)
+const MIN_LISTING_QUANTITY = parseInt(process.env.NEXT_PUBLIC_MIN_LISTING_QUANTITY || "5", 10);
+
 // Simple translation stub - replace with actual translations later
 const t = (key: string, params?: any) => {
   const translations: Record<string, string> = {
@@ -155,8 +158,8 @@ export function ListingForm({
     }
 
     const quantity = parseInt(formData.quantityTotal);
-    if (isNaN(quantity) || quantity <= 0) {
-      newErrors.quantityTotal = t("errors.minValue", { min: 1 });
+    if (isNaN(quantity) || quantity < MIN_LISTING_QUANTITY) {
+      newErrors.quantityTotal = t("errors.minValue", { min: MIN_LISTING_QUANTITY });
     }
 
     if (!formData.pickupAddress) {
@@ -584,9 +587,10 @@ export function ListingForm({
             name="quantityTotal"
             value={formData.quantityTotal}
             onChange={handleChange}
-            min="1"
+            min={MIN_LISTING_QUANTITY}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
           />
+          <p className="mt-1 text-xs text-gray-500">Minimum {MIN_LISTING_QUANTITY} units</p>
           {errors.quantityTotal && (
             <p className="mt-1 text-sm text-red-600">{errors.quantityTotal}</p>
           )}

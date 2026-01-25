@@ -28,7 +28,6 @@
     "@trpc/server": "catalog:",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.36.1",
-    "drizzle-orm": "^0.44.7",
     "expo-server-sdk": "^4.0.0",
     "openai": "^6.16.0",
     "resend": "^6.7.0",

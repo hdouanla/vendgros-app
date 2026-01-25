@@ -10,6 +10,7 @@ import {
   notifyListingApproved,
   notifyListingRejected,
 } from "../lib/notifications";
+import { cache } from "../lib/cache";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 // Middleware to check if user is admin
@@ -103,6 +104,12 @@ export const adminRouter = createTRPCRouter({
         })
         .where(eq(listing.id, input.listingId))
         .returning();
+
+      // Invalidate listing caches (new published listing affects latest + category counts)
+      await Promise.all([
+        cache.invalidatePrefix("listings:latest"),
+        cache.invalidate("listings:category-counts"),
+      ]);
 
       // Send approval notification to seller
       await notifyListingApproved({
@@ -656,6 +663,9 @@ export const adminRouter = createTRPCRouter({
         })
         .where(eq(listing.id, input.listingId))
         .returning();
+
+      // Invalidate featured listings cache
+      await cache.invalidatePrefix("listings:featured");
 
       return updated;
     }),

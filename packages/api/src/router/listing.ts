@@ -10,6 +10,7 @@ import {
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { geocodeAddress } from "../services/geocoding";
+import { cache, cacheKeys, cacheTTL } from "../lib/cache";
 
 export const listingRouter = createTRPCRouter({
   // Create a new listing (sellers only)
@@ -543,73 +544,92 @@ export const listingRouter = createTRPCRouter({
     }),
 
   // Get featured listings (admin-selected, sorted by publishedAt)
+  // Cached for 1 hour - invalidated when admin toggles featured status
   getFeatured: publicProcedure
     .input(z.object({ limit: z.number().default(8) }))
     .query(async ({ ctx, input }) => {
-      const results = await ctx.db.query.listing.findMany({
-        where: (listings, { eq, and }) =>
-          and(eq(listings.status, "PUBLISHED"), eq(listings.isFeatured, true)),
-        orderBy: (listings, { desc }) => [desc(listings.publishedAt)],
-        limit: input.limit,
-        with: {
-          seller: {
-            columns: {
-              id: true,
-              name: true,
-              verificationBadge: true,
-              sellerRatingAverage: true,
-              sellerRatingCount: true,
+      return cache.get(
+        cacheKeys.featuredListings(input.limit),
+        async () => {
+          const results = await ctx.db.query.listing.findMany({
+            where: (listings, { eq, and }) =>
+              and(eq(listings.status, "PUBLISHED"), eq(listings.isFeatured, true)),
+            orderBy: (listings, { desc }) => [desc(listings.publishedAt)],
+            limit: input.limit,
+            with: {
+              seller: {
+                columns: {
+                  id: true,
+                  name: true,
+                  verificationBadge: true,
+                  sellerRatingAverage: true,
+                  sellerRatingCount: true,
+                },
+              },
             },
-          },
+          });
+          return results;
         },
-      });
-
-      return results;
+        { ttl: cacheTTL.LONG },
+      );
     }),
 
   // Get latest listings (sorted by creation date, for homepage)
+  // Cached for 15 minutes - refreshes frequently to show new listings
   getLatest: publicProcedure
     .input(z.object({ limit: z.number().default(8) }))
     .query(async ({ ctx, input }) => {
-      const results = await ctx.db.query.listing.findMany({
-        where: (listings, { eq }) => eq(listings.status, "PUBLISHED"),
-        orderBy: (listings, { desc }) => [desc(listings.createdAt)],
-        limit: input.limit,
-        with: {
-          seller: {
-            columns: {
-              id: true,
-              name: true,
-              verificationBadge: true,
-              sellerRatingAverage: true,
-              sellerRatingCount: true,
+      return cache.get(
+        cacheKeys.latestListings(input.limit),
+        async () => {
+          const results = await ctx.db.query.listing.findMany({
+            where: (listings, { eq }) => eq(listings.status, "PUBLISHED"),
+            orderBy: (listings, { desc }) => [desc(listings.createdAt)],
+            limit: input.limit,
+            with: {
+              seller: {
+                columns: {
+                  id: true,
+                  name: true,
+                  verificationBadge: true,
+                  sellerRatingAverage: true,
+                  sellerRatingCount: true,
+                },
+              },
             },
-          },
+          });
+          return results;
         },
-      });
-
-      return results;
+        { ttl: cacheTTL.MEDIUM },
+      );
     }),
 
   // Get category counts (for homepage category grid)
+  // Cached for 1 hour - expensive GROUP BY aggregation
   getCategoryCounts: publicProcedure.query(async ({ ctx }) => {
-    const results = await ctx.db
-      .select({
-        category: listing.category,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(listing)
-      .where(eq(listing.status, "PUBLISHED"))
-      .groupBy(listing.category);
+    return cache.get(
+      cacheKeys.categoryCounts(),
+      async () => {
+        const results = await ctx.db
+          .select({
+            category: listing.category,
+            count: sql<number>`count(*)::int`,
+          })
+          .from(listing)
+          .where(eq(listing.status, "PUBLISHED"))
+          .groupBy(listing.category);
 
-    // Convert to a map for easy lookup
-    const countsMap: Record<string, number> = {};
-    for (const row of results) {
-      if (row.category) {
-        countsMap[row.category] = row.count;
-      }
-    }
+        // Convert to a map for easy lookup
+        const countsMap: Record<string, number> = {};
+        for (const row of results) {
+          if (row.category) {
+            countsMap[row.category] = row.count;
+          }
+        }
 
-    return countsMap;
+        return countsMap;
+      },
+      { ttl: cacheTTL.LONG },
+    );
   }),
 });

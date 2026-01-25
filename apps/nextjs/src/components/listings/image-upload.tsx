@@ -185,6 +185,8 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
     const newPhotos = [...photos];
     const draggedPhoto = newPhotos[draggedIndex];
 
+    if (!draggedPhoto) return;
+
     // Remove from old position
     newPhotos.splice(draggedIndex, 1);
     // Insert at new position

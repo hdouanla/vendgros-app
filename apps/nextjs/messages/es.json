@@ -288,7 +288,12 @@
     "delivered": "Entregado",
     "rateSeller": "Calificar a este vendedor",
     "rateBuyer": "Calificar a este comprador",
-    "rated": "Calificado"
+    "rated": "Calificado",
+    "cancel": "Cancelar",
+    "cancelReservationTitle": "Cancelar esta reserva?",
+    "cancelReservationMessage": "Esta seguro de que desea cancelar esta reserva? Esta accion no se puede deshacer.",
+    "confirmCancel": "Si, cancelar",
+    "cancelling": "Cancelando..."
   },
   "payment": {
     "payment": "Pago",

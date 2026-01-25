@@ -65,7 +65,7 @@ export function ForgotPasswordForm() {
       const result = await authClient.emailOtp.resetPassword({
         email,
         otp,
-        newPassword,
+        password: newPassword,
       });
 
       if (result.error) {

@@ -14,7 +14,7 @@ export function RequireVerification({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (!isLoading && session?.user) {
-      if (session.user.accountStatus !== "ACTIVE") {
+      if (!session.user.emailVerified) {
         router.replace("/auth/verify-email");
       }
     }
@@ -29,7 +29,7 @@ export function RequireVerification({ children }: { children: React.ReactNode })
     );
   }
 
-  if (session?.user && session.user.accountStatus !== "ACTIVE") {
+  if (session?.user && !session.user.emailVerified) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-gray-600">Redirecting to verification...</div>

@@ -288,7 +288,12 @@
     "delivered": "Livré",
     "rateSeller": "Évaluer ce vendeur",
     "rateBuyer": "Évaluer cet acheteur",
-    "rated": "Évalué"
+    "rated": "Évalué",
+    "cancel": "Annuler",
+    "cancelReservationTitle": "Annuler cette réservation ?",
+    "cancelReservationMessage": "Êtes-vous sûr de vouloir annuler cette réservation ? Cette action est irréversible.",
+    "confirmCancel": "Oui, annuler",
+    "cancelling": "Annulation..."
   },
   "payment": {
     "payment": "Paiement",

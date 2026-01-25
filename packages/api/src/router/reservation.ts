@@ -625,6 +625,45 @@ export const reservationRouter = createTRPCRouter({
       };
     }),
 
+  // Cancel pending reservation (buyer cancels before payment)
+  cancel: protectedProcedure
+    .input(z.object({ reservationId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const existingReservation = await ctx.db.query.reservation.findFirst({
+        where: (reservations, { eq }) => eq(reservations.id, input.reservationId),
+      });
+
+      if (!existingReservation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reservation not found",
+        });
+      }
+
+      // Only buyer can cancel their own reservation
+      if (existingReservation.buyerId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Not authorized to cancel this reservation",
+        });
+      }
+
+      // Can only cancel PENDING reservations (before payment)
+      if (existingReservation.status !== "PENDING") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Only pending reservations can be cancelled",
+        });
+      }
+
+      // Delete the reservation
+      await ctx.db
+        .delete(reservation)
+        .where(eq(reservation.id, input.reservationId));
+
+      return { success: true };
+    }),
+
   // Report no-show
   reportNoShow: protectedProcedure
     .input(z.object({ reservationId: z.string() }))

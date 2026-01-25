@@ -171,7 +171,7 @@ export const analyticsRouter = createTRPCRouter({
           .reduce((sum, r) => sum + r.totalPrice, 0);
 
         return {
-          date: date.toISOString().split("T")[0],
+          date: date.toISOString().split("T")[0] ?? "",
           revenue: dayRevenue,
         };
       });

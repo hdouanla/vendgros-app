@@ -30,7 +30,11 @@ export default function ProfilePage() {
     return null;
   }
 
+  // Use currentUser for full profile data, fall back to session.user for basic info
   const user = currentUser ?? session.user;
+
+  // Helper to check if we have the full user profile
+  const hasFullProfile = !!currentUser;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -75,19 +79,19 @@ export default function ProfilePage() {
                 <label className="text-sm font-medium text-gray-600">
                   {t("phone")}
                 </label>
-                {user.phone ? (
+                {currentUser?.phone ? (
                   <div className="mt-1 flex items-center gap-2">
                     <span className="text-gray-900">
-                      {user.phone.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, "($1) $2-$3")}
+                      {currentUser.phone.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, "($1) $2-$3")}
                     </span>
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                        user.phoneVerified
+                        currentUser.phoneVerified
                           ? "bg-green-100 text-green-800"
                           : "bg-yellow-100 text-yellow-800"
                       }`}
                     >
-                      {user.phoneVerified ? (
+                      {currentUser.phoneVerified ? (
                         <>
                           <svg className="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
                             <path
@@ -102,7 +106,7 @@ export default function ProfilePage() {
                         t("notVerified")
                       )}
                     </span>
-                    {!user.phoneVerified && (
+                    {!currentUser.phoneVerified && (
                       <Link
                         href="/auth/verify-phone"
                         className="text-sm font-medium text-green-600 hover:text-green-500"
@@ -129,7 +133,7 @@ export default function ProfilePage() {
                   {t("memberSince", { date: "" })}
                 </label>
                 <p className="mt-1 text-gray-900">
-                  {new Date(user.createdAt).toLocaleDateString()}
+                  {currentUser?.createdAt ? new Date(currentUser.createdAt).toLocaleDateString() : "—"}
                 </p>
               </div>
             </div>
@@ -190,14 +194,14 @@ export default function ProfilePage() {
 
             <div className="text-center">
               <div className="mb-2 text-5xl font-bold text-green-600">
-                {user.ratingAverage?.toFixed(1) ?? "—"}
+                {currentUser?.ratingAverage?.toFixed(1) ?? "—"}
               </div>
               <div className="mb-4 flex justify-center">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <span
                     key={star}
                     className={`text-2xl ${
-                      star <= Math.round(user.ratingAverage || 0)
+                      star <= Math.round(currentUser?.ratingAverage || 0)
                         ? "text-yellow-400"
                         : "text-gray-300"
                     }`}
@@ -207,7 +211,7 @@ export default function ProfilePage() {
                 ))}
               </div>
               <p className="text-sm text-gray-600">
-                {user.ratingCount} {user.ratingCount === 1 ? t('review') : t('reviews')}
+                {currentUser?.ratingCount ?? 0} {currentUser?.ratingCount === 1 ? t('review') : t('reviews')}
               </p>
             </div>
           </div>
@@ -224,7 +228,7 @@ export default function ProfilePage() {
                   {t("emailVerified")}
                 </span>
                 <span className="font-semibold text-gray-900">
-                  {user.emailVerified ? (
+                  {currentUser?.emailVerified ? (
                     <span className="text-green-600">{t("yes")}</span>
                   ) : (
                     <span className="text-yellow-600">{t("no")}</span>
@@ -237,7 +241,7 @@ export default function ProfilePage() {
                   {t("phoneVerified")}
                 </span>
                 <span className="font-semibold text-gray-900">
-                  {user.phoneVerified ? (
+                  {currentUser?.phoneVerified ? (
                     <span className="text-green-600">{t("yes")}</span>
                   ) : (
                     <span className="text-yellow-600">{t("no")}</span>
@@ -250,7 +254,7 @@ export default function ProfilePage() {
                   {t("verification")}
                 </span>
                 <span className="font-semibold text-gray-900">
-                  {user.verificationBadge === "NONE" ? t("standard") : user.verificationBadge}
+                  {currentUser?.verificationBadge === "NONE" ? t("standard") : currentUser?.verificationBadge ?? t("standard")}
                 </span>
               </div>
 
@@ -259,7 +263,7 @@ export default function ProfilePage() {
                   {t("status")}
                 </span>
                 <span className="font-semibold text-green-600">
-                  {user.accountStatus || 'ACTIVE'}
+                  {currentUser?.accountStatus ?? 'ACTIVE'}
                 </span>
               </div>
             </div>

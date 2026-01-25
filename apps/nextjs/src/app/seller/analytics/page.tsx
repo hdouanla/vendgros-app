@@ -142,7 +142,7 @@ export default function SellerAnalyticsPage() {
           {analytics.dailyRevenue.map((day, idx) => {
             const percentage =
               maxDailyRevenue > 0 ? (day.revenue / maxDailyRevenue) * 100 : 0;
-            const displayDate = new Date(day.date).toLocaleDateString(undefined, {
+            const displayDate = new Date(day.date ?? "").toLocaleDateString(undefined, {
               month: "short",
               day: "numeric",
             });

@@ -341,6 +341,7 @@ export const reservationRouter = createTRPCRouter({
           title: listing.title,
           pricePerPiece: listing.pricePerPiece,
           pickupAddress: listing.pickupAddress,
+          postalCode: listing.postalCode,
           pickupInstructions: listing.pickupInstructions,
         },
         // Buyer fields (nested)

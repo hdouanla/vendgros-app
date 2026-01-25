@@ -8,6 +8,7 @@ import {
   pgTable,
   text,
   timestamp,
+  unique,
   varchar,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
@@ -148,6 +149,8 @@ export const userRelations = relations(user, ({ many }) => ({
   conversationsAsBuyer: many(conversation, { relationName: "buyerConversations" }),
   conversationsAsSeller: many(conversation, { relationName: "sellerConversations" }),
   messagesSent: many(message),
+  likedListings: many(listingLike),
+  favoritedListings: many(listingFavorite),
 }));
 
 // ============================================================================
@@ -255,6 +258,9 @@ export const listing = pgTable(
     // View tracking
     viewCount: t.integer().notNull().default(0),
 
+    // Engagement tracking
+    likesCount: t.integer().notNull().default(0),
+
     // Featured listing (admin-controlled)
     isFeatured: t.boolean().notNull().default(false),
 
@@ -279,6 +285,66 @@ export const listingRelations = relations(listing, ({ one, many }) => ({
     references: [user.id],
   }),
   reservations: many(reservation),
+  likes: many(listingLike),
+  favorites: many(listingFavorite),
+}));
+
+// ============================================================================
+// LISTING LIKES TABLE
+// ============================================================================
+
+export const listingLike = pgTable(
+  "listing_like",
+  (t) => ({
+    id: t.text().primaryKey().$defaultFn(() => crypto.randomUUID()),
+    listingId: t.text().notNull().references(() => listing.id, { onDelete: "cascade" }),
+    userId: t.text().notNull().references(() => user.id, { onDelete: "cascade" }),
+    createdAt: t.timestamp().notNull().defaultNow(),
+  }),
+  (table) => ({
+    userListingUnique: unique("listing_like_user_listing_unique").on(table.userId, table.listingId),
+    listingIdx: index("listing_like_listing_idx").on(table.listingId),
+  }),
+);
+
+export const listingLikeRelations = relations(listingLike, ({ one }) => ({
+  listing: one(listing, {
+    fields: [listingLike.listingId],
+    references: [listing.id],
+  }),
+  user: one(user, {
+    fields: [listingLike.userId],
+    references: [user.id],
+  }),
+}));
+
+// ============================================================================
+// LISTING FAVORITES TABLE
+// ============================================================================
+
+export const listingFavorite = pgTable(
+  "listing_favorite",
+  (t) => ({
+    id: t.text().primaryKey().$defaultFn(() => crypto.randomUUID()),
+    listingId: t.text().notNull().references(() => listing.id, { onDelete: "cascade" }),
+    userId: t.text().notNull().references(() => user.id, { onDelete: "cascade" }),
+    createdAt: t.timestamp().notNull().defaultNow(),
+  }),
+  (table) => ({
+    userListingUnique: unique("listing_favorite_user_listing_unique").on(table.userId, table.listingId),
+    listingIdx: index("listing_favorite_listing_idx").on(table.listingId),
+  }),
+);
+
+export const listingFavoriteRelations = relations(listingFavorite, ({ one }) => ({
+  listing: one(listing, {
+    fields: [listingFavorite.listingId],
+    references: [listing.id],
+  }),
+  user: one(user, {
+    fields: [listingFavorite.userId],
+    references: [user.id],
+  }),
 }));
 
 // ============================================================================
@@ -681,6 +747,14 @@ export const insertBulkImportSchema = createInsertSchema(bulkImport, {
   failureCount: z.number().int().min(0),
 });
 export const selectBulkImportSchema = createSelectSchema(bulkImport);
+
+// Listing like schemas
+export const insertListingLikeSchema = createInsertSchema(listingLike);
+export const selectListingLikeSchema = createSelectSchema(listingLike);
+
+// Listing favorite schemas
+export const insertListingFavoriteSchema = createInsertSchema(listingFavorite);
+export const selectListingFavoriteSchema = createSelectSchema(listingFavorite);
 
 // Export all
 export * from "./auth-schema";

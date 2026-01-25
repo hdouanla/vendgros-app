@@ -19,7 +19,9 @@
     "search": "Buscar",
     "filter": "Filtrar",
     "sort": "Ordenar",
-    "select": "Seleccionar...","viewDetails": "Ver detalles"
+    "select": "Seleccionar...",
+    "viewDetails": "Ver detalles",
+    "loadMore": "Cargar más"
   },
   "auth": {
     "signIn": "Iniciar sesión",
@@ -99,7 +101,11 @@
     "chats": "Mensajes",
     "analytics": "Analíticas",
     "howItWorks": "Cómo funciona",
-    "language": "Idioma"
+    "language": "Idioma",
+    "myFavorites": "Mis favoritos",
+    "myLikes": "Mis me gusta",
+    "liked": "Me gusta",
+    "saved": "Guardados"
   },
   "footer": {
     "tagline": "El mercado de referencia en Canadá para ofertas al por mayor locales. Conectando empresas y compradores para soluciones de inventario más inteligentes.",
@@ -172,7 +178,16 @@
     "reserveNow": "Reservar ahora",
     "redirectToPayment": "Serás redirigido al pago para asegurar tu reserva. El monto restante de {amount} CAD se pagará en la recogida.",
     "goToSignIn": "Ir a iniciar sesión",
-    "inactive": "Inactivo"
+    "inactive": "Inactivo",
+    "publishedAt": "Publicado",
+    "like": "Me gusta",
+    "liked": "Me gusta",
+    "unlike": "Ya no me gusta",
+    "save": "Guardar",
+    "saved": "Guardado",
+    "addToFavorites": "Agregar a favoritos",
+    "removeFromFavorites": "Quitar de favoritos",
+    "browseListings": "Ver anuncios"
   },
   "search": {
     "searchNearbyListings": "Buscar anuncios cercanos",
@@ -426,7 +441,17 @@
     "phoneVerificationRequired": "Verificación de teléfono requerida",
     "phoneVerificationAlertMessage": "Debes verificar tu número de teléfono antes de poder crear anuncios en VendGros.",
     "verifyNow": "Verificar ahora",
-    "addPhoneFirst": "Por favor, agrega tu número de teléfono abajo y guarda, luego verifícalo."
+    "addPhoneFirst": "Por favor, agrega tu número de teléfono abajo y guarda, luego verifícalo.",
+    "viewMyLikes": "Ver mis me gusta",
+    "viewMyFavorites": "Ver mis favoritos",
+    "myLikes": "Mis me gusta",
+    "myFavorites": "Mis favoritos",
+    "likesCount": "{count} anuncios con me gusta",
+    "favoritesCount": "{count} anuncios guardados",
+    "noLikesYet": "Aún no hay anuncios con me gusta",
+    "noLikesDescription": "Cuando te gusten anuncios, aparecerán aquí para fácil acceso.",
+    "noFavoritesYet": "Aún no hay anuncios guardados",
+    "noFavoritesDescription": "Guarda los anuncios que te interesen para encontrarlos fácilmente después."
   },
   "settings": {
     "settings": "Configuración",
@@ -503,6 +528,8 @@
     "ctaTitle": "¿Listo para liquidar tu inventario?",
     "ctaDescription": "Únete a miles de negocios locales que venden productos al por mayor en VendGros hoy.",
     "startSelling": "Comenzar a vender",
-    "learnMore": "Más información"
+    "learnMore": "Más información",
+    "recentlyViewed": "Vistos recientemente",
+    "clearHistory": "Borrar historial"
   }
 }

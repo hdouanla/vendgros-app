@@ -308,6 +308,44 @@ export const listingRouter = createTRPCRouter({
       };
     }),
 
+  // Get multiple listings by IDs (public - for recently viewed)
+  getByIds: publicProcedure
+    .input(z.object({ ids: z.array(z.string()) }))
+    .query(async ({ ctx, input }) => {
+      if (input.ids.length === 0) {
+        return [];
+      }
+
+      // Limit to 10 IDs to prevent abuse
+      const limitedIds = input.ids.slice(0, 10);
+
+      const results = await ctx.db.query.listing.findMany({
+        where: (listings, { and, eq, inArray }) =>
+          and(
+            inArray(listings.id, limitedIds),
+            eq(listings.status, "PUBLISHED"),
+          ),
+        with: {
+          seller: {
+            columns: {
+              id: true,
+              name: true,
+              verificationBadge: true,
+              sellerRatingAverage: true,
+              sellerRatingCount: true,
+            },
+          },
+        },
+      });
+
+      // Sort results to match the order of input IDs
+      const orderedResults = limitedIds
+        .map((id) => results.find((r) => r.id === id))
+        .filter((r): r is NonNullable<typeof r> => r !== undefined);
+
+      return orderedResults;
+    }),
+
   // Get my listings (protected)
   myListings: protectedProcedure.query(async ({ ctx }) => {
     const results = await ctx.db.query.listing.findMany({

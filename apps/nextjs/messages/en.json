@@ -19,7 +19,9 @@
     "search": "Search",
     "filter": "Filter",
     "sort": "Sort",
-    "select": "Select...","viewDetails": "View Details"
+    "select": "Select...",
+    "viewDetails": "View Details",
+    "loadMore": "Load More"
   },
   "auth": {
     "signIn": "Sign In",
@@ -99,7 +101,11 @@
     "chats": "Chats",
     "analytics": "Analytics",
     "howItWorks": "How it works",
-    "language": "Language"
+    "language": "Language",
+    "myFavorites": "My Favorites",
+    "myLikes": "My Likes",
+    "liked": "Liked",
+    "saved": "Saved"
   },
   "footer": {
     "tagline": "Canada's premier marketplace for local bulk deals. Connecting businesses and buyers for smarter inventory solutions.",
@@ -173,7 +179,15 @@
     "redirectToPayment": "You'll be redirected to payment to secure your reservation. The remaining {amount} CAD will be paid at pickup.",
     "goToSignIn": "Go to Sign In",
     "inactive": "Inactive",
-    "publishedAt": "Published"
+    "publishedAt": "Published",
+    "like": "Like",
+    "liked": "Liked",
+    "unlike": "Unlike",
+    "save": "Save",
+    "saved": "Saved",
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites",
+    "browseListings": "Browse Listings"
   },
   "search": {
     "searchNearbyListings": "Search Nearby Listings",
@@ -427,7 +441,17 @@
     "phoneVerificationRequired": "Phone verification required",
     "phoneVerificationAlertMessage": "You must verify your phone number before you can create listings on VendGros.",
     "verifyNow": "Verify now",
-    "addPhoneFirst": "Please add your phone number below and save, then verify it."
+    "addPhoneFirst": "Please add your phone number below and save, then verify it.",
+    "viewMyLikes": "View My Likes",
+    "viewMyFavorites": "View My Favorites",
+    "myLikes": "My Likes",
+    "myFavorites": "My Favorites",
+    "likesCount": "{count} liked listings",
+    "favoritesCount": "{count} saved listings",
+    "noLikesYet": "No liked listings yet",
+    "noLikesDescription": "When you like listings, they will appear here for easy access.",
+    "noFavoritesYet": "No saved listings yet",
+    "noFavoritesDescription": "Save listings you're interested in to easily find them later."
   },
   "settings": {
     "settings": "Settings",
@@ -504,6 +528,8 @@
     "ctaTitle": "Ready to clear your inventory?",
     "ctaDescription": "Join thousands of local businesses selling bulk goods on VendGros today.",
     "startSelling": "Start Selling",
-    "learnMore": "Learn More"
+    "learnMore": "Learn More",
+    "recentlyViewed": "Recently Viewed",
+    "clearHistory": "Clear History"
   }
 }

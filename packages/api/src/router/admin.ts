@@ -47,7 +47,6 @@ export const adminRouter = createTRPCRouter({
               verificationBadge: true,
               ratingAverage: true,
               ratingCount: true,
-              createdAt: true,
             },
           },
         },
@@ -549,5 +548,115 @@ export const adminRouter = createTRPCRouter({
         total,
         hasMore: input.offset + input.limit < total,
       };
+    }),
+
+  // Get all listings for management
+  getAllListings: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().default(50),
+        offset: z.number().default(0),
+        search: z.string().optional(),
+        status: z
+          .enum([
+            "ALL",
+            "DRAFT",
+            "PENDING_REVIEW",
+            "PUBLISHED",
+            "RESERVED",
+            "COMPLETED",
+            "EXPIRED",
+            "CANCELLED",
+          ])
+          .default("ALL"),
+        featured: z.enum(["ALL", "FEATURED", "NOT_FEATURED"]).default("ALL"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      await requireAdmin(ctx);
+
+      let whereConditions = [];
+
+      // Filter by status
+      if (input.status !== "ALL") {
+        whereConditions.push(eq(listing.status, input.status));
+      }
+
+      // Filter by featured
+      if (input.featured === "FEATURED") {
+        whereConditions.push(eq(listing.isFeatured, true));
+      } else if (input.featured === "NOT_FEATURED") {
+        whereConditions.push(eq(listing.isFeatured, false));
+      }
+
+      // Search by title
+      if (input.search) {
+        whereConditions.push(
+          sql`${listing.title} ILIKE ${"%" + input.search + "%"}`,
+        );
+      }
+
+      const listings = await ctx.db.query.listing.findMany({
+        where: whereConditions.length > 0 ? and(...whereConditions) : undefined,
+        with: {
+          seller: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: (listings, { desc }) => [desc(listings.createdAt)],
+        limit: input.limit,
+        offset: input.offset,
+      });
+
+      // Get total count
+      const totalResult =
+        whereConditions.length > 0
+          ? await ctx.db
+              .select({ count: sql<number>`count(*)` })
+              .from(listing)
+              .where(and(...whereConditions))
+          : await ctx.db.select({ count: sql<number>`count(*)` }).from(listing);
+      const total = Number(totalResult[0]?.count ?? 0);
+
+      return {
+        listings,
+        total,
+        hasMore: input.offset + input.limit < total,
+      };
+    }),
+
+  // Toggle featured status for a listing
+  toggleFeatured: protectedProcedure
+    .input(
+      z.object({
+        listingId: z.string(),
+        isFeatured: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await requireAdmin(ctx);
+
+      const existingListing = await ctx.db.query.listing.findFirst({
+        where: (listings, { eq }) => eq(listings.id, input.listingId),
+      });
+
+      if (!existingListing) {
+        throw new Error("Listing not found");
+      }
+
+      const [updated] = await ctx.db
+        .update(listing)
+        .set({
+          isFeatured: input.isFeatured,
+          updatedAt: new Date(),
+        })
+        .where(eq(listing.id, input.listingId))
+        .returning();
+
+      return updated;
     }),
 });

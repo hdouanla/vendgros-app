@@ -172,7 +172,8 @@
     "reserveNow": "Réserver maintenant",
     "redirectToPayment": "Vous serez redirigé vers le paiement pour sécuriser votre réservation. Le montant restant de {amount} CAD sera payé au ramassage.",
     "goToSignIn": "Aller à la connexion",
-    "inactive": "Inactif"
+    "inactive": "Inactif",
+    "publishedAt": "Publié"
   },
   "search": {
     "searchNearbyListings": "Rechercher des annonces à proximité",

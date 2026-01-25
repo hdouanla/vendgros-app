@@ -4,7 +4,6 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
-import { ListingMap } from "~/components/map/listing-map";
 import { ImageLightbox } from "~/components/ui/image-lightbox";
 import { LikeButton } from "~/components/listings/like-button";
 import { FavoriteButton } from "~/components/listings/favorite-button";
@@ -217,45 +216,6 @@ export default function ListingDetailPage({
             <p className="whitespace-pre-wrap text-gray-700">
               {listing.description}
             </p>
-          </div>
-
-          {/* Pickup Information */}
-          <div className="rounded-lg bg-white p-6 shadow-md">
-            <h2 className="mb-4 text-xl font-semibold">
-              {tListing("pickupAddress")}
-            </h2>
-            <p className="mb-4 text-gray-700">{listing.pickupAddress}</p>
-
-            {listing.pickupInstructions && (
-              <>
-                <h3 className="mb-2 font-medium">
-                  {tListing("pickupInstructions")}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {listing.pickupInstructions}
-                </p>
-              </>
-            )}
-
-            {/* Map */}
-            <div className="mt-4">
-              <ListingMap
-                listings={[
-                  {
-                    id: listing.id,
-                    latitude: listing.latitude,
-                    longitude: listing.longitude,
-                    title: listing.title,
-                    pricePerPiece: listing.pricePerPiece,
-                    quantityAvailable: listing.quantityAvailable,
-                    category: listing.category,
-                  },
-                ]}
-                center={[listing.longitude, listing.latitude]}
-                zoom={14}
-                height="300px"
-              />
-            </div>
           </div>
 
           {/* Seller Information */}

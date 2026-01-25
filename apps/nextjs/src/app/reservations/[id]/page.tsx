@@ -371,7 +371,10 @@ export default function ReservationDetailPage({
               <div className="space-y-3 text-sm">
                 <div>
                   <span className="font-medium text-gray-600">Address:</span>
-                  <p className="mt-1">{reservation.listing.pickupAddress}</p>
+                  <p className="mt-1">
+                    {reservation.listing.pickupAddress}
+                    {reservation.listing.postalCode && `, ${reservation.listing.postalCode}`}
+                  </p>
                 </div>
 
                 {reservation.listing.pickupInstructions && (

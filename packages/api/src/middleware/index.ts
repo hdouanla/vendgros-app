@@ -6,12 +6,11 @@
  */
 
 export {
-  createRateLimiter,
   strictRateLimit,
   standardRateLimit,
   generousRateLimit,
-  createIpRateLimiter,
   publicRateLimit,
+  isRedisConfigured,
 } from "./rate-limit";
 
 export {

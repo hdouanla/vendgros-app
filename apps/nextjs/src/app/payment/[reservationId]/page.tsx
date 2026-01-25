@@ -12,6 +12,7 @@ import { PaymentCountdownTimer } from "~/components/reservations/payment-countdo
 const t = (key: string, params?: any) => {
   const translations: Record<string, string> = {
     "common.loading": "Loading...",
+    "common.cancel": "Cancel",
     "errors.notFound": "Reservation not found",
     "payment.payment": "Payment",
     "payment.securePayment": "Secure Payment",
@@ -22,6 +23,10 @@ const t = (key: string, params?: any) => {
     "reservation.totalPrice": "Total Price",
     "reservation.depositAmount": "Deposit Amount (5%)",
     "reservation.balancePayment": `Pay remaining balance at pickup`,
+    "reservation.cancelReservation": "Cancel Reservation",
+    "reservation.cancelConfirmTitle": "Cancel this reservation?",
+    "reservation.cancelConfirmMessage": "Are you sure you want to cancel? This action cannot be undone.",
+    "reservation.cancelling": "Cancelling...",
   };
   return translations[key] || key;
 };
@@ -40,6 +45,13 @@ export default function PaymentPage({
   const router = useRouter();
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+
+  const cancelReservation = api.reservation.cancel.useMutation({
+    onSuccess: () => {
+      router.push("/reservations");
+    },
+  });
 
   const { data: reservation, isLoading: reservationLoading } =
     api.reservation.getById.useQuery({
@@ -215,6 +227,48 @@ export default function PaymentPage({
           Your payment information is encrypted and secure
         </p>
       </div>
+
+      {/* Cancel Button */}
+      <div className="mt-8 text-center">
+        <button
+          onClick={() => setShowCancelModal(true)}
+          className="text-sm text-gray-500 underline hover:text-gray-700"
+        >
+          {t("reservation.cancelReservation")}
+        </button>
+      </div>
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h2 className="mb-4 text-xl font-semibold text-gray-900">
+              {t("reservation.cancelConfirmTitle")}
+            </h2>
+            <p className="mb-6 text-gray-600">
+              {t("reservation.cancelConfirmMessage")}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                disabled={cancelReservation.isPending}
+                className="flex-1 rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                onClick={() => cancelReservation.mutate({ reservationId })}
+                disabled={cancelReservation.isPending}
+                className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {cancelReservation.isPending
+                  ? t("reservation.cancelling")
+                  : t("reservation.cancelReservation")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

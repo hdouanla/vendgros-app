@@ -6,6 +6,60 @@ import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 import Link from "next/link";
 import { RatingModal } from "~/components/ratings/rating-modal";
+import { useQueryClient } from "@tanstack/react-query";
+
+// Component to cancel a pending reservation
+function CancelButton({ reservationId, onSuccess, t }: { reservationId: string; onSuccess: () => void; t: ReturnType<typeof useTranslations<"reservation">> }) {
+  const [showModal, setShowModal] = useState(false);
+  const tCommon = useTranslations("common");
+
+  const cancelMutation = api.reservation.cancel.useMutation({
+    onSuccess: () => {
+      setShowModal(false);
+      onSuccess();
+    },
+  });
+
+  return (
+    <>
+      <button
+        onClick={() => setShowModal(true)}
+        className="whitespace-nowrap rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+      >
+        {t("cancel")}
+      </button>
+
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h2 className="mb-4 text-xl font-semibold text-gray-900">
+              {t("cancelReservationTitle")}
+            </h2>
+            <p className="mb-6 text-gray-600">
+              {t("cancelReservationMessage")}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowModal(false)}
+                disabled={cancelMutation.isPending}
+                className="flex-1 rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+              >
+                {tCommon("cancel")}
+              </button>
+              <button
+                onClick={() => cancelMutation.mutate({ reservationId })}
+                disabled={cancelMutation.isPending}
+                className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {cancelMutation.isPending ? t("cancelling") : t("confirmCancel")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 
 // Component to show rating status for a completed reservation
 function RatingButton({ reservationId, sellerName, t }: { reservationId: string; sellerName: string; t: ReturnType<typeof useTranslations<"reservation">> }) {
@@ -23,10 +77,10 @@ function RatingButton({ reservationId, sellerName, t }: { reservationId: string;
     );
   }
 
-  if (ratingStatus?.myRating) {
+  if (ratingStatus?.ownRating) {
     return (
       <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
-        ✓ {t("rated")} ({ratingStatus.myRating.score}/5)
+        ✓ {t("rated")} ({ratingStatus.ownRating.score}/5)
       </span>
     );
   }
@@ -52,6 +106,7 @@ function RatingButton({ reservationId, sellerName, t }: { reservationId: string;
 
 export default function MyReservationsPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const t = useTranslations("reservation");
   const tCommon = useTranslations("common");
   const [activeTab, setActiveTab] = useState<"active" | "completed" | "other">("active");
@@ -262,12 +317,19 @@ export default function MyReservationsPage() {
                         {t("viewDetails")}
                       </Link>
                       {reservation.status === "PENDING" && (
-                        <Link
-                          href={`/payment/${reservation.id}`}
-                          className="whitespace-nowrap rounded-md border border-green-600 bg-white px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-50"
-                        >
-                          {t("payDeposit")}
-                        </Link>
+                        <>
+                          <Link
+                            href={`/payment/${reservation.id}`}
+                            className="whitespace-nowrap rounded-md border border-green-600 bg-white px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-50"
+                          >
+                            {t("payDeposit")}
+                          </Link>
+                          <CancelButton
+                            reservationId={reservation.id}
+                            onSuccess={() => queryClient.invalidateQueries()}
+                            t={t}
+                          />
+                        </>
                       )}
                       {reservation.status === "CONFIRMED" && (
                         <Link

@@ -288,7 +288,12 @@
     "delivered": "Delivered",
     "rateSeller": "Rate this seller",
     "rateBuyer": "Rate this buyer",
-    "rated": "Rated"
+    "rated": "Rated",
+    "cancel": "Cancel",
+    "cancelReservationTitle": "Cancel this reservation?",
+    "cancelReservationMessage": "Are you sure you want to cancel this reservation? This action cannot be undone.",
+    "confirmCancel": "Yes, Cancel",
+    "cancelling": "Cancelling..."
   },
   "payment": {
     "payment": "Payment",

@@ -36,7 +36,7 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
 
         // Check if user needs email verification
         const session = await authClient.getSession();
-        if (!session?.user?.emailVerified) {
+        if (session.data && !session.data.user?.emailVerified) {
           router.push("/auth/verify-email");
           router.refresh();
         } else {

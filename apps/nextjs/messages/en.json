@@ -195,7 +195,9 @@
     "buyersReviews": "Buyers reviews",
     "forListing": "For listing",
     "noReviewsYet": "No reviews yet",
-    "totalReviews": "total reviews"
+    "totalReviews": "total reviews",
+    "pickupLocation": "Pickup Location",
+    "searchNearby": "Search nearby"
   },
   "search": {
     "searchNearbyListings": "Search Nearby Listings",

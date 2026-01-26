@@ -265,6 +265,60 @@ export default function ListingDetailPage({
             </p>
           </div>
 
+          {/* Pickup Location */}
+          {listing.postalCode && (
+            <div className="rounded-lg bg-white p-6 shadow-md">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-semibold">
+                  {tListing("pickupLocation")}
+                </h2>
+                <Link
+                  href={`/listings/search?lat=${listing.latitude}&lng=${listing.longitude}&radius=10`}
+                  className="inline-flex items-center gap-1 text-sm font-medium text-green-600 hover:text-green-700"
+                >
+                  {tListing("searchNearby")}
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </Link>
+              </div>
+              <div className="flex items-center gap-3">
+                <svg
+                  className="h-6 w-6 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                <span className="text-2xl font-bold text-green-600">
+                  {listing.postalCode}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Listing & Seller Information */}
           <div className="rounded-lg bg-white p-6 shadow-md">
             <div className="space-y-2 text-sm text-gray-600">

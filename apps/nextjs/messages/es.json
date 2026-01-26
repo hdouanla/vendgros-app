@@ -195,7 +195,9 @@
     "buyersReviews": "Opiniones de compradores",
     "forListing": "Para el anuncio",
     "noReviewsYet": "Sin opiniones todavia",
-    "totalReviews": "opiniones en total"
+    "totalReviews": "opiniones en total",
+    "pickupLocation": "Lugar de recogida",
+    "searchNearby": "Buscar cerca"
   },
   "search": {
     "searchNearbyListings": "Buscar anuncios cercanos",

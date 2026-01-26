@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 import { env } from "~/env";
@@ -18,8 +19,11 @@ interface PendingReservation {
 
 export function PendingPaymentAlert() {
   const t = useTranslations("reservation");
-  const tCommon = useTranslations("common");
+  const pathname = usePathname();
   const timeoutMinutes = env.NEXT_PUBLIC_RESERVATION_PAYMENT_TIMEOUT_MINUTES;
+
+  // Don't show modal on payment pages - user is already paying
+  const isOnPaymentPage = pathname?.startsWith("/payment/");
 
   const { data: pendingReservations } = api.reservation.getPendingPayments.useQuery(
     undefined,
@@ -66,8 +70,10 @@ export function PendingPaymentAlert() {
   }, [currentTime, getPaymentDeadline]);
 
   // Check for reservations about to expire (3 minutes or less)
+  // Don't show modal if user is already on a payment page
   useEffect(() => {
     if (!pendingReservations || pendingReservations.length === 0) return;
+    if (isOnPaymentPage) return;
 
     const checkExpiry = () => {
       const threeMinutes = 3 * 60 * 1000;
@@ -86,13 +92,20 @@ export function PendingPaymentAlert() {
     };
 
     checkExpiry();
-  }, [pendingReservations, dismissedIds, currentTime, getPaymentDeadline]);
+  }, [pendingReservations, dismissedIds, currentTime, getPaymentDeadline, isOnPaymentPage]);
 
   // Update countdown timer for modal
   useEffect(() => {
     if (!expiringReservation || !showExpiryModal) return;
     setCountdown(formatTimeRemaining(expiringReservation.createdAt));
   }, [expiringReservation, showExpiryModal, formatTimeRemaining, currentTime]);
+
+  // Close modal if user navigates to payment page
+  useEffect(() => {
+    if (isOnPaymentPage && showExpiryModal) {
+      setShowExpiryModal(false);
+    }
+  }, [isOnPaymentPage, showExpiryModal]);
 
   const handleDismiss = () => {
     if (expiringReservation) {

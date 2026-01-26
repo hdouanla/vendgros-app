@@ -11,6 +11,27 @@ import { FavoriteButton } from "~/components/listings/favorite-button";
 import { ListingCard } from "~/components/listings/listing-card";
 import { useLastVisited } from "~/hooks/use-last-visited";
 
+// Star rating display component
+function StarRating({ rating }: { rating: number }) {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  return (
+    <span className="inline-flex text-yellow-400">
+      {[...Array(fullStars)].map((_, i) => (
+        <span key={`full-${i}`}>★</span>
+      ))}
+      {hasHalfStar && <span>★</span>}
+      {[...Array(emptyStars)].map((_, i) => (
+        <span key={`empty-${i}`} className="text-gray-300">
+          ★
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export default function ListingDetailPage({
   params,
 }: {
@@ -30,6 +51,7 @@ export default function ListingDetailPage({
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
   const [reservationError, setReservationError] = useState<string | null>(null);
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
 
   const { data: session } = api.auth.getSession.useQuery();
   const { data: phoneStatus } = api.phoneVerification.getStatus.useQuery(
@@ -50,6 +72,19 @@ export default function ListingDetailPage({
     },
     { enabled: !!listing?.sellerId }
   );
+
+  // Get seller profile for registration date
+  const { data: sellerProfile } = api.listing.getSellerProfile.useQuery(
+    { sellerId: listing?.sellerId ?? "" },
+    { enabled: !!listing?.sellerId }
+  );
+
+  // Get seller reviews
+  const { data: sellerReviews, isLoading: reviewsLoading } =
+    api.rating.getSellerReviews.useQuery(
+      { sellerId: listing?.sellerId ?? "", limit: 50 },
+      { enabled: !!listing?.sellerId && showReviewsModal }
+    );
 
   const trackView = api.listing.trackView.useMutation();
   const { addVisited } = useLastVisited();
@@ -230,15 +265,53 @@ export default function ListingDetailPage({
             </p>
           </div>
 
-          {/* Listing Information */}
-          {listing.publishedAt && (
-            <div className="rounded-lg bg-white p-6 shadow-md">
-              <div className="text-sm text-gray-600">
-                <span className="font-medium">{tListing("publishedAt")}:</span>{" "}
-                {new Date(listing.publishedAt).toLocaleDateString()}
+          {/* Listing & Seller Information */}
+          <div className="rounded-lg bg-white p-6 shadow-md">
+            <div className="space-y-2 text-sm text-gray-600">
+              {listing.publishedAt && (
+                <div>
+                  <span className="font-medium">{tListing("publishedAt")}:</span>{" "}
+                  {new Date(listing.publishedAt).toLocaleDateString()}
+                </div>
+              )}
+              {sellerProfile?.createdAt && (
+                <div>
+                  <span className="font-medium">{tListing("sellerSince")}:</span>{" "}
+                  {new Date(sellerProfile.createdAt).toLocaleDateString()}
+                </div>
+              )}
+              <div>
+                <span className="font-medium">{tListing("buyersReviews")}:</span>
+                <div className="mt-1 flex items-center gap-2">
+                  <StarRating
+                    rating={
+                      sellerProfile?.sellerRatingAverage ??
+                      listing.seller?.sellerRatingAverage ??
+                      0
+                    }
+                  />
+                  <span className="font-semibold text-gray-900">
+                    {(
+                      sellerProfile?.sellerRatingAverage ??
+                      listing.seller?.sellerRatingAverage ??
+                      0
+                    ).toFixed(1)}
+                    /5
+                  </span>
+                  <span className="text-gray-500">-</span>
+                  <button
+                    onClick={() => setShowReviewsModal(true)}
+                    className="font-medium text-green-600 hover:text-green-700 hover:underline"
+                  >
+                    {sellerProfile?.sellerRatingCount ??
+                      listing.seller?.sellerRatingCount ??
+                      0}{" "}
+                    {tListing("reviews")}
+                  </button>
+                </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Right Column - Purchase Card */}
@@ -593,6 +666,90 @@ export default function ListingDetailPage({
           onIndexChange={setSelectedPhotoIndex}
           alt={listing.title}
         />
+      )}
+
+      {/* Reviews Modal */}
+      {showReviewsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="max-h-[80vh] w-full max-w-lg overflow-hidden rounded-lg bg-white shadow-xl">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b px-6 py-4">
+              <h2 className="text-xl font-semibold">
+                {tListing("buyersReviews")}
+              </h2>
+              <button
+                onClick={() => setShowReviewsModal(false)}
+                className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="max-h-[60vh] overflow-y-auto px-6 py-4">
+              {reviewsLoading ? (
+                <div className="py-8 text-center text-gray-500">
+                  {tCommon("loading")}
+                </div>
+              ) : sellerReviews?.reviews && sellerReviews.reviews.length > 0 ? (
+                <div className="space-y-4">
+                  {sellerReviews.reviews.map((review) => (
+                    <div
+                      key={review.id}
+                      className="border-b border-gray-100 pb-4 last:border-0"
+                    >
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="font-medium text-gray-900">
+                          {review.buyerName}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="mb-2 flex items-center gap-2">
+                        <StarRating rating={review.score} />
+                        <span className="text-sm font-medium text-gray-700">
+                          {review.score}/5
+                        </span>
+                      </div>
+                      {review.comment && (
+                        <p className="text-sm text-gray-600">{review.comment}</p>
+                      )}
+                      {review.listingTitle && (
+                        <p className="mt-1 text-xs text-gray-400">
+                          {tListing("forListing")}: {review.listingTitle}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 text-center text-gray-500">
+                  {tListing("noReviewsYet")}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t px-6 py-4">
+              <div className="text-center text-sm text-gray-500">
+                {sellerReviews?.total ?? 0} {tListing("totalReviews")}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

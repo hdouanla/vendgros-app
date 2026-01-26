@@ -190,7 +190,12 @@
     "browseListings": "Browse Listings",
     "moreFromSeller": "More from this seller",
     "viewAllListings": "View all listings",
-    "verified": "Verified Seller"
+    "verified": "Verified Seller",
+    "sellerSince": "Seller since",
+    "buyersReviews": "Buyers reviews",
+    "forListing": "For listing",
+    "noReviewsYet": "No reviews yet",
+    "totalReviews": "total reviews"
   },
   "search": {
     "searchNearbyListings": "Search Nearby Listings",

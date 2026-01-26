@@ -289,6 +289,30 @@ export const reservationRouter = createTRPCRouter({
     return results;
   }),
 
+  // Get pending reservations awaiting payment (as buyer)
+  getPendingPayments: protectedProcedure.query(async ({ ctx }) => {
+    const results = await ctx.db.query.reservation.findMany({
+      where: (reservations, { and, eq }) =>
+        and(
+          eq(reservations.buyerId, ctx.session.user.id),
+          eq(reservations.status, "PENDING")
+        ),
+      with: {
+        listing: {
+          columns: {
+            id: true,
+            title: true,
+            pricePerPiece: true,
+          },
+        },
+      },
+      // Sort by createdAt ascending - oldest first (closest to payment timeout)
+      orderBy: (reservations, { asc }) => [asc(reservations.createdAt)],
+    });
+
+    return results;
+  }),
+
   // Get reservations for a specific listing (for sellers to check if listing can be edited)
   getByListingId: protectedProcedure
     .input(z.object({ listingId: z.string() }))

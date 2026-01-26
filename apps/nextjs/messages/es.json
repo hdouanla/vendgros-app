@@ -300,7 +300,15 @@
     "cancelReservationTitle": "Cancelar esta reserva?",
     "cancelReservationMessage": "Esta seguro de que desea cancelar esta reserva? Esta accion no se puede deshacer.",
     "confirmCancel": "Si, cancelar",
-    "cancelling": "Cancelando..."
+    "cancelling": "Cancelando...",
+    "pendingPayment": "Pago pendiente",
+    "reservationExpiring": "Reserva a punto de expirar!",
+    "reservationExpiringDesc": "Tu reserva para \"{title}\" esta a punto de expirar. Completa tu pago ahora para asegurar tus articulos.",
+    "timeRemaining": "Tiempo restante",
+    "remindLater": "Recordarme mas tarde",
+    "payNow": "Pagar ahora",
+    "paymentDueIn": "Pago debido en",
+    "paymentTimeExpired": "Tiempo de pago expirado"
   },
   "payment": {
     "payment": "Pago",

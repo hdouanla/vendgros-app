@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { Footer } from "./footer";
+import { ScrollToTop } from "./scroll-to-top";
 
 export function FooterWrapper() {
   const pathname = usePathname();
@@ -11,5 +12,10 @@ export function FooterWrapper() {
     return null;
   }
 
-  return <Footer />;
+  return (
+    <>
+      <Footer />
+      <ScrollToTop />
+    </>
+  );
 }

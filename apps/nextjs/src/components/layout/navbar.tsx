@@ -7,6 +7,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { api } from "~/trpc/react";
 import { locales, localeNames, type Locale } from "~/i18n";
+import { PendingPaymentAlert } from "~/components/reservations/pending-payment-alert";
 
 export function Navbar() {
   const router = useRouter();
@@ -172,7 +173,11 @@ export function Navbar() {
             {isLoading ? (
               <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200"></div>
             ) : session?.user ? (
-              <div className="relative">
+              <>
+                {/* Pending Payment Alert */}
+                <PendingPaymentAlert />
+
+                <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center space-x-2 rounded-full bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
@@ -257,6 +262,7 @@ export function Navbar() {
                   </>
                 )}
               </div>
+              </>
             ) : (
               <div className="flex items-center space-x-2">
                 <Link

@@ -300,7 +300,15 @@
     "cancelReservationTitle": "Annuler cette réservation ?",
     "cancelReservationMessage": "Êtes-vous sûr de vouloir annuler cette réservation ? Cette action est irréversible.",
     "confirmCancel": "Oui, annuler",
-    "cancelling": "Annulation..."
+    "cancelling": "Annulation...",
+    "pendingPayment": "Paiement en attente",
+    "reservationExpiring": "Reservation sur le point d'expirer!",
+    "reservationExpiringDesc": "Votre reservation pour \"{title}\" est sur le point d'expirer. Completez votre paiement maintenant pour securiser vos articles.",
+    "timeRemaining": "Temps restant",
+    "remindLater": "Me rappeler plus tard",
+    "payNow": "Payer maintenant",
+    "paymentDueIn": "Paiement dû dans",
+    "paymentTimeExpired": "Délai de paiement expiré"
   },
   "payment": {
     "payment": "Paiement",

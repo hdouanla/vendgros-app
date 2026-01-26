@@ -3,7 +3,7 @@ import { and, eq, sql } from "@acme/db";
 
 import { rating, reservation, user } from "@acme/db/schema";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
 export const ratingRouter = createTRPCRouter({
   // Submit a rating (blind - hidden until both submit)
@@ -339,6 +339,81 @@ export const ratingRouter = createTRPCRouter({
           score: existingRating.score,
           comment: existingRating.comment,
         } : null,
+      };
+    }),
+
+  // Get public seller reviews (visible to anyone)
+  getSellerReviews: publicProcedure
+    .input(
+      z.object({
+        sellerId: z.string(),
+        limit: z.number().default(20),
+        offset: z.number().default(0),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      // Get ratings where this user was rated AS_SELLER (buyers reviewing the seller)
+      const allRatings = await ctx.db.query.rating.findMany({
+        where: (ratings, { and, eq }) =>
+          and(
+            eq(ratings.ratedId, input.sellerId),
+            eq(ratings.ratingType, "AS_SELLER"),
+          ),
+        with: {
+          rater: {
+            columns: {
+              id: true,
+              name: true,
+            },
+          },
+          reservation: {
+            with: {
+              listing: {
+                columns: {
+                  id: true,
+                  title: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: (ratings, { desc }) => [desc(ratings.createdAt)],
+      });
+
+      // Filter to only include ratings where both parties rated (blind reveal)
+      const visibleRatings = [];
+      for (const ratingItem of allRatings) {
+        const otherRating = await ctx.db.query.rating.findFirst({
+          where: (ratings, { and, eq }) =>
+            and(
+              eq(ratings.reservationId, ratingItem.reservationId),
+              eq(ratings.raterId, input.sellerId),
+            ),
+        });
+
+        // Only show if both rated
+        if (otherRating) {
+          visibleRatings.push(ratingItem);
+        }
+      }
+
+      // Apply pagination
+      const paginatedRatings = visibleRatings.slice(
+        input.offset,
+        input.offset + input.limit,
+      );
+
+      return {
+        reviews: paginatedRatings.map((r: any) => ({
+          id: r.id,
+          score: r.score,
+          comment: r.comment,
+          createdAt: r.createdAt,
+          buyerName: r.rater?.name ?? "Anonymous Buyer",
+          listingTitle: r.reservation?.listing?.title,
+        })),
+        total: visibleRatings.length,
+        hasMore: input.offset + input.limit < visibleRatings.length,
       };
     }),
 });

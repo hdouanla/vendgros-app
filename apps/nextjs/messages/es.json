@@ -190,7 +190,12 @@
     "browseListings": "Ver anuncios",
     "moreFromSeller": "Mas de este vendedor",
     "viewAllListings": "Ver todos los anuncios",
-    "verified": "Vendedor Verificado"
+    "verified": "Vendedor Verificado",
+    "sellerSince": "Vendedor desde",
+    "buyersReviews": "Opiniones de compradores",
+    "forListing": "Para el anuncio",
+    "noReviewsYet": "Sin opiniones todavia",
+    "totalReviews": "opiniones en total"
   },
   "search": {
     "searchNearbyListings": "Buscar anuncios cercanos",

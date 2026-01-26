@@ -249,14 +249,17 @@ export function ListingCard({
 
           {/* Rating and Likes */}
           <div className="mb-1 flex items-center gap-2 text-sm text-gray-600">
-            {ratingAverage !== null && (
-              <div className="flex items-center gap-1">
-                <span className="text-yellow-400">★</span>
-                <span className="font-medium text-gray-700">
-                  {Number(ratingAverage).toFixed(1)}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-1">
+              <span className="text-yellow-400">★</span>
+              <span className="font-medium text-gray-700">
+                {ratingAverage !== null
+                  ? `${Number(ratingAverage).toFixed(1)}/5`
+                  : "—"}
+              </span>
+              <span className="text-gray-500">
+                - {ratingCount} {t("listing.reviews")}
+              </span>
+            </div>
             <div className="flex items-center gap-1 text-gray-500">
               <svg
                 className="h-3.5 w-3.5"

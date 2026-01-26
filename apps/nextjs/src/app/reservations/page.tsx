@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 import Link from "next/link";
 import { RatingModal } from "~/components/ratings/rating-modal";
+import { InlinePaymentCountdown } from "~/components/reservations/inline-payment-countdown";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Component to cancel a pending reservation
@@ -301,10 +302,11 @@ export default function MyReservationsPage() {
                       </div>
 
                       {reservation.status === "PENDING" && (
-                        <div className="mt-3 rounded-md bg-yellow-50 p-3">
-                          <p className="text-sm text-yellow-800">
-                            ⚠️ {t("paymentPending")}
-                          </p>
+                        <div className="mt-3">
+                          <InlinePaymentCountdown
+                            reservationCreatedAt={reservation.createdAt}
+                            reservationId={reservation.id}
+                          />
                         </div>
                       )}
                     </div>

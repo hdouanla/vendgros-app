@@ -300,7 +300,15 @@
     "cancelReservationTitle": "Cancel this reservation?",
     "cancelReservationMessage": "Are you sure you want to cancel this reservation? This action cannot be undone.",
     "confirmCancel": "Yes, Cancel",
-    "cancelling": "Cancelling..."
+    "cancelling": "Cancelling...",
+    "pendingPayment": "Pending Payment",
+    "reservationExpiring": "Reservation Expiring Soon!",
+    "reservationExpiringDesc": "Your reservation for \"{title}\" is about to expire. Complete your payment now to secure your items.",
+    "timeRemaining": "Time Remaining",
+    "remindLater": "Remind Me Later",
+    "payNow": "Pay Now",
+    "paymentDueIn": "Payment due in",
+    "paymentTimeExpired": "Payment time expired"
   },
   "payment": {
     "payment": "Payment",

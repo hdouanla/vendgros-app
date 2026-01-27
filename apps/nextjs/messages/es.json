@@ -556,5 +556,11 @@
     "learnMore": "Más información",
     "recentlyViewed": "Vistos recientemente",
     "clearHistory": "Borrar historial"
+  },
+  "cms": {
+    "contentUnavailable": "Contenido no disponible",
+    "contentUnavailableMessage": "Estamos teniendo problemas para cargar esta página. Por favor, inténtelo más tarde.",
+    "backToHome": "Volver al inicio",
+    "tryAgain": "Intentar de nuevo"
   }
 }

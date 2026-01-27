@@ -283,7 +283,7 @@ export default function MyReservationsPage() {
                         </p>
                         <p>
                           <span className="font-medium">{t("totalPrice")}:</span>{" "}
-                          ${reservation.totalPrice.toFixed(2)} CAD
+                          ${(reservation.totalPrice * 1.05).toFixed(2)} CAD
                         </p>
                         <p>
                           <span className="font-medium">{t("depositPaid")}:</span>{" "}
@@ -292,7 +292,7 @@ export default function MyReservationsPage() {
                         <p>
                           <span className="font-medium">{t("balanceDue")}:</span>{" "}
                           <span className="text-lg font-bold text-green-600">
-                            ${(reservation.totalPrice - reservation.depositAmount).toFixed(2)} CAD
+                            ${reservation.totalPrice.toFixed(2)} CAD
                           </span>
                         </p>
                         <p>

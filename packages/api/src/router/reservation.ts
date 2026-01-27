@@ -473,7 +473,7 @@ export const reservationRouter = createTRPCRouter({
         reservationId: result.id,
         buyerInfo: result.buyer,
         quantity: result.quantityReserved,
-        balanceDue: result.totalPrice - result.depositAmount,
+        balanceDue: result.totalPrice, // Full seller price (service fee is ON TOP, not FROM total)
       };
     }),
 
@@ -522,9 +522,9 @@ export const reservationRouter = createTRPCRouter({
         reservationId: result.id,
         buyerInfo: result.buyer,
         quantity: result.quantityReserved,
-        balanceDue: result.totalPrice - result.depositAmount,
+        balanceDue: result.totalPrice, // Full seller price (service fee is ON TOP, not FROM total)
         totalPrice: result.totalPrice,
-        depositPaid: result.depositAmount,
+        depositPaid: result.depositAmount, // This is the service fee paid
         pricePerPiece: result.listing.pricePerPiece,
         listing: {
           id: result.listing.id,

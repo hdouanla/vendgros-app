@@ -192,7 +192,7 @@ export default function QRScannerPage() {
                     </p>
                   )}
                   <p className="mt-2 text-sm text-gray-700">
-                    <span className="font-medium">${Number(scanResult.pricePerPiece).toFixed(2)}</span>
+                    <span className="font-medium">${(Number(scanResult.pricePerPiece) * 1.05).toFixed(2)}</span>
                     {" "}per piece
                   </p>
                   {scanResult.listing.category && (
@@ -220,13 +220,13 @@ export default function QRScannerPage() {
               <div className="flex justify-between">
                 <span className="text-gray-600">Total Price:</span>
                 <span className="font-medium text-gray-900">
-                  ${Number(scanResult.totalPrice).toFixed(2)} CAD
+                  ${(Number(scanResult.totalPrice) * 1.05).toFixed(2)} CAD
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Deposit Paid (5%):</span>
+                <span className="text-gray-600">Deposit Paid:</span>
                 <span className="font-medium text-green-600">
-                  -${Number(scanResult.depositPaid).toFixed(2)} CAD
+                  ${Number(scanResult.depositPaid).toFixed(2)} CAD
                 </span>
               </div>
               <div className="flex justify-between border-t pt-2">

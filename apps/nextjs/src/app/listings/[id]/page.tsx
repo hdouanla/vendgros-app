@@ -60,9 +60,10 @@ export default function ListingDetailPage({
     { enabled: !!session?.user }
   );
 
-  const { data: listing, isLoading } = api.listing.getById.useQuery({
-    id,
-  });
+  const { data: listing, isLoading } = api.listing.getById.useQuery(
+    { id },
+    { staleTime: 0 } // Always fetch fresh price data
+  );
 
   // Get more listings from the same seller
   const { data: sellerListings } = api.listing.getBySellerId.useQuery(
@@ -167,7 +168,8 @@ export default function ListingDetailPage({
 
   const depositAmount = listing.pricePerPiece * quantityToReserve * 0.05;
   const totalPrice = listing.pricePerPiece * quantityToReserve;
-  const balanceDue = totalPrice - depositAmount;
+  const displayedTotal = totalPrice * 1.05; // Inflated price shown to buyer
+  const balanceDue = totalPrice; // Seller's price (what buyer pays at pickup)
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -413,7 +415,7 @@ export default function ListingDetailPage({
             <div className="mb-6 border-t border-b py-4">
               <div className="mb-2 flex items-baseline justify-between">
                 <span className="text-3xl font-bold text-green-600">
-                  ${listing.pricePerPiece.toFixed(2)}
+                  ${(listing.pricePerPiece * 1.05).toFixed(2)}
                 </span>
                 <span className="text-sm text-gray-600">
                   {tListing("perPiece")}
@@ -500,7 +502,7 @@ export default function ListingDetailPage({
               <div className="flex justify-between">
                 <span className="text-gray-600">{tReservation("totalPrice")}:</span>
                 <span className="font-medium">
-                  ${totalPrice.toFixed(2)} CAD
+                  ${displayedTotal.toFixed(2)} CAD
                 </span>
               </div>
               <div className="flex justify-between border-t pt-2">

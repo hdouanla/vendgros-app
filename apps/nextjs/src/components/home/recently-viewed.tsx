@@ -15,6 +15,7 @@ export function RecentlyViewed() {
     { ids: visitedIds },
     {
       enabled: isLoaded && visitedIds.length > 0,
+      staleTime: 0, // Always fetch fresh price data
     }
   );
 

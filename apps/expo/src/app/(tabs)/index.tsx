@@ -212,7 +212,7 @@ export default function BrowseScreen() {
                     <View className="mt-3 flex-row items-baseline justify-between">
                       <View>
                         <Text className="text-2xl font-bold text-green-600">
-                          ${item.listing.pricePerPiece.toFixed(2)}
+                          ${(item.listing.pricePerPiece * 1.05).toFixed(2)}
                         </Text>
                         <Text className="text-xs text-gray-500">per piece</Text>
                       </View>

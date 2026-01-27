@@ -8,12 +8,12 @@ export const revalidate = 3600; // ISR: regenerate every hour
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
-  const result = await cmsClient.getPageBySlug("privacy-policy", locale);
+  const result = await cmsClient.getPageBySlug("about", locale);
 
   if (!isCMSSuccess(result)) {
     return {
-      title: "Privacy Policy - VendGros",
-      description: "Privacy Policy for VendGros marketplace platform.",
+      title: "About Us - VendGros",
+      description: "Learn about VendGros, Canada's premier bulk marketplace.",
     };
   }
 
@@ -39,9 +39,9 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function PrivacyPolicyPage() {
+export default async function AboutPage() {
   const locale = await getLocale();
-  const result = await cmsClient.getPageBySlug("privacy-policy", locale);
+  const result = await cmsClient.getPageBySlug("about", locale);
 
   if (!isCMSSuccess(result)) {
     return <CMSError />;
@@ -51,8 +51,8 @@ export default async function PrivacyPolicyPage() {
     <CMSPageLayout
       page={result.data}
       relatedLinks={[
-        { href: "/terms-of-service", label: "Terms of Service" },
-        { href: "/cookies", label: "Cookie Policy" },
+        { href: "/careers", label: "Careers" },
+        { href: "/press", label: "Press" },
       ]}
     />
   );

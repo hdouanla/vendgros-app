@@ -25,6 +25,8 @@ export const env = createEnv({
    */
   client: {
     NEXT_PUBLIC_RESERVATION_PAYMENT_TIMEOUT_MINUTES: z.coerce.number().default(10),
+    NEXT_PUBLIC_CMS_URL: z.string().url().default("https://cms.vendgros.ca"),
+    NEXT_PUBLIC_CMS_REVALIDATE_SECONDS: z.coerce.number().default(3600),
   },
   /**
    * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
@@ -32,6 +34,8 @@ export const env = createEnv({
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_RESERVATION_PAYMENT_TIMEOUT_MINUTES: process.env.NEXT_PUBLIC_RESERVATION_PAYMENT_TIMEOUT_MINUTES,
+    NEXT_PUBLIC_CMS_URL: process.env.NEXT_PUBLIC_CMS_URL,
+    NEXT_PUBLIC_CMS_REVALIDATE_SECONDS: process.env.NEXT_PUBLIC_CMS_REVALIDATE_SECONDS,
   },
   skipValidation:
     !!process.env.CI || process.env.npm_lifecycle_event === "lint",

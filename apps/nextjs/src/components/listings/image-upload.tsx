@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { getStorageUrl } from "~/lib/storage";
 
 interface ImageUploadProps {
   photos: string[];
@@ -137,8 +138,8 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
           throw new Error(error.error || `Upload failed for ${file.name}`);
         }
 
-        const { publicUrl } = await uploadResponse.json();
-        return publicUrl;
+        const { path } = await uploadResponse.json();
+        return path;
       });
 
       const uploadedUrls = await Promise.all(uploadPromises);
@@ -230,7 +231,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
                 }`}
               >
                 <img
-                  src={photo}
+                  src={getStorageUrl(photo)}
                   alt={`Photo ${index + 1}`}
                   className="h-full w-full rounded-lg object-cover pointer-events-none"
                 />

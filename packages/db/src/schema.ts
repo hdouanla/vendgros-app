@@ -695,7 +695,8 @@ export const selectUserSchema = createSelectSchema(user);
 export const insertListingSchema = createInsertSchema(listing, {
   title: z.string().min(10).max(200),
   description: z.string().min(50).max(5000),
-  photos: z.array(z.string().url()).min(1).max(10),
+  // Photos can be relative paths or full URLs (for backwards compatibility)
+  photos: z.array(z.string().min(1)).min(1).max(10),
   pricePerPiece: z.number().positive(),
   quantityTotal: z.number().int().positive(),
   maxPerBuyer: z.number().int().positive().optional(),
@@ -736,7 +737,8 @@ export const selectConversationSchema = createSelectSchema(conversation);
 // Message schemas
 export const insertMessageSchema = createInsertSchema(message, {
   content: z.string().min(1).max(5000),
-  attachments: z.array(z.string().url()).max(5).optional(),
+  // Attachments can be relative paths or full URLs (for backwards compatibility)
+  attachments: z.array(z.string().min(1)).max(5).optional(),
 });
 export const selectMessageSchema = createSelectSchema(message);
 

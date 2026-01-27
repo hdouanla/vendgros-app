@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "~/trpc/react";
+import { getStorageUrl } from "~/lib/storage";
 
 export default function MessagesPage() {
   const t = useTranslations();
@@ -51,7 +52,7 @@ export default function MessagesPage() {
                 {/* Listing Image */}
                 {conv.listing.photos && conv.listing.photos[0] && (
                   <img
-                    src={conv.listing.photos[0]}
+                    src={getStorageUrl(conv.listing.photos[0])}
                     alt={conv.listing.title}
                     className="h-16 w-16 rounded object-cover"
                   />

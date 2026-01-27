@@ -3,6 +3,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { randomUUID } from "crypto";
+import { getStoragePath } from "../lib/storage";
 
 // Helper function to create S3 client with current environment variables
 function createS3Client() {
@@ -62,10 +63,9 @@ export const uploadRouter = createTRPCRouter({
       // Generate pre-signed URL (valid for 5 minutes)
       const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
 
-      // Construct public URL for the uploaded image
-      const publicUrl = `${process.env.DO_SPACES_URL}/${key}`;
-
-      return { uploadUrl, publicUrl };
+      // Return the relative path (not the full URL) for storage flexibility
+      // The full URL will be constructed at display time using getStorageUrl()
+      return { uploadUrl, path: key };
     }),
 
   /**
@@ -73,18 +73,18 @@ export const uploadRouter = createTRPCRouter({
    * Only allows deleting images uploaded by the current user
    *
    * @requires Authentication
-   * @param imageUrl - Full public URL of the image to delete
+   * @param imagePath - Relative path or full URL of the image to delete
    */
   deleteImage: protectedProcedure
     .input(
       z.object({
-        imageUrl: z.string().url(),
+        // Accept both relative paths and full URLs (for backwards compatibility)
+        imagePath: z.string().min(1),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Extract key from URL
-      const url = new URL(input.imageUrl);
-      const key = url.pathname.substring(1); // Remove leading slash
+      // Convert URL to relative path if needed
+      const key = getStoragePath(input.imagePath);
 
       // Security check: only allow deleting own images
       // Support both old path (listings/{userId}/) and new path (vendgros/{env}/listings/{userId}/)

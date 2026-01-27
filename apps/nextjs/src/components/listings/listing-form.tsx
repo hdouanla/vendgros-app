@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 import { ImageUpload } from "./image-upload";
+import { getStorageUrl } from "~/lib/storage";
 
 interface ListingFormProps {
   mode?: "create" | "edit";
@@ -409,7 +410,7 @@ export function ListingForm({
                   {initialData.photos.slice(0, 4).map((photo: string, idx: number) => (
                     <img
                       key={idx}
-                      src={photo}
+                      src={getStorageUrl(photo)}
                       alt={`Photo ${idx + 1}`}
                       className="h-16 w-16 rounded object-cover"
                     />

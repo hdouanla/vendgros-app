@@ -121,8 +121,8 @@ export default function ReservationsScreen() {
             {reservations.map((reservation) => {
               const statusConfig = STATUS_CONFIG[reservation.status];
               const depositPaid = reservation.depositAmount > 0;
-              const balanceDue =
-                reservation.totalPrice - reservation.depositAmount;
+              const displayedTotal = reservation.totalPrice * 1.05; // Inflated price shown to buyer
+              const balanceDue = reservation.totalPrice; // Seller's price (what buyer pays at pickup)
 
               return (
                 <Pressable
@@ -223,7 +223,7 @@ export default function ReservationsScreen() {
                           Total Price:
                         </Text>
                         <Text className="text-sm font-semibold text-gray-900">
-                          ${reservation.totalPrice.toFixed(2)}
+                          ${displayedTotal.toFixed(2)}
                         </Text>
                       </View>
                       {depositPaid && (

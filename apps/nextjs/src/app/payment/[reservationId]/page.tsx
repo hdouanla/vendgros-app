@@ -21,7 +21,8 @@ const t = (key: string, params?: any) => {
     "listing.quantity": "Quantity",
     "listing.pricePerPiece": "Price per piece",
     "reservation.totalPrice": "Total Price",
-    "reservation.depositAmount": "Deposit Amount (5%)",
+    "reservation.depositAmount": "Deposit (5%)",
+    "reservation.balanceDue": "Balance Due at Pickup",
     "reservation.balancePayment": `Pay remaining balance at pickup`,
     "reservation.cancelReservation": "Cancel Reservation",
     "reservation.cancelConfirmTitle": "Cancel this reservation?",
@@ -157,14 +158,14 @@ export default function PaymentPage({
               {t("listing.pricePerPiece")}:
             </span>
             <span className="font-medium">
-              ${reservation.listing.pricePerPiece.toFixed(2)} CAD
+              ${(reservation.listing.pricePerPiece * 1.05).toFixed(2)} CAD
             </span>
           </div>
 
           <div className="flex justify-between border-t pt-3">
             <span className="text-gray-600">{t("reservation.totalPrice")}:</span>
             <span className="font-medium">
-              ${reservation.totalPrice.toFixed(2)} CAD
+              ${(reservation.totalPrice * 1.05).toFixed(2)} CAD
             </span>
           </div>
 
@@ -176,15 +177,20 @@ export default function PaymentPage({
               ${reservation.depositAmount.toFixed(2)} CAD
             </span>
           </div>
+
+          <div className="flex justify-between">
+            <span className="text-gray-600">
+              {t("reservation.balanceDue")}:
+            </span>
+            <span className="font-medium">
+              ${reservation.totalPrice.toFixed(2)} CAD
+            </span>
+          </div>
         </div>
 
         <div className="mt-4 rounded-lg bg-blue-50 p-3 text-xs text-blue-900">
           <p>
-            💡 {t("reservation.balancePayment", {
-              amount: (
-                reservation.totalPrice - reservation.depositAmount
-              ).toFixed(2),
-            })}
+            💡 {t("reservation.balancePayment")} (${reservation.totalPrice.toFixed(2)} CAD)
           </p>
         </div>
       </div>

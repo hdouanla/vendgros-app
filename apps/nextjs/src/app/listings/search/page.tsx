@@ -157,6 +157,7 @@ export default function SearchListingsPage() {
       },
       {
         enabled: latitude !== null && longitude !== null,
+        staleTime: 0, // Always fetch fresh price data
       },
     );
 
@@ -174,6 +175,7 @@ export default function SearchListingsPage() {
     {
       enabled: activePostalCode.length > 0,
       retry: false,
+      staleTime: 0, // Always fetch fresh price data
     },
   );
 

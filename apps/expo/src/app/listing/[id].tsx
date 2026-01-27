@@ -80,7 +80,8 @@ export default function ListingDetailScreen() {
   const quantityNum = parseInt(quantity) || 1;
   const depositAmount = listing.pricePerPiece * quantityNum * 0.05;
   const totalPrice = listing.pricePerPiece * quantityNum;
-  const balanceDue = totalPrice - depositAmount;
+  const displayedTotal = totalPrice * 1.05; // Inflated price shown to buyer
+  const balanceDue = totalPrice; // Seller's price (what buyer pays at pickup)
 
   const handleReserve = () => {
     if (quantityNum < 1 || quantityNum > listing.quantityAvailable) {
@@ -144,7 +145,7 @@ export default function ListingDetailScreen() {
           {/* Price */}
           <View className="mt-4 flex-row items-baseline">
             <Text className="text-3xl font-bold text-green-600">
-              ${listing.pricePerPiece.toFixed(2)}
+              ${(listing.pricePerPiece * 1.05).toFixed(2)}
             </Text>
             <Text className="ml-2 text-base text-gray-600">per piece</Text>
           </View>
@@ -280,7 +281,7 @@ export default function ListingDetailScreen() {
                   Price per piece:
                 </Text>
                 <Text className="font-medium text-gray-900">
-                  ${listing.pricePerPiece.toFixed(2)}
+                  ${(listing.pricePerPiece * 1.05).toFixed(2)}
                 </Text>
               </View>
               <View className="mt-2 flex-row justify-between">
@@ -291,12 +292,12 @@ export default function ListingDetailScreen() {
               <View className="flex-row justify-between">
                 <Text className="text-gray-700">Total Price:</Text>
                 <Text className="font-semibold text-gray-900">
-                  ${totalPrice.toFixed(2)}
+                  ${displayedTotal.toFixed(2)}
                 </Text>
               </View>
               <View className="mt-2 flex-row justify-between">
                 <Text className="text-sm text-gray-600">
-                  Deposit (5%):
+                  Deposit:
                 </Text>
                 <Text className="text-sm font-medium text-green-600">
                   ${depositAmount.toFixed(2)}

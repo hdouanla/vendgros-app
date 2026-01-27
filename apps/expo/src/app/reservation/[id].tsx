@@ -138,7 +138,8 @@ export default function ReservationDetailScreen() {
 
   const statusConfig = STATUS_CONFIG[reservation.status];
   const depositPaid = reservation.depositAmount > 0;
-  const balanceDue = reservation.totalPrice - reservation.depositAmount;
+  const displayedTotal = reservation.totalPrice * 1.05; // Inflated price shown to buyer
+  const balanceDue = reservation.totalPrice; // Seller's price (what buyer pays at pickup)
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -240,10 +241,10 @@ export default function ReservationDetailScreen() {
             <View className="flex-row justify-between">
               <Text className="text-gray-700">
                 {reservation.quantityReserved} × $
-                {reservation.listing.pricePerPiece.toFixed(2)}
+                {(reservation.listing.pricePerPiece * 1.05).toFixed(2)}
               </Text>
               <Text className="font-medium text-gray-900">
-                ${reservation.totalPrice.toFixed(2)}
+                ${displayedTotal.toFixed(2)}
               </Text>
             </View>
 
@@ -252,7 +253,7 @@ export default function ReservationDetailScreen() {
                 <View className="my-3 border-t border-gray-300" />
                 <View className="flex-row justify-between">
                   <Text className="text-sm text-gray-600">
-                    Deposit Paid (5%):
+                    Deposit Paid:
                   </Text>
                   <Text className="text-sm font-medium text-green-600">
                     ${reservation.depositAmount.toFixed(2)}
@@ -277,7 +278,7 @@ export default function ReservationDetailScreen() {
                 Total Price:
               </Text>
               <Text className="text-lg font-bold text-gray-900">
-                ${reservation.totalPrice.toFixed(2)}
+                ${displayedTotal.toFixed(2)}
               </Text>
             </View>
           </View>

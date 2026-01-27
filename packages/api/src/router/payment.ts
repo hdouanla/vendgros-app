@@ -162,8 +162,7 @@ export const paymentRouter = createTRPCRouter({
           listingTitle: existingReservation.listing.title,
           quantity: existingReservation.quantityReserved,
           verificationCode: existingReservation.verificationCode,
-          balanceDue:
-            existingReservation.totalPrice - existingReservation.depositAmount,
+          balanceDue: existingReservation.totalPrice, // Full seller price (service fee is ON TOP)
           pickupAddress: existingReservation.listing.pickupAddress,
           pickupInstructions: existingReservation.listing.pickupInstructions ?? undefined,
         });

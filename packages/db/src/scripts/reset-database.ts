@@ -37,6 +37,12 @@ async function resetDatabase() {
     await sql`DROP TABLE IF EXISTS reservation CASCADE;`;
     console.log("✓ Dropped reservation");
 
+    await sql`DROP TABLE IF EXISTS listing_favorite CASCADE;`;
+    console.log("✓ Dropped listing_favorite");
+
+    await sql`DROP TABLE IF EXISTS listing_like CASCADE;`;
+    console.log("✓ Dropped listing_like");
+
     await sql`DROP TABLE IF EXISTS listing CASCADE;`;
     console.log("✓ Dropped listing");
 

@@ -139,7 +139,7 @@ export function ListingCard({
                 size === "large" ? "text-base" : "text-xs"
               }`}
             >
-              ${listing.pricePerPiece.toFixed(2)}
+              ${(listing.pricePerPiece * 1.05).toFixed(2)}
               <span className="ml-1 text-white/80">
                 {t("listing.perPiece")}
               </span>
@@ -238,7 +238,7 @@ export function ListingCard({
           {/* Price */}
           <p className="mb-1">
             <span className="text-lg font-bold text-[#0DAE09]">
-              ${listing.pricePerPiece.toFixed(2)}
+              ${(listing.pricePerPiece * 1.05).toFixed(2)}
             </span>
             <span className="text-sm text-gray-500">{t("home.perPiece")}</span>
           </p>
@@ -339,7 +339,7 @@ export function ListingCard({
         <div className="mb-3 flex items-center justify-between">
           <div>
             <span className="text-2xl font-bold text-green-600">
-              ${listing.pricePerPiece.toFixed(2)}
+              ${(listing.pricePerPiece * 1.05).toFixed(2)}
             </span>
             <span className="ml-1 text-sm text-gray-500">
               / {t("listing.pricePerPiece")}

@@ -27,7 +27,7 @@ interface ReservationCardProps {
 
 export function ReservationCard({ reservation, variant }: ReservationCardProps) {
   const isPending = variant === "pending";
-  const balanceDue = reservation.totalPrice - reservation.depositAmount;
+  const balanceDue = reservation.totalPrice; // Full seller price (service fee is ON TOP, not FROM total)
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
 
   // Check if seller has already rated this buyer (for completed reservations)
@@ -56,7 +56,7 @@ export function ReservationCard({ reservation, variant }: ReservationCardProps) 
               </p>
               <p>
                 <span className="font-medium">Total Price:</span>{" "}
-                ${reservation.totalPrice.toFixed(2)} CAD
+                ${(reservation.totalPrice * 1.05).toFixed(2)} CAD
               </p>
               <p>
                 <span className="font-medium">Deposit Paid:</span>{" "}

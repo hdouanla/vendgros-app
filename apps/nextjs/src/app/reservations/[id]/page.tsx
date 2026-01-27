@@ -22,7 +22,7 @@ const t = (key: string) => {
     "reservation.status.cancelled": "Cancelled",
     "listing.quantity": "Quantity",
     "reservation.totalPrice": "Total Price",
-    "reservation.depositAmount": "Deposit Paid (5%)",
+    "reservation.depositPaid": "Deposit Paid",
     "reservation.balanceDue": "Balance Due at Pickup",
     "reservation.payDeposit": "Pay Deposit Now",
     "listing.seller": "Seller Information",
@@ -338,13 +338,13 @@ export default function ReservationDetailPage({
                   {t("reservation.totalPrice")}:
                 </span>
                 <span className="font-medium">
-                  ${reservation.totalPrice.toFixed(2)} CAD
+                  ${(reservation.totalPrice * 1.05).toFixed(2)} CAD
                 </span>
               </div>
 
               <div className="flex justify-between border-t pt-3">
                 <span className="text-gray-600">
-                  {t("reservation.depositAmount")}:
+                  {t("reservation.depositPaid")}:
                 </span>
                 <span className="font-medium text-green-600">
                   ${reservation.depositAmount.toFixed(2)} CAD
@@ -356,8 +356,7 @@ export default function ReservationDetailPage({
                   {t("reservation.balanceDue")}:
                 </span>
                 <span className="text-xl font-bold">
-                  ${(reservation.totalPrice - reservation.depositAmount).toFixed(2)}{" "}
-                  CAD
+                  ${reservation.totalPrice.toFixed(2)} CAD
                 </span>
               </div>
             </div>
@@ -528,7 +527,7 @@ export default function ReservationDetailPage({
                 <li>Pay the deposit of ${reservation.depositAmount.toFixed(2)} CAD</li>
                 <li>Receive your pickup QR code</li>
                 <li>Pick up your items before the deadline</li>
-                <li>Pay the remaining balance at pickup</li>
+                <li>Pay the remaining balance (${reservation.totalPrice.toFixed(2)} CAD) at pickup</li>
               </ol>
 
               <button
@@ -599,8 +598,7 @@ export default function ReservationDetailPage({
                   Show this QR code or verification code to the seller at pickup
                 </li>
                 <li>
-                  Pay the balance of ${(reservation.totalPrice - reservation.depositAmount).toFixed(2)}{" "}
-                  CAD in person
+                  Pay the remaining balance of ${reservation.totalPrice.toFixed(2)} CAD
                 </li>
                 <li>Collect your items</li>
                 <li>Rate your experience after pickup</li>
@@ -639,8 +637,7 @@ export default function ReservationDetailPage({
                   Ask the buyer for their verification code or scan their QR code
                 </li>
                 <li>
-                  Collect the balance of ${(reservation.totalPrice - reservation.depositAmount).toFixed(2)}{" "}
-                  CAD from the buyer
+                  Collect the remaining balance of ${reservation.totalPrice.toFixed(2)} CAD from the buyer
                 </li>
                 <li>Hand over the items</li>
                 <li>Rate your experience with the buyer</li>

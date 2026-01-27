@@ -85,7 +85,8 @@ export function ListingForm({
     description: initialData?.description ?? "",
     category: initialData?.category ?? "",
     pricePerPiece: initialData?.pricePerPiece ?? "",
-    quantityTotal: initialData?.quantityTotal ?? "",
+    quantityTotal: initialData?.quantityTotal ?? MIN_LISTING_QUANTITY.toString(),
+    minPerBuyer: initialData?.minPerBuyer ?? "1",
     maxPerBuyer: initialData?.maxPerBuyer ?? "",
     pickupAddress: initialData?.pickupAddress ?? "",
     postalCode: initialData?.postalCode ?? "",
@@ -163,6 +164,22 @@ export function ListingForm({
       newErrors.quantityTotal = t("errors.minValue", { min: MIN_LISTING_QUANTITY });
     }
 
+    // Validate minPerBuyer and maxPerBuyer constraints
+    const minPerBuyer = formData.minPerBuyer ? parseInt(formData.minPerBuyer) : null;
+    const maxPerBuyer = formData.maxPerBuyer ? parseInt(formData.maxPerBuyer) : null;
+
+    if (minPerBuyer && maxPerBuyer && minPerBuyer >= maxPerBuyer) {
+      newErrors.minPerBuyer = "Minimum must be less than maximum";
+    }
+
+    if (minPerBuyer && !isNaN(quantity) && minPerBuyer > quantity) {
+      newErrors.minPerBuyer = "Cannot exceed total quantity";
+    }
+
+    if (maxPerBuyer && !isNaN(quantity) && maxPerBuyer > quantity) {
+      newErrors.maxPerBuyer = "Cannot exceed total quantity";
+    }
+
     if (!formData.pickupAddress) {
       newErrors.pickupAddress = t("errors.required");
     }
@@ -195,6 +212,7 @@ export function ListingForm({
       category: formData.category,
       pricePerPiece: parseFloat(formData.pricePerPiece),
       quantityTotal: parseInt(formData.quantityTotal),
+      minPerBuyer: parseInt(formData.minPerBuyer) || 1,
       maxPerBuyer: formData.maxPerBuyer
         ? parseInt(formData.maxPerBuyer)
         : undefined,
@@ -558,7 +576,7 @@ export function ListingForm({
       </div>
 
       {/* Price and Quantity */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div>
           <label htmlFor="pricePerPiece" className="block text-sm font-medium">
             {t("listing.pricePerPiece")} ({process.env.NEXT_PUBLIC_CURRENCY || "CAD"}) *
@@ -588,12 +606,46 @@ export function ListingForm({
             name="quantityTotal"
             value={formData.quantityTotal}
             onChange={handleChange}
+            onBlur={(e) => {
+              const val = parseInt(e.target.value);
+              if (isNaN(val) || val < MIN_LISTING_QUANTITY) {
+                setFormData(prev => ({ ...prev, quantityTotal: MIN_LISTING_QUANTITY.toString() }));
+              }
+            }}
             min={MIN_LISTING_QUANTITY}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
           />
           <p className="mt-1 text-xs text-gray-500">Minimum {MIN_LISTING_QUANTITY} units</p>
           {errors.quantityTotal && (
             <p className="mt-1 text-sm text-red-600">{errors.quantityTotal}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Min/Max Per Buyer */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div>
+          <label htmlFor="minPerBuyer" className="block text-sm font-medium">
+            {t("listing.minPerBuyer")}
+          </label>
+          <input
+            type="number"
+            id="minPerBuyer"
+            name="minPerBuyer"
+            value={formData.minPerBuyer}
+            onChange={handleChange}
+            onBlur={(e) => {
+              const val = parseInt(e.target.value);
+              if (isNaN(val) || val < 1) {
+                setFormData(prev => ({ ...prev, minPerBuyer: "1" }));
+              }
+            }}
+            min="1"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+          />
+          <p className="mt-1 text-xs text-gray-500">Minimum pieces buyers must reserve</p>
+          {errors.minPerBuyer && (
+            <p className="mt-1 text-sm text-red-600">{errors.minPerBuyer}</p>
           )}
         </div>
 
@@ -609,7 +661,12 @@ export function ListingForm({
             onChange={handleChange}
             min="1"
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+            placeholder="Optional"
           />
+          <p className="mt-1 text-xs text-gray-500">Maximum pieces per buyer</p>
+          {errors.maxPerBuyer && (
+            <p className="mt-1 text-sm text-red-600">{errors.maxPerBuyer}</p>
+          )}
         </div>
       </div>
 

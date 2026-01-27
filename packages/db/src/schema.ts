@@ -231,6 +231,7 @@ export const listing = pgTable(
     pricePerPiece: t.doublePrecision().notNull(),
     quantityTotal: t.integer().notNull(),
     quantityAvailable: t.integer().notNull(),
+    minPerBuyer: t.integer(), // Optional minimum per reservation
     maxPerBuyer: t.integer(), // Optional purchase limit
 
     pickupAddress: t.text().notNull(),
@@ -699,6 +700,7 @@ export const insertListingSchema = createInsertSchema(listing, {
   photos: z.array(z.string().min(1)).min(1).max(10),
   pricePerPiece: z.number().positive(),
   quantityTotal: z.number().int().positive(),
+  minPerBuyer: z.number().int().positive().optional(),
   maxPerBuyer: z.number().int().positive().optional(),
 });
 

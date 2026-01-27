@@ -147,6 +147,7 @@
     "pricePerPiece": "Precio por pieza",
     "quantity": "Cantidad",
     "quantityAvailable": "Disponible",
+    "minPerBuyer": "Mínimo por comprador",
     "maxPerBuyer": "Máximo por comprador",
     "pickupAddress": "Dirección de recogida",
     "pickupInstructions": "Instrucciones de recogida",
@@ -257,6 +258,7 @@
     "reservationFailed": "Error al crear la reserva",
     "minimumDepositRequired": "El depósito mínimo de reserva es de $1.00 CAD. Por favor aumenta la cantidad.",
     "minimumDepositTitle": "Depósito mínimo requerido",
+    "minimumRequired": "Mínimo {min} piezas requeridas",
     "pickupBy": "Recoger antes del {date}",
     "expiresIn": "Expira en {hours} horas",
     "status": {
@@ -513,6 +515,7 @@
     "maxLength": "Debe tener como máximo {max} caracteres",
     "minValue": "Debe ser al menos {min}",
     "maxValue": "Debe ser como máximo {max}",
+    "minGreaterThanMax": "El mínimo debe ser menor que el máximo",
     "networkError": "Error de red. Inténtelo de nuevo.",
     "unauthorized": "No está autorizado para realizar esta acción",
     "notFound": "No encontrado",

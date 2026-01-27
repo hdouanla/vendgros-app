@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 import Link from "next/link";
 import { ReservationCard } from "~/components/seller/reservation-card";
+import { getStorageUrl } from "~/lib/storage";
 
 export default function SellerDashboardPage() {
   const router = useRouter();
@@ -243,7 +244,7 @@ export default function SellerDashboardPage() {
                           <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200">
                             {listing.photos && listing.photos.length > 0 ? (
                               <img
-                                src={listing.photos[0]}
+                                src={getStorageUrl(listing.photos[0])}
                                 alt={listing.title}
                                 className="h-full w-full object-cover"
                               />

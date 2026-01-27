@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { api } from "~/trpc/react";
+import { getStorageUrl } from "~/lib/storage";
 
 export default function ChatDetailPage({
   params,
@@ -160,7 +161,7 @@ export default function ChatDetailPage({
             <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
               {chat.listing.photos?.[0] ? (
                 <Image
-                  src={chat.listing.photos[0]}
+                  src={getStorageUrl(chat.listing.photos[0])}
                   alt={chat.listing.title}
                   width={48}
                   height={48}

@@ -87,10 +87,9 @@ export async function POST(request: NextRequest) {
 
     await s3Client.send(command);
 
-    // Construct public URL
-    const publicUrl = `${process.env.DO_SPACES_URL}/${key}`;
-
-    return NextResponse.json({ publicUrl });
+    // Return the relative path (not the full URL) for storage flexibility
+    // The full URL will be constructed at display time using getStorageUrl()
+    return NextResponse.json({ path: key });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json(

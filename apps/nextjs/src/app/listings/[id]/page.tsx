@@ -10,6 +10,7 @@ import { LikeButton } from "~/components/listings/like-button";
 import { FavoriteButton } from "~/components/listings/favorite-button";
 import { ListingCard } from "~/components/listings/listing-card";
 import { useLastVisited } from "~/hooks/use-last-visited";
+import { getStorageUrl } from "~/lib/storage";
 
 // Star rating display component
 function StarRating({ rating }: { rating: number }) {
@@ -202,7 +203,7 @@ export default function ListingDetailPage({
                 className="group relative h-full w-full cursor-zoom-in"
               >
                 <img
-                  src={listing.photos[selectedPhotoIndex]}
+                  src={getStorageUrl(listing.photos[selectedPhotoIndex] ?? "")}
                   alt={listing.title}
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
@@ -246,7 +247,7 @@ export default function ListingDetailPage({
                   }`}
                 >
                   <img
-                    src={photo}
+                    src={getStorageUrl(photo)}
                     alt={`Photo ${idx + 1}`}
                     className="h-full w-full object-cover"
                   />

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { api } from "~/trpc/react";
+import { getStorageUrl } from "~/lib/storage";
 
 type Notification = {
   type: "success" | "error";
@@ -254,7 +255,7 @@ export default function AdminListingsPage() {
                       {listing.photos && listing.photos[0] && (
                         <div className="relative mr-3 h-10 w-10 flex-shrink-0 overflow-hidden rounded">
                           <Image
-                            src={listing.photos[0]}
+                            src={getStorageUrl(listing.photos[0])}
                             alt={listing.title}
                             fill
                             className="object-cover"

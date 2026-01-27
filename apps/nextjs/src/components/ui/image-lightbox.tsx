@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useCallback, useState } from "react";
+import { getStorageUrl } from "~/lib/storage";
 
 interface ImageLightboxProps {
   images: string[];
@@ -149,7 +150,7 @@ export function ImageLightbox({
           onClick={(e) => e.stopPropagation()}
         >
           <img
-            src={images[currentIndex]}
+            src={getStorageUrl(images[currentIndex] ?? "")}
             alt={`${alt} - Photo ${currentIndex + 1}`}
             className="max-h-full max-w-full object-contain"
           />
@@ -172,7 +173,7 @@ export function ImageLightbox({
                 }`}
               >
                 <img
-                  src={photo}
+                  src={getStorageUrl(photo)}
                   alt={`Thumbnail ${idx + 1}`}
                   className="h-full w-full object-cover"
                 />
@@ -229,7 +230,7 @@ export function ImageGallery({
             className={`${sizeClasses[thumbnailSize]} flex-shrink-0 overflow-hidden rounded object-cover transition-opacity hover:opacity-80`}
           >
             <img
-              src={photo}
+              src={getStorageUrl(photo)}
               alt={`${alt} ${idx + 1}`}
               className="h-full w-full object-cover"
             />
@@ -298,7 +299,7 @@ export function ImageGalleryWithPreview({
           className="group relative h-full w-full cursor-zoom-in"
         >
           <img
-            src={images[selectedIndex]}
+            src={getStorageUrl(images[selectedIndex] ?? "")}
             alt={alt}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
@@ -337,7 +338,7 @@ export function ImageGalleryWithPreview({
               }`}
             >
               <img
-                src={photo}
+                src={getStorageUrl(photo)}
                 alt={`${alt} ${idx + 1}`}
                 className="h-full w-full object-cover"
               />

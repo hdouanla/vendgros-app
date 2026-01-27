@@ -11,14 +11,12 @@ export function Footer() {
     company: [
       { label: t("aboutUs"), href: "/about" },
       { label: t("careers"), href: "/careers" },
-      { label: t("press"), href: "/press" },
-      { label: t("blog"), href: "/blog" },
+      { label: t("contactUs"), href: "/contact" },
     ],
     support: [
       { label: t("helpCenter"), href: "/help" },
       { label: t("safetyGuidelines"), href: "/safety" },
       { label: t("sellingFees"), href: "/fees" },
-      { label: t("contactUs"), href: "/contact" },
     ],
     legal: [
       { label: t("termsOfService"), href: "/terms-of-service" },

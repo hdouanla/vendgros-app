@@ -147,6 +147,7 @@
     "pricePerPiece": "Price per Piece",
     "quantity": "Quantity",
     "quantityAvailable": "Available",
+    "minPerBuyer": "Min per Buyer",
     "maxPerBuyer": "Max per Buyer",
     "pickupAddress": "Pickup Address",
     "pickupInstructions": "Pickup Instructions",
@@ -257,6 +258,7 @@
     "reservationFailed": "Failed to create reservation",
     "minimumDepositRequired": "The minimum reservation deposit is $1.00 CAD. Please increase your quantity.",
     "minimumDepositTitle": "Minimum Deposit Required",
+    "minimumRequired": "Minimum {min} pieces required",
     "pickupBy": "Pickup by {date}",
     "expiresIn": "Expires in {hours} hours",
     "status": {
@@ -513,6 +515,7 @@
     "maxLength": "Must be at most {max} characters",
     "minValue": "Must be at least {min}",
     "maxValue": "Must be at most {max}",
+    "minGreaterThanMax": "Minimum must be less than maximum",
     "networkError": "Network error. Please try again.",
     "unauthorized": "You are not authorized to perform this action",
     "notFound": "Not found",

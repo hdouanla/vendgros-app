@@ -65,6 +65,16 @@ export default function ListingDetailPage({
     { staleTime: 0 } // Always fetch fresh price data
   );
 
+  // Update quantity when listing loads - use minPerBuyer or quantityAvailable if lower
+  useEffect(() => {
+    if (listing) {
+      const effectiveMin = listing.minPerBuyer && listing.minPerBuyer > 1
+        ? Math.min(listing.minPerBuyer, listing.quantityAvailable)
+        : 1;
+      setQuantityToReserve(effectiveMin);
+    }
+  }, [listing?.minPerBuyer, listing?.quantityAvailable]);
+
   // Get more listings from the same seller
   const { data: sellerListings } = api.listing.getBySellerId.useQuery(
     {
@@ -429,6 +439,14 @@ export default function ListingDetailPage({
                     {listing.quantityAvailable} {tListing("units")}
                   </span>
                 </div>
+                {listing.minPerBuyer && (
+                  <div className="flex justify-between">
+                    <span>{tListing("minPerBuyer")}:</span>
+                    <span className="font-medium">
+                      {listing.minPerBuyer} {tListing("units")}
+                    </span>
+                  </div>
+                )}
                 {listing.maxPerBuyer && (
                   <div className="flex justify-between">
                     <span>{tListing("maxPerBuyer")}:</span>
@@ -473,28 +491,38 @@ export default function ListingDetailPage({
               >
                 {tListing("quantity")}
               </label>
-              <input
-                type="number"
-                id="quantity"
-                value={quantityToReserve}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  if (val > 0 && val <= listing.quantityAvailable) {
-                    if (listing.maxPerBuyer && val > listing.maxPerBuyer) {
-                      setQuantityToReserve(listing.maxPerBuyer);
-                    } else {
-                      setQuantityToReserve(val);
-                    }
-                  }
-                }}
-                min="1"
-                max={
-                  listing.maxPerBuyer
-                    ? Math.min(listing.maxPerBuyer, listing.quantityAvailable)
-                    : listing.quantityAvailable
-                }
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-              />
+              {(() => {
+                // If available < minPerBuyer, allow buying what's left
+                const effectiveMin = listing.minPerBuyer
+                  ? Math.min(listing.minPerBuyer, listing.quantityAvailable)
+                  : 1;
+                const effectiveMax = listing.maxPerBuyer
+                  ? Math.min(listing.maxPerBuyer, listing.quantityAvailable)
+                  : listing.quantityAvailable;
+                return (
+                  <>
+                    <input
+                      type="number"
+                      id="quantity"
+                      value={quantityToReserve}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (val >= effectiveMin && val <= effectiveMax) {
+                          setQuantityToReserve(val);
+                        }
+                      }}
+                      min={effectiveMin}
+                      max={effectiveMax}
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+                    />
+                    {listing.minPerBuyer && listing.minPerBuyer > 1 && (
+                      <p className="mt-1 text-xs text-amber-600">
+                        {tReservation("minimumRequired", { min: effectiveMin })}
+                      </p>
+                    )}
+                  </>
+                );
+              })()}
             </div>
 
             {/* Price Breakdown */}

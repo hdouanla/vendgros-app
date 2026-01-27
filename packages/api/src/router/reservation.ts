@@ -88,6 +88,13 @@ export const reservationRouter = createTRPCRouter({
       }
 
       if (
+        targetListing.minPerBuyer &&
+        input.quantity < targetListing.minPerBuyer
+      ) {
+        throw new Error(`Minimum ${targetListing.minPerBuyer} pieces required`);
+      }
+
+      if (
         targetListing.maxPerBuyer &&
         input.quantity > targetListing.maxPerBuyer
       ) {

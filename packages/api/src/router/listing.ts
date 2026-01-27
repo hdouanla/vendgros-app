@@ -24,6 +24,7 @@ export const listingRouter = createTRPCRouter({
         photos: true,
         pricePerPiece: true,
         quantityTotal: true,
+        minPerBuyer: true,
         maxPerBuyer: true,
         pickupAddress: true,
         pickupInstructions: true,
@@ -59,6 +60,28 @@ export const listingRouter = createTRPCRouter({
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: `Minimum quantity is ${MIN_LISTING_QUANTITY} units`,
+        });
+      }
+
+      // Validate minPerBuyer and maxPerBuyer constraints
+      if (input.minPerBuyer && input.maxPerBuyer && input.minPerBuyer >= input.maxPerBuyer) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Minimum per buyer must be less than maximum per buyer",
+        });
+      }
+
+      if (input.minPerBuyer && input.minPerBuyer > input.quantityTotal) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Minimum per buyer cannot exceed total quantity",
+        });
+      }
+
+      if (input.maxPerBuyer && input.maxPerBuyer > input.quantityTotal) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Maximum per buyer cannot exceed total quantity",
         });
       }
 
@@ -101,8 +124,10 @@ export const listingRouter = createTRPCRouter({
         throw new Error("Not authorized");
       }
 
-      if (existingListing.status !== "DRAFT") {
-        throw new Error("Only draft listings can be submitted for review");
+      // Allow resubmission for DRAFT, PENDING_REVIEW (after edits), and PUBLISHED listings
+      const allowedStatuses = ["DRAFT", "PENDING_REVIEW", "PUBLISHED"];
+      if (!allowedStatuses.includes(existingListing.status)) {
+        throw new Error("This listing cannot be submitted for review");
       }
 
       // Always require manual admin approval
@@ -136,6 +161,7 @@ export const listingRouter = createTRPCRouter({
             pricePerPiece: true,
             quantityTotal: true,
             quantityAvailable: true,
+            minPerBuyer: true,
             maxPerBuyer: true,
             pickupAddress: true,
             pickupInstructions: true,
@@ -191,6 +217,32 @@ export const listingRouter = createTRPCRouter({
             message: `Minimum quantity is ${MIN_LISTING_QUANTITY} units`,
           });
         }
+      }
+
+      // Validate minPerBuyer and maxPerBuyer constraints
+      const effectiveMinPerBuyer = input.data.minPerBuyer ?? existingListing.minPerBuyer;
+      const effectiveMaxPerBuyer = input.data.maxPerBuyer ?? existingListing.maxPerBuyer;
+      const effectiveQuantityTotal = input.data.quantityTotal ?? existingListing.quantityTotal;
+
+      if (effectiveMinPerBuyer && effectiveMaxPerBuyer && effectiveMinPerBuyer >= effectiveMaxPerBuyer) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Minimum per buyer must be less than maximum per buyer",
+        });
+      }
+
+      if (effectiveMinPerBuyer && effectiveMinPerBuyer > effectiveQuantityTotal) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Minimum per buyer cannot exceed total quantity",
+        });
+      }
+
+      if (effectiveMaxPerBuyer && effectiveMaxPerBuyer > effectiveQuantityTotal) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Maximum per buyer cannot exceed total quantity",
+        });
       }
 
       // Check if content was changed (requires re-moderation)
@@ -591,6 +643,7 @@ export const listingRouter = createTRPCRouter({
           pricePerPiece: existingListing.pricePerPiece,
           quantityTotal: existingListing.quantityTotal,
           quantityAvailable: existingListing.quantityTotal, // Reset to total
+          minPerBuyer: existingListing.minPerBuyer,
           maxPerBuyer: existingListing.maxPerBuyer,
           pickupAddress: existingListing.pickupAddress,
           pickupInstructions: existingListing.pickupInstructions,

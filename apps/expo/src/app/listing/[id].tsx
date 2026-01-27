@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -32,6 +32,16 @@ export default function ListingDetailScreen() {
       enabled: !!id,
     }
   );
+
+  // Update quantity when listing loads - use minPerBuyer or quantityAvailable if lower
+  React.useEffect(() => {
+    if (listing) {
+      const effectiveMin = listing.minPerBuyer && listing.minPerBuyer > 1
+        ? Math.min(listing.minPerBuyer, listing.quantityAvailable)
+        : 1;
+      setQuantity(effectiveMin.toString());
+    }
+  }, [listing?.minPerBuyer, listing?.quantityAvailable]);
 
   // Create reservation mutation
   const createReservation = useMutation(
@@ -84,8 +94,20 @@ export default function ListingDetailScreen() {
   const balanceDue = totalPrice; // Seller's price (what buyer pays at pickup)
 
   const handleReserve = () => {
-    if (quantityNum < 1 || quantityNum > listing.quantityAvailable) {
-      Alert.alert("Invalid Quantity", "Please enter a valid quantity");
+    // If available < minPerBuyer, allow buying what's left
+    const effectiveMin = listing.minPerBuyer
+      ? Math.min(listing.minPerBuyer, listing.quantityAvailable)
+      : 1;
+    const effectiveMax = listing.maxPerBuyer
+      ? Math.min(listing.maxPerBuyer, listing.quantityAvailable)
+      : listing.quantityAvailable;
+
+    if (quantityNum < effectiveMin) {
+      Alert.alert("Invalid Quantity", `Minimum ${effectiveMin} pieces required`);
+      return;
+    }
+    if (quantityNum > effectiveMax) {
+      Alert.alert("Invalid Quantity", `Maximum ${effectiveMax} per buyer`);
       return;
     }
 
@@ -160,10 +182,19 @@ export default function ListingDetailScreen() {
                 {listing.quantityAvailable} / {listing.quantityTotal}
               </Text>
             </View>
-            {listing.maxPerBuyer && (
-              <Text className="mt-2 text-xs text-gray-500">
-                Max {listing.maxPerBuyer} per buyer
-              </Text>
+            {(listing.minPerBuyer || listing.maxPerBuyer) && (
+              <View className="mt-2">
+                {listing.minPerBuyer && (
+                  <Text className="text-xs text-amber-600">
+                    Min {Math.min(listing.minPerBuyer, listing.quantityAvailable)} per buyer
+                  </Text>
+                )}
+                {listing.maxPerBuyer && (
+                  <Text className="text-xs text-gray-500">
+                    Max {Math.min(listing.maxPerBuyer, listing.quantityAvailable)} per buyer
+                  </Text>
+                )}
+              </View>
             )}
           </View>
 

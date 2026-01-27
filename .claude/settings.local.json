@@ -56,7 +56,8 @@
       "Bash(dotenv -e ../../.env.local -- next dev:*)",
       "WebSearch",
       "Bash(npm view:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(npx dotenv:*)"
     ]
   }
 }

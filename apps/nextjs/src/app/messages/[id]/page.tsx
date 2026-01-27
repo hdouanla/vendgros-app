@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
+import { getStorageUrl } from "~/lib/storage";
 
 export default function ChatPage() {
   const t = useTranslations();
@@ -119,7 +120,7 @@ export default function ChatPage() {
             {currentConversation.listing.photos &&
               currentConversation.listing.photos[0] && (
                 <img
-                  src={currentConversation.listing.photos[0]}
+                  src={getStorageUrl(currentConversation.listing.photos[0])}
                   alt={currentConversation.listing.title}
                   className="h-12 w-12 rounded object-cover"
                 />

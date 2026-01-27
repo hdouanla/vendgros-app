@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { getStorageUrl } from "~/lib/storage";
 import { LikeButton } from "./like-button";
 import { FavoriteButton } from "./favorite-button";
 
@@ -66,9 +67,9 @@ export function ListingCard({
   const ratingCount =
     listing.seller?.ratingCount ?? listing.seller?.sellerRatingCount ?? 0;
 
-  const imageUrl =
-    listing.photos[0] ??
-    "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600";
+  const imageUrl = listing.photos[0]
+    ? getStorageUrl(listing.photos[0])
+    : "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600";
 
   // Overlay variant - content overlaid on image with gradient
   if (variant === "overlay") {

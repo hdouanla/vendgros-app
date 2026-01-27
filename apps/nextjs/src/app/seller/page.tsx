@@ -31,7 +31,6 @@ export default function SellerDashboardPage() {
     {
       enabled: !!session?.user,
       refetchOnMount: true,
-      staleTime: 0,
     }
   );
 
@@ -40,7 +39,6 @@ export default function SellerDashboardPage() {
     api.reservation.getPendingPickups.useQuery(undefined, {
       enabled: !!session?.user,
       refetchOnMount: true,
-      staleTime: 0,
     });
 
   // Fetch completed reservations (delivered orders)
@@ -48,7 +46,6 @@ export default function SellerDashboardPage() {
     api.reservation.getCompletedPickups.useQuery(undefined, {
       enabled: !!session?.user,
       refetchOnMount: true,
-      staleTime: 0,
     });
 
   if (sessionLoading || !session?.user) {

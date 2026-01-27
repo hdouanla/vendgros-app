@@ -60,10 +60,7 @@ export default function ListingDetailPage({
     { enabled: !!session?.user }
   );
 
-  const { data: listing, isLoading } = api.listing.getById.useQuery(
-    { id },
-    { staleTime: 0 } // Always fetch fresh price data
-  );
+  const { data: listing, isLoading } = api.listing.getById.useQuery({ id });
 
   // Update quantity when listing loads - use minPerBuyer or quantityAvailable if lower
   useEffect(() => {

@@ -119,7 +119,6 @@ export default function MyReservationsPage() {
     api.reservation.myReservations.useQuery(undefined, {
       enabled: !!session?.user,
       refetchOnMount: true,
-      staleTime: 0,
     });
 
   // Handle redirect to signin if not authenticated

@@ -13,15 +13,8 @@ import {
 } from "~/components/home";
 
 export default function HomePage() {
-  // Fetch data for homepage sections - staleTime: 0 ensures fresh price data
-  const { data: featuredListings = [] } = api.listing.getFeatured.useQuery(
-    { limit: 8 },
-    { staleTime: 0 }
-  );
-  const { data: latestListings = [] } = api.listing.getLatest.useQuery(
-    { limit: 8 },
-    { staleTime: 0 }
-  );
+  const { data: featuredListings = [] } = api.listing.getFeatured.useQuery({ limit: 8 });
+  const { data: latestListings = [] } = api.listing.getLatest.useQuery({ limit: 8 });
   const { data: categoryCounts = {} } = api.listing.getCategoryCounts.useQuery();
 
   return (

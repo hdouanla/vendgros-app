@@ -423,11 +423,11 @@ export function ListingForm({
             </div>
             <div>
               <span className="font-medium text-gray-600">Price:</span>
-              <p className="text-gray-900">${initialData?.pricePerPiece} CAD per piece</p>
+              <p className="text-gray-900">${initialData?.pricePerPiece} CAD / piece</p>
             </div>
             <div>
               <span className="font-medium text-gray-600">Quantity:</span>
-              <p className="text-gray-900">{initialData?.quantityTotal} units</p>
+              <p className="text-gray-900">{initialData?.quantityTotal} {(initialData?.quantityTotal ?? 0) > 1 ? "pieces" : "piece"}</p>
             </div>
             <div className="md:col-span-2">
               <span className="font-medium text-gray-600">Description:</span>
@@ -635,7 +635,7 @@ export function ListingForm({
             min={MIN_LISTING_QUANTITY}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
           />
-          <p className="mt-1 text-xs text-gray-500">Minimum {MIN_LISTING_QUANTITY} units</p>
+          <p className="mt-1 text-xs text-gray-500">Minimum {MIN_LISTING_QUANTITY} pieces</p>
           {errors.quantityTotal && (
             <p className="mt-1 text-sm text-red-600">{errors.quantityTotal}</p>
           )}

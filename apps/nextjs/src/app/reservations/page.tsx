@@ -278,7 +278,7 @@ export default function MyReservationsPage() {
                         </p>
                         <p>
                           <span className="font-medium">{t("quantity")}:</span>{" "}
-                          {reservation.quantityReserved} {t("units")}
+                          {reservation.quantityReserved} {reservation.quantityReserved > 1 ? t("pieces") : t("piece")}
                         </p>
                         <p>
                           <span className="font-medium">{t("totalPrice")}:</span>{" "}
@@ -385,7 +385,7 @@ export default function MyReservationsPage() {
                         </p>
                         <p>
                           <span className="font-medium">{t("quantity")}:</span>{" "}
-                          {reservation.quantityReserved} {t("units")}
+                          {reservation.quantityReserved} {reservation.quantityReserved > 1 ? t("pieces") : t("piece")}
                         </p>
                         <p>
                           <span className="font-medium">{t("totalPaid")}:</span>{" "}
@@ -462,7 +462,7 @@ export default function MyReservationsPage() {
                         </p>
                         <p>
                           <span className="font-medium">{t("quantity")}:</span>{" "}
-                          {reservation.quantityReserved} {t("units")}
+                          {reservation.quantityReserved} {reservation.quantityReserved > 1 ? t("pieces") : t("piece")}
                         </p>
                         <p>
                           <span className="font-medium">{t("totalPrice")}:</span>{" "}

@@ -435,20 +435,20 @@ export default function ListingDetailPage({
                   <div className="flex justify-between">
                     <span>{tListing("quantityTotal")}:</span>
                     <span className="font-medium">
-                      {listing.quantityTotal} {tListing("units")}
+                      {listing.quantityTotal} {listing.quantityTotal > 1 ? tListing("pieces") : tListing("piece")}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>{tListing("quantityAvailable")}:</span>
                     <span className="font-medium">
-                      {listing.quantityAvailable} {tListing("units")}
+                      {listing.quantityAvailable} {listing.quantityAvailable > 1 ? tListing("pieces") : tListing("piece")}
                     </span>
                   </div>
                   {listing.minPerBuyer && (
                     <div className="flex justify-between">
                       <span>{tListing("minPerBuyer")}:</span>
                       <span className="font-medium">
-                        {listing.minPerBuyer} {tListing("units")}
+                        {listing.minPerBuyer} {listing.minPerBuyer > 1 ? tListing("pieces") : tListing("piece")}
                       </span>
                     </div>
                   )}
@@ -456,7 +456,7 @@ export default function ListingDetailPage({
                     <div className="flex justify-between">
                       <span>{tListing("maxPerBuyer")}:</span>
                       <span className="font-medium">
-                        {listing.maxPerBuyer} {tListing("units")}
+                        {listing.maxPerBuyer} {listing.maxPerBuyer > 1 ? tListing("pieces") : tListing("piece")}
                       </span>
                     </div>
                   )}
@@ -653,7 +653,7 @@ export default function ListingDetailPage({
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">{tListing("quantity")}:</span>
-                <span className="font-medium">{quantityToReserve} {tListing("units")}</span>
+                <span className="font-medium">{quantityToReserve} {quantityToReserve > 1 ? tListing("pieces") : tListing("piece")}</span>
               </div>
               <div className="flex justify-between border-t pt-2">
                 <span className="text-gray-600">

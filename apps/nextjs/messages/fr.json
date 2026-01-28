@@ -147,6 +147,7 @@
     "photoHelp": "La première photo sera la couverture. Formats supportés: JPEG, PNG, WebP. Max 5 Mo par photo.",
     "pricePerPiece": "Prix par pièce",
     "quantity": "Quantité",
+    "quantityTotal": "Total",
     "quantityAvailable": "Disponible",
     "minPerBuyer": "Minimum par acheteur",
     "maxPerBuyer": "Maximum par acheteur",

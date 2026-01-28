@@ -419,7 +419,7 @@ export default function ListingDetailPage({
               )}
             </div>
 
-            <div className="mb-6 border-t border-b py-4">
+            <div className="mb-6 py-4">
               <div className="mb-2 flex items-baseline justify-between">
                 <span className="text-3xl font-bold text-green-600">
                   ${(listing.pricePerPiece * 1.05).toFixed(2)}
@@ -429,53 +429,62 @@ export default function ListingDetailPage({
                 </span>
               </div>
 
-              <div className="text-sm text-gray-600">
-                <div className="flex justify-between">
-                  <span>{tListing("quantityAvailable")}:</span>
-                  <span className="font-medium">
-                    {listing.quantityAvailable} {tListing("units")}
-                  </span>
+              {/* Inventory Card */}
+              <div className="rounded-lg bg-gray-50 p-4">
+                <div className="space-y-1 text-sm text-gray-600">
+                  <div className="flex justify-between">
+                    <span>{tListing("quantityTotal")}:</span>
+                    <span className="font-medium">
+                      {listing.quantityTotal} {tListing("units")}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{tListing("quantityAvailable")}:</span>
+                    <span className="font-medium">
+                      {listing.quantityAvailable} {tListing("units")}
+                    </span>
+                  </div>
+                  {listing.minPerBuyer && (
+                    <div className="flex justify-between">
+                      <span>{tListing("minPerBuyer")}:</span>
+                      <span className="font-medium">
+                        {listing.minPerBuyer} {tListing("units")}
+                      </span>
+                    </div>
+                  )}
+                  {listing.maxPerBuyer && (
+                    <div className="flex justify-between">
+                      <span>{tListing("maxPerBuyer")}:</span>
+                      <span className="font-medium">
+                        {listing.maxPerBuyer} {tListing("units")}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                {listing.minPerBuyer && (
-                  <div className="flex justify-between">
-                    <span>{tListing("minPerBuyer")}:</span>
-                    <span className="font-medium">
-                      {listing.minPerBuyer} {tListing("units")}
-                    </span>
-                  </div>
-                )}
-                {listing.maxPerBuyer && (
-                  <div className="flex justify-between">
-                    <span>{tListing("maxPerBuyer")}:</span>
-                    <span className="font-medium">
-                      {listing.maxPerBuyer} {tListing("units")}
-                    </span>
-                  </div>
-                )}
-              </div>
 
-              {/* Progress Bar */}
-              <div className="mt-4">
-                <div className="mb-1 flex justify-between text-xs text-gray-600">
-                  <span>
-                    {tListing("remaining", { percent: Math.round((listing.quantityAvailable / listing.quantityTotal) * 100) })}
-                  </span>
-                </div>
-                <div className="h-4 w-full overflow-hidden rounded-lg bg-gray-200">
-                  <div
-                    className={`h-full transition-all ${
-                      (listing.quantityAvailable / listing.quantityTotal) * 100 > 70
-                        ? "bg-green-500"
-                        : (listing.quantityAvailable / listing.quantityTotal) * 100 > 30
-                          ? "bg-yellow-500"
-                          : (listing.quantityAvailable / listing.quantityTotal) * 100 > 10
-                            ? "bg-orange-500"
-                            : "bg-red-500"
-                    }`}
-                    style={{
-                      width: `${(listing.quantityAvailable / listing.quantityTotal) * 100}%`,
-                    }}
-                  />
+                {/* Progress Bar */}
+                <div className="mt-3">
+                  <div className="mb-1 flex justify-between text-xs text-gray-600">
+                    <span>
+                      {tListing("remaining", { percent: Math.round((listing.quantityAvailable / listing.quantityTotal) * 100) })}
+                    </span>
+                  </div>
+                  <div className="h-4 w-full overflow-hidden rounded-lg bg-gray-200">
+                    <div
+                      className={`h-full transition-all ${
+                        (listing.quantityAvailable / listing.quantityTotal) * 100 > 70
+                          ? "bg-green-500"
+                          : (listing.quantityAvailable / listing.quantityTotal) * 100 > 30
+                            ? "bg-yellow-500"
+                            : (listing.quantityAvailable / listing.quantityTotal) * 100 > 10
+                              ? "bg-orange-500"
+                              : "bg-red-500"
+                      }`}
+                      style={{
+                        width: `${(listing.quantityAvailable / listing.quantityTotal) * 100}%`,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

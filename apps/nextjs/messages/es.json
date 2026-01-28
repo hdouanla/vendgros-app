@@ -147,6 +147,7 @@
     "photoHelp": "La primera foto será la portada. Formatos soportados: JPEG, PNG, WebP. Máx 5 MB por foto.",
     "pricePerPiece": "Precio por pieza",
     "quantity": "Cantidad",
+    "quantityTotal": "Total",
     "quantityAvailable": "Disponible",
     "minPerBuyer": "Mínimo por comprador",
     "maxPerBuyer": "Máximo por comprador",

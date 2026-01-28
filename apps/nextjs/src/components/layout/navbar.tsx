@@ -85,23 +85,29 @@ export function Navbar() {
             <div className="hidden md:flex items-center space-x-6">
               <Link
                 href="/listings/search"
-                className={`text-md font-medium transition-colors ${
+                className={`text-md flex items-center gap-1.5 font-medium transition-colors ${
                   isActive("/listings/search")
                     ? "text-green-600"
                     : "text-gray-700 hover:text-green-600"
                 }`}
               >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
                 {t("browse")}
               </Link>
 
               <Link
                 href="/listings/create"
-                className={`text-md font-medium transition-colors ${
+                className={`text-md flex items-center gap-1.5 font-medium transition-colors ${
                   isActive("/listings/create")
                     ? "text-green-600"
                     : "text-gray-700 hover:text-green-600"
                 }`}
               >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5a1.99 1.99 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+                </svg>
                 {t("sell")}
               </Link>
             </div>
@@ -318,25 +324,31 @@ export function Navbar() {
           <div className="space-y-1 px-4 pb-3 pt-2">
             <Link
               href="/listings/search"
-              className={`block rounded-md px-3 py-2 text-base font-medium ${
+              className={`flex items-center gap-2 rounded-md px-3 py-2 text-base font-medium ${
                 isActive("/listings/search")
                   ? "bg-green-50 text-green-600"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
               onClick={() => setShowMobileMenu(false)}
             >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
               {t("browse")}
             </Link>
 
             <Link
               href="/listings/create"
-              className={`block rounded-md px-3 py-2 text-base font-medium ${
+              className={`flex items-center gap-2 rounded-md px-3 py-2 text-base font-medium ${
                 isActive("/listings/create")
                   ? "bg-green-50 text-green-600"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
               onClick={() => setShowMobileMenu(false)}
             >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5a1.99 1.99 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+              </svg>
               {t("sell")}
             </Link>
 

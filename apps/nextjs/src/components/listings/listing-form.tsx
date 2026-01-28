@@ -79,6 +79,27 @@ export function ListingForm({
     }
   };
 
+  // Helper to translate API error codes
+  const translateApiError = (error: any): string => {
+    const message = error?.message || "";
+    const cause = error?.data?.cause || error?.cause || {};
+
+    switch (message) {
+      case "QUANTITY_BELOW_RESERVED":
+        return tErrors("quantityBelowReserved", { count: cause.amountReserved || 0 });
+      case "MIN_QUANTITY_REQUIRED":
+        return tErrors("minQuantityRequired", { min: cause.min || 5 });
+      case "MIN_GREATER_THAN_MAX":
+        return tErrors("minGreaterThanMax");
+      case "MIN_EXCEEDS_TOTAL":
+        return tErrors("minExceedsTotal");
+      case "MAX_EXCEEDS_TOTAL":
+        return tErrors("maxExceedsTotal");
+      default:
+        return message;
+    }
+  };
+
   const [formData, setFormData] = useState({
     title: initialData?.title ?? "",
     description: initialData?.description ?? "",
@@ -113,14 +134,14 @@ export function ListingForm({
   const createListing = api.listing.create.useMutation({
     onError: (error) => {
       console.error("Failed to create listing:", error);
-      setErrors({ submit: error.message });
+      setErrors({ submit: translateApiError(error) });
     },
   });
 
   const updateListing = api.listing.update.useMutation({
     onError: (error) => {
       console.error("Failed to update listing:", error);
-      setErrors({ submit: error.message });
+      setErrors({ submit: translateApiError(error) });
     },
   });
 

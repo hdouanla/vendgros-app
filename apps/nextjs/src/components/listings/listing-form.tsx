@@ -45,29 +45,6 @@ const categoryTranslationKeys: Record<CategoryId, string> = {
 // Minimum quantity for listings (configurable via env, defaults to 5)
 const MIN_LISTING_QUANTITY = parseInt(process.env.NEXT_PUBLIC_MIN_LISTING_QUANTITY || "5", 10);
 
-// Simple translation stub - replace with actual translations later
-const t = (key: string, params?: any) => {
-  const translations: Record<string, string> = {
-    "errors.minLength": `Minimum length is ${params?.min} characters`,
-    "errors.minValue": `Minimum value is ${params?.min}`,
-    "errors.required": "This field is required",
-    "listing.itemTitle": "Item Title",
-    "listing.description": "Description",
-    "listing.category": "Category",
-    "common.select": "Select...",
-    "listing.pricePerPiece": "Price Per Piece",
-    "listing.quantity": "Quantity",
-    "listing.maxPerBuyer": "Max Per Buyer",
-    "listing.pickupAddress": "Pickup Address",
-    "listing.pickupInstructions": "Pickup Instructions",
-    "common.loading": "Loading...",
-    "common.save": "Save as Draft",
-    "common.submit": "Submit for Review",
-    "listing.submitForReview": "Submit for Review",
-  };
-  return translations[key] || key;
-};
-
 export function ListingForm({
   mode = "create",
   initialData,
@@ -79,6 +56,49 @@ export function ListingForm({
   const router = useRouter();
   const queryClient = useQueryClient();
   const tSearch = useTranslations("search");
+  const tListing = useTranslations("listing");
+  const tCommon = useTranslations("common");
+  const tErrors = useTranslations("errors");
+
+  // Helper function to get translations with namespace prefix
+  const t = (key: string, params?: Record<string, string | number>) => {
+    const [namespace, ...rest] = key.split(".");
+    const translationKey = rest.join(".");
+
+    switch (namespace) {
+      case "listing":
+        return tListing(translationKey as any, params);
+      case "common":
+        return tCommon(translationKey as any, params);
+      case "errors":
+        return tErrors(translationKey as any, params);
+      case "search":
+        return tSearch(translationKey as any, params);
+      default:
+        return key;
+    }
+  };
+
+  // Helper to translate API error codes
+  const translateApiError = (error: any): string => {
+    const message = error?.message || "";
+    const cause = error?.data?.cause || error?.cause || {};
+
+    switch (message) {
+      case "QUANTITY_BELOW_RESERVED":
+        return tErrors("quantityBelowReserved", { count: cause.amountReserved || 0 });
+      case "MIN_QUANTITY_REQUIRED":
+        return tErrors("minQuantityRequired", { min: cause.min || 5 });
+      case "MIN_GREATER_THAN_MAX":
+        return tErrors("minGreaterThanMax");
+      case "MIN_EXCEEDS_TOTAL":
+        return tErrors("minExceedsTotal");
+      case "MAX_EXCEEDS_TOTAL":
+        return tErrors("maxExceedsTotal");
+      default:
+        return message;
+    }
+  };
 
   const [formData, setFormData] = useState({
     title: initialData?.title ?? "",
@@ -114,14 +134,14 @@ export function ListingForm({
   const createListing = api.listing.create.useMutation({
     onError: (error) => {
       console.error("Failed to create listing:", error);
-      setErrors({ submit: error.message });
+      setErrors({ submit: translateApiError(error) });
     },
   });
 
   const updateListing = api.listing.update.useMutation({
     onError: (error) => {
       console.error("Failed to update listing:", error);
-      setErrors({ submit: error.message });
+      setErrors({ submit: translateApiError(error) });
     },
   });
 

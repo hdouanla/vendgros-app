@@ -519,7 +519,11 @@
     "networkError": "Error de red. Inténtelo de nuevo.",
     "unauthorized": "No está autorizado para realizar esta acción",
     "notFound": "No encontrado",
-    "serverError": "Error del servidor. Inténtelo más tarde."
+    "serverError": "Error del servidor. Inténtelo más tarde.",
+    "quantityBelowReserved": "No se puede reducir la cantidad por debajo de {count} unidades. Tiene {count} unidades en reservas pendientes o confirmadas.",
+    "minQuantityRequired": "La cantidad mínima es de {min} unidades",
+    "minExceedsTotal": "El mínimo por comprador no puede superar la cantidad total",
+    "maxExceedsTotal": "El máximo por comprador no puede superar la cantidad total"
   },
   "success": {
     "listingCreated": "Anuncio creado exitosamente",

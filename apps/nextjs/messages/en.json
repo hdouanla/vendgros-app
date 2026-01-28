@@ -519,7 +519,11 @@
     "networkError": "Network error. Please try again.",
     "unauthorized": "You are not authorized to perform this action",
     "notFound": "Not found",
-    "serverError": "Server error. Please try again later."
+    "serverError": "Server error. Please try again later.",
+    "quantityBelowReserved": "Cannot reduce quantity below {count} units. You have {count} units in pending or confirmed reservations.",
+    "minQuantityRequired": "Minimum quantity is {min} units",
+    "minExceedsTotal": "Minimum per buyer cannot exceed total quantity",
+    "maxExceedsTotal": "Maximum per buyer cannot exceed total quantity"
   },
   "success": {
     "listingCreated": "Listing created successfully",

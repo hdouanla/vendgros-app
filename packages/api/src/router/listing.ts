@@ -214,7 +214,8 @@ export const listingRouter = createTRPCRouter({
         if (input.data.quantityTotal < MIN_LISTING_QUANTITY) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Minimum quantity is ${MIN_LISTING_QUANTITY} units`,
+            message: "MIN_QUANTITY_REQUIRED",
+            cause: { min: MIN_LISTING_QUANTITY },
           });
         }
       }
@@ -227,28 +228,47 @@ export const listingRouter = createTRPCRouter({
       if (effectiveMinPerBuyer && effectiveMaxPerBuyer && effectiveMinPerBuyer >= effectiveMaxPerBuyer) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Minimum per buyer must be less than maximum per buyer",
+          message: "MIN_GREATER_THAN_MAX",
         });
       }
 
       if (effectiveMinPerBuyer && effectiveMinPerBuyer > effectiveQuantityTotal) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Minimum per buyer cannot exceed total quantity",
+          message: "MIN_EXCEEDS_TOTAL",
         });
       }
 
       if (effectiveMaxPerBuyer && effectiveMaxPerBuyer > effectiveQuantityTotal) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Maximum per buyer cannot exceed total quantity",
+          message: "MAX_EXCEEDS_TOTAL",
         });
       }
 
+      // Adjust quantityAvailable when quantityTotal changes
+      // Formula: newAvailable = newTotal - amountReserved
+      // Where amountReserved = oldTotal - oldAvailable
+      let adjustedQuantityAvailable: number | undefined;
+      if (input.data.quantityTotal !== undefined && input.data.quantityTotal !== existingListing.quantityTotal) {
+        const amountReserved = existingListing.quantityTotal - existingListing.quantityAvailable;
+        const newAvailable = input.data.quantityTotal - amountReserved;
+
+        if (newAvailable < 0) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "QUANTITY_BELOW_RESERVED",
+            cause: { amountReserved },
+          });
+        }
+
+        adjustedQuantityAvailable = newAvailable;
+      }
+
       // Check if content was changed (requires re-moderation)
-      // Exclude status, quantityAvailable, photos, and isActive from triggering re-review
+      // Exclude status, quantityAvailable, quantityTotal, photos, and isActive from triggering re-review
       const contentChanged = Object.keys(input.data).some(
-        (key) => key !== "status" && key !== "quantityAvailable" && key !== "photos" && key !== "isActive"
+        (key) => key !== "status" && key !== "quantityAvailable" && key !== "quantityTotal" && key !== "photos" && key !== "isActive"
       );
 
       // Determine new status
@@ -268,6 +288,7 @@ export const listingRouter = createTRPCRouter({
         .update(listing)
         .set({
           ...input.data,
+          ...(adjustedQuantityAvailable !== undefined && { quantityAvailable: adjustedQuantityAvailable }),
           status: newStatus,
           updatedAt: new Date(),
         })
@@ -276,6 +297,7 @@ export const listingRouter = createTRPCRouter({
       return {
         id: input.listingId,
         status: newStatus,
+        quantityAvailable: adjustedQuantityAvailable ?? existingListing.quantityAvailable,
         success: true,
       };
     }),

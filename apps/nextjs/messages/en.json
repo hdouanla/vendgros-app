@@ -259,6 +259,7 @@
     "balanceDue": "Balance Due at Pickup",
     "pleaseSignIn": "Please sign in to make a reservation",
     "reservationFailed": "Failed to create reservation",
+    "verifyPostalCodeWarning": "Please verify the postal code and ensure you can make the necessary arrangements for pickup before confirming.",
     "minimumDepositRequired": "The minimum reservation deposit is $1.00 CAD. Please increase your quantity.",
     "minimumDepositTitle": "Minimum Deposit Required",
     "minimumRequired": "Minimum {min} pieces required",

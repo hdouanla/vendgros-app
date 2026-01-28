@@ -45,29 +45,6 @@ const categoryTranslationKeys: Record<CategoryId, string> = {
 // Minimum quantity for listings (configurable via env, defaults to 5)
 const MIN_LISTING_QUANTITY = parseInt(process.env.NEXT_PUBLIC_MIN_LISTING_QUANTITY || "5", 10);
 
-// Simple translation stub - replace with actual translations later
-const t = (key: string, params?: any) => {
-  const translations: Record<string, string> = {
-    "errors.minLength": `Minimum length is ${params?.min} characters`,
-    "errors.minValue": `Minimum value is ${params?.min}`,
-    "errors.required": "This field is required",
-    "listing.itemTitle": "Item Title",
-    "listing.description": "Description",
-    "listing.category": "Category",
-    "common.select": "Select...",
-    "listing.pricePerPiece": "Price Per Piece",
-    "listing.quantity": "Quantity",
-    "listing.maxPerBuyer": "Max Per Buyer",
-    "listing.pickupAddress": "Pickup Address",
-    "listing.pickupInstructions": "Pickup Instructions",
-    "common.loading": "Loading...",
-    "common.save": "Save as Draft",
-    "common.submit": "Submit for Review",
-    "listing.submitForReview": "Submit for Review",
-  };
-  return translations[key] || key;
-};
-
 export function ListingForm({
   mode = "create",
   initialData,
@@ -79,6 +56,28 @@ export function ListingForm({
   const router = useRouter();
   const queryClient = useQueryClient();
   const tSearch = useTranslations("search");
+  const tListing = useTranslations("listing");
+  const tCommon = useTranslations("common");
+  const tErrors = useTranslations("errors");
+
+  // Helper function to get translations with namespace prefix
+  const t = (key: string, params?: Record<string, string | number>) => {
+    const [namespace, ...rest] = key.split(".");
+    const translationKey = rest.join(".");
+
+    switch (namespace) {
+      case "listing":
+        return tListing(translationKey as any, params);
+      case "common":
+        return tCommon(translationKey as any, params);
+      case "errors":
+        return tErrors(translationKey as any, params);
+      case "search":
+        return tSearch(translationKey as any, params);
+      default:
+        return key;
+    }
+  };
 
   const [formData, setFormData] = useState({
     title: initialData?.title ?? "",

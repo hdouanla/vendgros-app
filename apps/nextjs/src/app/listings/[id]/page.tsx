@@ -72,6 +72,12 @@ export default function ListingDetailPage({
     }
   }, [listing?.minPerBuyer, listing?.quantityAvailable]);
 
+  // Get city from postal code (best-effort, fails silently if not found)
+  const { data: postalCodeData } = api.listing.geocodePostalCode.useQuery(
+    { postalCode: listing?.postalCode ?? "" },
+    { enabled: !!listing?.postalCode, retry: false }
+  );
+
   // Get more listings from the same seller
   const { data: sellerListings } = api.listing.getBySellerId.useQuery(
     {
@@ -682,9 +688,18 @@ export default function ListingDetailPage({
               </div>
             )}
 
-            <p className="mb-6 text-sm text-gray-600">
+            <p className="mb-4 text-sm text-gray-600">
               {tListing("redirectToPayment", { amount: balanceDue.toFixed(2) })}
             </p>
+
+            <div className="mb-6 rounded-md bg-yellow-50 p-3 text-sm text-yellow-800">
+              <p>{tReservation("verifyPostalCodeWarning")}</p>
+              {listing.postalCode && (
+                <p className="mt-2 font-semibold">
+                  {postalCodeData?.city && `${postalCodeData.city}, `}{listing.postalCode}
+                </p>
+              )}
+            </div>
 
             <div className="flex gap-3">
               <button

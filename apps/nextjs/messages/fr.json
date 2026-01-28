@@ -259,6 +259,7 @@
     "balanceDue": "Solde dû au ramassage",
     "pleaseSignIn": "Veuillez vous connecter pour faire une réservation",
     "reservationFailed": "Échec de la création de la réservation",
+    "verifyPostalCodeWarning": "Veuillez vérifier le code postal et vous assurer que vous pouvez prendre les dispositions nécessaires pour le ramassage avant de confirmer.",
     "minimumDepositRequired": "Le dépôt minimum de réservation est de 1,00 $ CAD. Veuillez augmenter la quantité.",
     "minimumDepositTitle": "Dépôt minimum requis",
     "minimumRequired": "Minimum {min} pièces requises",

@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Routes that require authentication
-const protectedRoutes = ["/seller", "/buyer", "/admin", "/profile", "/settings"];
+// Note: /seller is the seller dashboard (protected), /sellers is public seller profiles
+const protectedRoutes = ["/seller/", "/seller", "/buyer", "/admin", "/profile", "/settings"];
+
+// Public routes that might match protected route prefixes
+const publicRoutes = ["/sellers"];
 
 // Routes that should redirect to home if already logged in
 const authRoutes = ["/auth/signin", "/auth/signup"];
@@ -59,9 +63,14 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Check if route requires authentication
-  const isProtectedRoute = protectedRoutes.some((route) =>
+  // Check if route is explicitly public (before checking protected routes)
+  const isPublicRoute = publicRoutes.some((route) =>
     pathname.startsWith(route)
+  );
+
+  // Check if route requires authentication
+  const isProtectedRoute = !isPublicRoute && protectedRoutes.some((route) =>
+    pathname.startsWith(route) || pathname === route.replace(/\/$/, "")
   );
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
   const isVerifyEmailPage = pathname === "/auth/verify-email";

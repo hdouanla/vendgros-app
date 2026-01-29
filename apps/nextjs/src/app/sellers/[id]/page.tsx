@@ -118,7 +118,7 @@ export default function SellerProfilePage({
           <p className="text-gray-600">{t("common.loading")}</p>
         </div>
       ) : listings && listings.length > 0 ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {listings.map((listing) => (
             <ListingCard
               key={listing.id}

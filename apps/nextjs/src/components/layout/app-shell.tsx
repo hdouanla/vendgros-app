@@ -8,6 +8,7 @@ import { Toaster } from "@acme/ui/toast";
 import { FooterWrapper } from "~/components/layout/footer-wrapper";
 import { Navbar } from "~/components/layout/navbar";
 import { UserNav } from "~/components/layout/user-nav";
+import { ImpersonationBanner } from "~/components/admin/impersonation-banner";
 
 // Check for maintenance mode cookie
 function getMaintenanceCookie() {
@@ -39,6 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <ImpersonationBanner />
       <Navbar />
       <UserNav />
       <main>{children}</main>

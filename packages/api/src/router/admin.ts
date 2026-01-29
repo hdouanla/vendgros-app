@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
 import { and, desc, eq, gte, inArray, or, sql } from "@acme/db";
 
-import { listing, reservation, user } from "@acme/db/schema";
+import { listing, reservation, user, impersonationLog } from "@acme/db/schema";
 
 import {
   notifyAccountBanned,
@@ -11,17 +11,43 @@ import {
   notifyListingRejected,
 } from "../lib/notifications";
 import { cache } from "../lib/cache";
+import {
+  createImpersonationCookie,
+  clearImpersonationCookie,
+  getImpersonationState,
+} from "../lib/impersonation";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 // Middleware to check if user is admin
+// When impersonating, we check the original admin's privileges
 async function requireAdmin(ctx: any) {
+  // If impersonating, check the original admin's privileges
+  const userIdToCheck = ctx.impersonation?.isImpersonating
+    ? ctx.impersonation.originalAdmin?.id
+    : ctx.session.user.id;
+
+  if (!userIdToCheck) {
+    throw new Error("Admin access required");
+  }
+
   const currentUser = await ctx.db.query.user.findFirst({
-    where: (users: any, { eq }: any) => eq(users.id, ctx.session.user.id),
+    where: (users: any, { eq }: any) => eq(users.id, userIdToCheck),
   });
 
   if (!currentUser || !currentUser.isAdmin) {
     throw new Error("Admin access required");
   }
+
+  return currentUser;
+}
+
+// Helper to get client IP from headers
+function getClientIp(headers: Headers): string | undefined {
+  return (
+    headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    headers.get("x-real-ip") ||
+    undefined
+  );
 }
 
 export const adminRouter = createTRPCRouter({
@@ -668,5 +694,183 @@ export const adminRouter = createTRPCRouter({
       await cache.invalidatePrefix("listings:featured");
 
       return updated;
+    }),
+
+  // ============================================================================
+  // IMPERSONATION ENDPOINTS
+  // ============================================================================
+
+  // Start impersonating a user
+  startImpersonation: protectedProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        reason: z.string().max(500).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const admin = await requireAdmin(ctx);
+
+      // Prevent impersonation while already impersonating
+      if (ctx.impersonation?.isImpersonating) {
+        throw new Error("Cannot start new impersonation while already impersonating. Please exit current impersonation first.");
+      }
+
+      // Get target user
+      const targetUser = await ctx.db.query.user.findFirst({
+        where: (users, { eq }) => eq(users.id, input.userId),
+      });
+
+      if (!targetUser) {
+        throw new Error("User not found");
+      }
+
+      // Prevent impersonating admin users
+      if (targetUser.isAdmin) {
+        throw new Error("Cannot impersonate admin users");
+      }
+
+      // Prevent impersonating banned/suspended users
+      if (targetUser.accountStatus === "BANNED") {
+        throw new Error("Cannot impersonate banned users");
+      }
+
+      if (targetUser.accountStatus === "SUSPENDED") {
+        throw new Error("Cannot impersonate suspended users");
+      }
+
+      // Create audit log entry
+      const [logEntry] = await ctx.db
+        .insert(impersonationLog)
+        .values({
+          adminId: admin.id,
+          impersonatedUserId: targetUser.id,
+          ipAddress: getClientIp(ctx.headers),
+          userAgent: ctx.headers.get("user-agent") || undefined,
+          reason: input.reason,
+        })
+        .returning();
+
+      if (!logEntry) {
+        throw new Error("Failed to create impersonation log entry");
+      }
+
+      // Create the impersonation cookie
+      const cookie = createImpersonationCookie({
+        adminId: admin.id,
+        adminEmail: admin.email,
+        adminName: admin.name,
+        impersonatedUserId: targetUser.id,
+        impersonatedUserEmail: targetUser.email,
+        impersonatedUserName: targetUser.name,
+        logId: logEntry.id,
+      });
+
+      return {
+        success: true,
+        logId: logEntry.id,
+        cookie,
+        impersonatedUser: {
+          id: targetUser.id,
+          email: targetUser.email,
+          name: targetUser.name,
+        },
+      };
+    }),
+
+  // Stop impersonation
+  stopImpersonation: protectedProcedure.mutation(async ({ ctx }) => {
+    // Must be in impersonation state
+    if (!ctx.impersonation?.isImpersonating || !ctx.impersonation.logId) {
+      throw new Error("Not currently impersonating");
+    }
+
+    // Update the audit log entry with end time
+    await ctx.db
+      .update(impersonationLog)
+      .set({
+        endedAt: new Date(),
+      })
+      .where(eq(impersonationLog.id, ctx.impersonation.logId));
+
+    // Return the cookie clearing instruction
+    const cookie = clearImpersonationCookie();
+
+    return {
+      success: true,
+      cookie,
+    };
+  }),
+
+  // Get current impersonation state
+  getImpersonationState: protectedProcedure.query(async ({ ctx }) => {
+    return {
+      isImpersonating: ctx.impersonation?.isImpersonating ?? false,
+      originalAdmin: ctx.impersonation?.originalAdmin ?? null,
+      impersonatedUser: ctx.impersonation?.impersonatedUser ?? null,
+    };
+  }),
+
+  // Get impersonation audit log
+  getImpersonationLogs: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().default(50),
+        offset: z.number().default(0),
+        adminId: z.string().optional(),
+        impersonatedUserId: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      await requireAdmin(ctx);
+
+      let whereConditions = [];
+
+      if (input.adminId) {
+        whereConditions.push(eq(impersonationLog.adminId, input.adminId));
+      }
+
+      if (input.impersonatedUserId) {
+        whereConditions.push(eq(impersonationLog.impersonatedUserId, input.impersonatedUserId));
+      }
+
+      const logs = await ctx.db.query.impersonationLog.findMany({
+        where: whereConditions.length > 0 ? and(...whereConditions) : undefined,
+        with: {
+          admin: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          impersonatedUser: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: (logs, { desc }) => [desc(logs.startedAt)],
+        limit: input.limit,
+        offset: input.offset,
+      });
+
+      const totalResult = whereConditions.length > 0
+        ? await ctx.db
+            .select({ count: sql<number>`count(*)` })
+            .from(impersonationLog)
+            .where(and(...whereConditions))
+        : await ctx.db
+            .select({ count: sql<number>`count(*)` })
+            .from(impersonationLog);
+      const total = Number(totalResult[0]?.count ?? 0);
+
+      return {
+        logs,
+        total,
+        hasMore: input.offset + input.limit < total,
+      };
     }),
 });

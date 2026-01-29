@@ -151,6 +151,8 @@ export const userRelations = relations(user, ({ many }) => ({
   messagesSent: many(message),
   likedListings: many(listingLike),
   favoritedListings: many(listingFavorite),
+  adminImpersonations: many(impersonationLog, { relationName: "adminImpersonations" }),
+  impersonatedSessions: many(impersonationLog, { relationName: "impersonatedSessions" }),
 }));
 
 // ============================================================================
@@ -690,6 +692,42 @@ export const postalCode = pgTable(
 );
 
 // ============================================================================
+// IMPERSONATION LOG TABLE
+// ============================================================================
+
+export const impersonationLog = pgTable(
+  "impersonation_log",
+  (t) => ({
+    id: t.text().primaryKey().$defaultFn(() => crypto.randomUUID()),
+    adminId: t.text().notNull().references(() => user.id, { onDelete: "cascade" }),
+    impersonatedUserId: t.text().notNull().references(() => user.id, { onDelete: "cascade" }),
+    startedAt: t.timestamp().notNull().defaultNow(),
+    endedAt: t.timestamp(),
+    ipAddress: t.varchar({ length: 45 }), // IPv6 max length
+    userAgent: t.text(),
+    reason: t.text(),
+  }),
+  (table) => ({
+    adminIdx: index("impersonation_log_admin_idx").on(table.adminId),
+    impersonatedIdx: index("impersonation_log_impersonated_idx").on(table.impersonatedUserId),
+    startedAtIdx: index("impersonation_log_started_at_idx").on(table.startedAt),
+  }),
+);
+
+export const impersonationLogRelations = relations(impersonationLog, ({ one }) => ({
+  admin: one(user, {
+    fields: [impersonationLog.adminId],
+    references: [user.id],
+    relationName: "adminImpersonations",
+  }),
+  impersonatedUser: one(user, {
+    fields: [impersonationLog.impersonatedUserId],
+    references: [user.id],
+    relationName: "impersonatedSessions",
+  }),
+}));
+
+// ============================================================================
 // ZOD SCHEMAS
 // ============================================================================
 
@@ -777,6 +815,10 @@ export const selectListingLikeSchema = createSelectSchema(listingLike);
 // Listing favorite schemas
 export const insertListingFavoriteSchema = createInsertSchema(listingFavorite);
 export const selectListingFavoriteSchema = createSelectSchema(listingFavorite);
+
+// Impersonation log schemas
+export const insertImpersonationLogSchema = createInsertSchema(impersonationLog);
+export const selectImpersonationLogSchema = createSelectSchema(impersonationLog);
 
 // Export all
 export * from "./auth-schema";

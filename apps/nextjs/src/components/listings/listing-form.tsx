@@ -112,6 +112,14 @@ export function ListingForm({
     postalCode: initialData?.postalCode ?? "",
     pickupInstructions: initialData?.pickupInstructions ?? "",
     photos: initialData?.photos ?? [],
+    // Product specifications
+    weightKg: initialData?.weightKg ?? "",
+    lengthCm: initialData?.lengthCm ?? "",
+    widthCm: initialData?.widthCm ?? "",
+    heightCm: initialData?.heightCm ?? "",
+    // Delivery options
+    canDeliver: initialData?.canDeliver ?? false,
+    deliveryRadiusKm: initialData?.deliveryRadiusKm ?? "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -242,6 +250,16 @@ export function ListingForm({
       photos: formData.photos,
       latitude,
       longitude,
+      // Product specifications
+      weightKg: formData.weightKg ? parseFloat(formData.weightKg) : undefined,
+      lengthCm: formData.lengthCm ? parseFloat(formData.lengthCm) : undefined,
+      widthCm: formData.widthCm ? parseFloat(formData.widthCm) : undefined,
+      heightCm: formData.heightCm ? parseFloat(formData.heightCm) : undefined,
+      // Delivery options
+      canDeliver: formData.canDeliver,
+      deliveryRadiusKm: formData.canDeliver && formData.deliveryRadiusKm
+        ? parseFloat(formData.deliveryRadiusKm)
+        : undefined,
     };
 
     if (mode === "create") {
@@ -688,6 +706,119 @@ export function ListingForm({
             <p className="mt-1 text-sm text-red-600">{errors.maxPerBuyer}</p>
           )}
         </div>
+      </div>
+
+      {/* Product Specifications */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-semibold text-gray-700">{tListing("productSpecifications")}</h3>
+
+        {/* Weight */}
+        <div>
+          <label htmlFor="weightKg" className="block text-sm font-medium">
+            {tListing("weight")} (kg)
+          </label>
+          <input
+            type="number"
+            id="weightKg"
+            name="weightKg"
+            value={formData.weightKg}
+            onChange={handleChange}
+            step="0.01"
+            min="0"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+            placeholder={tListing("weightPlaceholder")}
+          />
+        </div>
+
+        {/* Dimensions */}
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            {tListing("dimensions")} (cm)
+          </label>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <input
+                type="number"
+                id="lengthCm"
+                name="lengthCm"
+                value={formData.lengthCm}
+                onChange={handleChange}
+                step="0.1"
+                min="0"
+                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+                placeholder={tListing("length")}
+              />
+            </div>
+            <div>
+              <input
+                type="number"
+                id="widthCm"
+                name="widthCm"
+                value={formData.widthCm}
+                onChange={handleChange}
+                step="0.1"
+                min="0"
+                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+                placeholder={tListing("width")}
+              />
+            </div>
+            <div>
+              <input
+                type="number"
+                id="heightCm"
+                name="heightCm"
+                value={formData.heightCm}
+                onChange={handleChange}
+                step="0.1"
+                min="0"
+                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+                placeholder={tListing("height")}
+              />
+            </div>
+          </div>
+          <p className="mt-1 text-xs text-gray-500">{tListing("dimensionsHint")}</p>
+        </div>
+      </div>
+
+      {/* Delivery Options */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-semibold text-gray-700">{tListing("deliveryOptions")}</h3>
+
+        {/* Can Deliver Toggle */}
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="canDeliver"
+            name="canDeliver"
+            checked={formData.canDeliver}
+            onChange={(e) => setFormData((prev) => ({ ...prev, canDeliver: e.target.checked }))}
+            className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+          />
+          <label htmlFor="canDeliver" className="text-sm font-medium">
+            {tListing("canDeliver")}
+          </label>
+        </div>
+
+        {/* Delivery Radius (only shown when canDeliver is true) */}
+        {formData.canDeliver && (
+          <div>
+            <label htmlFor="deliveryRadiusKm" className="block text-sm font-medium">
+              {tListing("deliveryRadius")} (km)
+            </label>
+            <input
+              type="number"
+              id="deliveryRadiusKm"
+              name="deliveryRadiusKm"
+              value={formData.deliveryRadiusKm}
+              onChange={handleChange}
+              step="1"
+              min="1"
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+              placeholder={tListing("deliveryRadiusPlaceholder")}
+            />
+            <p className="mt-1 text-xs text-gray-500">{tListing("deliveryRadiusHint")}</p>
+          </div>
+        )}
       </div>
 
       {/* Pickup Address and Postal Code */}

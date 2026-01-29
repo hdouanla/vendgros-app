@@ -31,6 +31,14 @@ export const listingRouter = createTRPCRouter({
         postalCode: true,
         latitude: true,
         longitude: true,
+        // Product specifications
+        weightKg: true,
+        lengthCm: true,
+        widthCm: true,
+        heightCm: true,
+        // Delivery options
+        canDeliver: true,
+        deliveryRadiusKm: true,
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -170,6 +178,14 @@ export const listingRouter = createTRPCRouter({
             longitude: true,
             status: true,
             isActive: true,
+            // Product specifications
+            weightKg: true,
+            lengthCm: true,
+            widthCm: true,
+            heightCm: true,
+            // Delivery options
+            canDeliver: true,
+            deliveryRadiusKm: true,
           })
           .partial(),
       }),
@@ -669,8 +685,17 @@ export const listingRouter = createTRPCRouter({
           maxPerBuyer: existingListing.maxPerBuyer,
           pickupAddress: existingListing.pickupAddress,
           pickupInstructions: existingListing.pickupInstructions,
+          postalCode: existingListing.postalCode,
           latitude: existingListing.latitude,
           longitude: existingListing.longitude,
+          // Product specifications
+          weightKg: existingListing.weightKg,
+          lengthCm: existingListing.lengthCm,
+          widthCm: existingListing.widthCm,
+          heightCm: existingListing.heightCm,
+          // Delivery options
+          canDeliver: existingListing.canDeliver,
+          deliveryRadiusKm: existingListing.deliveryRadiusKm,
           status: "DRAFT",
           location: null, // Will be set by PostGIS trigger
         })

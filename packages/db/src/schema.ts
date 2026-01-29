@@ -256,6 +256,16 @@ export const listing = pgTable(
     aiModerationFlags: t.text().array().default(sql`ARRAY[]::text[]`),
     aiModeratedAt: t.timestamp(),
 
+    // Product specifications (optional)
+    weightKg: t.doublePrecision(), // Weight in kilograms
+    lengthCm: t.doublePrecision(), // Length in centimeters
+    widthCm: t.doublePrecision(), // Width in centimeters
+    heightCm: t.doublePrecision(), // Height in centimeters
+
+    // Delivery options
+    canDeliver: t.boolean().notNull().default(false),
+    deliveryRadiusKm: t.doublePrecision(), // Delivery radius in km from listing location
+
     // View tracking
     viewCount: t.integer().notNull().default(0),
 
@@ -702,6 +712,14 @@ export const insertListingSchema = createInsertSchema(listing, {
   quantityTotal: z.number().int().positive(),
   minPerBuyer: z.number().int().positive().optional(),
   maxPerBuyer: z.number().int().positive().optional(),
+  // Product specifications
+  weightKg: z.number().positive().optional(),
+  lengthCm: z.number().positive().optional(),
+  widthCm: z.number().positive().optional(),
+  heightCm: z.number().positive().optional(),
+  // Delivery options
+  canDeliver: z.boolean().optional(),
+  deliveryRadiusKm: z.number().positive().optional(),
 });
 
 export const selectListingSchema = createSelectSchema(listing);

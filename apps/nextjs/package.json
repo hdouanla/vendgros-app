@@ -27,6 +27,7 @@
     "@aws-sdk/s3-request-presigner": "^3.969.0",
     "@stripe/react-stripe-js": "^5.4.1",
     "@stripe/stripe-js": "^8.6.1",
+    "stripe": "^17.6.0",
     "@t3-oss/env-nextjs": "^0.13.8",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",

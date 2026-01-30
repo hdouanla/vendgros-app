@@ -130,6 +130,7 @@
     "title": "Listing",
     "listings": "Listings",
     "createListing": "Create Listing",
+    "createListingSubtitle": "List your bulk items for sale to the community. All listings are reviewed before publication.",
     "editListing": "Edit Listing",
     "deleteListing": "Delete Listing",
     "submitForReview": "Submit for Review",

@@ -1,0 +1,34 @@
+[
+  {
+    "titleKey": "heroSlide1Title",
+    "subtitleKey": "heroSubtitle",
+    "descriptionKey": "heroDescription",
+    "ctaTextKey": "browseListings",
+    "ctaHref": "/listings/search",
+    "backgroundImage": "/images/slider/vendgros-hero-slide-bg-01.jpg"
+  },
+  {
+    "titleKey": "heroSlide2Title",
+    "subtitleKey": "heroSlide2Subtitle",
+    "descriptionKey": "heroSlide2Description",
+    "ctaTextKey": "shopNow",
+    "ctaHref": "/listings/search",
+    "backgroundImage": "/images/slider/vendgros-hero-slide-bg-02.jpg"
+  },
+  {
+    "titleKey": "heroSlide3Title",
+    "subtitleKey": "heroSlide3Subtitle",
+    "descriptionKey": "heroSlide3Description",
+    "ctaTextKey": "learnMore",
+    "ctaHref": "/how-it-works",
+    "backgroundImage": "/images/slider/vendgros-hero-slide-bg-03.jpg"
+  },
+  {
+    "titleKey": "heroSlide4Title",
+    "subtitleKey": "heroSlide4Subtitle",
+    "descriptionKey": "heroSlide4Description",
+    "ctaTextKey": "browseListings",
+    "ctaHref": "/listings/search",
+    "backgroundImage": "/images/slider/vendgros-hero-slide-bg-04.jpg"
+  }
+]

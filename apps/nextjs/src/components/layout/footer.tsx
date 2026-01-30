@@ -34,7 +34,7 @@ export function Footer() {
           <div className="lg:col-span-2">
             <Link href="/" className="mb-4 inline-block">
               <Image
-                src="/vendgros-logo-web-dark.png"
+                src="/vendgros-logo-web-white.png"
                 alt="VendGros"
                 width={220}
                 height={46}

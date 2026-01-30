@@ -13,7 +13,7 @@ export default function OfflinePage() {
       <div className="relative mx-auto flex min-h-screen max-w-content flex-col items-start justify-between px-6 py-16 text-left text-[#0B0F14]">
         <div className="w-full">
           <Image
-            src="/vendgros-logo-white.png"
+            src="/vendgros-logo-web-white.png"
             alt="VendGros"
             width={240}
             height={66}

@@ -7,6 +7,7 @@ import { api } from "~/trpc/react";
 import { ListingMap } from "~/components/map/listing-map";
 import { SearchFilters, type SearchFiltersValues } from "~/components/search";
 import { ListingCard } from "~/components/listings/listing-card";
+import { FreshArrivals } from "~/components/home/fresh-arrivals";
 
 export default function SearchListingsPage() {
   const router = useRouter();
@@ -177,6 +178,15 @@ export default function SearchListingsPage() {
     },
   );
 
+  // Get latest listings for Fresh Arrivals section
+  const { data: latestListings } = api.listing.getLatest.useQuery(
+    { limit: 8 },
+    {
+      // Only fetch when no search is active
+      enabled: !latitude && !longitude && !activePostalCode,
+    },
+  );
+
   const listings = activePostalCode ? postalListings : nearbyListings;
   const isLoading = isLoadingNearby || isLoadingPostal;
   const postalCodeError = postalError?.message;
@@ -237,14 +247,25 @@ export default function SearchListingsPage() {
             </p>
           </div>
         ) : !latitude && !longitude && !activePostalCode ? (
-          <div className="rounded-lg bg-blue-50 p-8 text-center">
-            {autoLocationError && (
-              <p className="text-red-600 mb-4">{autoLocationError}</p>
+          <>
+            <div className="rounded-lg bg-blue-50 p-8 text-center mb-12">
+              {autoLocationError && (
+                <p className="text-red-600 mb-4">{autoLocationError}</p>
+              )}
+              <p className="text-gray-700">
+                {t("enterPostalCodePrompt")}
+              </p>
+            </div>
+            {/* Show Fresh Arrivals when no search is active */}
+            {latestListings && latestListings.length > 0 && (
+              <FreshArrivals
+                listings={latestListings}
+                count={8}
+                compact={true}
+                showSeeAll={false}
+              />
             )}
-            <p className="text-gray-700">
-              {t("enterPostalCodePrompt")}
-            </p>
-          </div>
+          </>
         ) : listings && listings.length > 0 ? (
           <>
             {/* View Toggle and Results Count */}

@@ -41,6 +41,7 @@
     "next-intl": "^4.7.0",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
+    "stripe": "^17.6.0",
     "superjson": "2.2.3",
     "zod": "catalog:"
   },

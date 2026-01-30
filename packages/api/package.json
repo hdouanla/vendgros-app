@@ -6,6 +6,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./src/index.ts"
+    },
+    "./notifications": {
+      "types": "./dist/lib/notifications.d.ts",
+      "default": "./src/lib/notifications.ts"
     }
   },
   "license": "MIT",

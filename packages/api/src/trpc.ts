@@ -12,9 +12,12 @@ import { z, ZodError } from "zod/v4";
 
 import type { Auth } from "@acme/auth";
 import { db } from "@acme/db/client";
+import { user } from "@acme/db/schema";
+import { eq } from "@acme/db";
 import { loggerMiddleware, performanceMonitor } from "./middleware/logger";
 import { sentryMiddleware } from "./middleware/sentry";
 import { standardRateLimit, publicRateLimit } from "./middleware/rate-limit";
+import { getImpersonationState, type ImpersonationState } from "./lib/impersonation";
 
 /**
  * 1. CONTEXT
@@ -34,13 +37,53 @@ export const createTRPCContext = async (opts: {
   auth: Auth;
 }) => {
   const authApi = opts.auth.api;
-  const session = await authApi.getSession({
+  const originalSession = await authApi.getSession({
     headers: opts.headers,
   });
+
+  // Check for impersonation state
+  const impersonation = getImpersonationState(opts.headers);
+
+  // If impersonating and we have a valid session, swap the user
+  let session = originalSession;
+  if (impersonation.isImpersonating && originalSession?.user && impersonation.impersonatedUser) {
+    // Verify the logged-in user is the same admin who started impersonation
+    if (originalSession.user.id === impersonation.originalAdmin?.id) {
+      // Fetch the impersonated user from database
+      const impersonatedUser = await db.query.user.findFirst({
+        where: eq(user.id, impersonation.impersonatedUser.id),
+      });
+
+      if (impersonatedUser) {
+        // Swap the session user with the impersonated user
+        session = {
+          ...originalSession,
+          user: {
+            id: impersonatedUser.id,
+            email: impersonatedUser.email,
+            name: impersonatedUser.name,
+            emailVerified: impersonatedUser.emailVerified,
+            image: null,
+            createdAt: impersonatedUser.createdAt,
+            updatedAt: impersonatedUser.updatedAt,
+          },
+        };
+      }
+    }
+  }
+
   return {
     authApi,
     session,
     db,
+    headers: opts.headers,
+    // Impersonation context
+    impersonation: {
+      isImpersonating: impersonation.isImpersonating,
+      originalAdmin: impersonation.originalAdmin,
+      impersonatedUser: impersonation.impersonatedUser,
+      logId: impersonation.logId,
+    } as ImpersonationState,
   };
 };
 /**

@@ -63,19 +63,19 @@ export function Navbar() {
             <Link href="/" className="flex items-center">
               {/* Mobile: Icon */}
               <Image
-                src="/vendgros-icon.png"
+                src="/vendgros-icon-web.png"
                 alt="VendGros"
-                width={40}
-                height={40}
+                width={48}
+                height={48}
                 priority
                 className="md:hidden"
               />
               {/* Desktop: Full logo */}
               <Image
-                src="/vendgros-logo-light.png"
+                src="/vendgros-logo-web-light.png"
                 alt="VendGros"
-                width={182}
-                height={38}
+                width={220}
+                height={46}
                 priority
                 className="hidden md:block"
               />

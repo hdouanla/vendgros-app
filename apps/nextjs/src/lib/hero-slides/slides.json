@@ -30,5 +30,13 @@
     "ctaTextKey": "browseListings",
     "ctaHref": "/listings/search",
     "backgroundImage": "/images/slider/vendgros-hero-slide-bg-04.jpg"
+  },
+  {
+    "titleKey": "heroSlide5Title",
+    "subtitleKey": "heroSlide5Subtitle",
+    "descriptionKey": "heroSlide5Description",
+    "ctaTextKey": "shopNow",
+    "ctaHref": "/listings/search",
+    "backgroundImage": "/images/slider/vendgros-hero-slide-bg-05.jpg"
   }
 ]

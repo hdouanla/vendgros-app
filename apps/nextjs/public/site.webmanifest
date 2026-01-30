@@ -1,7 +1,6 @@
 {
-  "name": "VendGros",
-  "short_name": "VendGros",
-  "description": "Buy and Sell Bulk Items Locally",
+  "name": "MyWebSite",
+  "short_name": "MySite",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -16,9 +15,7 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#0DAE09",
+  "theme_color": "#ffffff",
   "background_color": "#ffffff",
-  "display": "standalone",
-  "start_url": "/",
-  "scope": "/"
+  "display": "standalone"
 }

@@ -57,7 +57,10 @@
       "WebSearch",
       "Bash(npm view:*)",
       "WebFetch(domain:github.com)",
-      "Bash(npx dotenv:*)"
+      "Bash(npx dotenv:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run dev:next:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { getSession } from "~/auth/server";
 import { db } from "@acme/db/client";
 import { ListingForm } from "~/components/listings/listing-form";
 
 export default async function CreateListingPage() {
+  const t = await getTranslations("listing");
   const session = await getSession();
 
   // Redirect to signin if not authenticated
@@ -36,11 +38,10 @@ export default async function CreateListingPage() {
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
-          Create Listing
+          {t("createListing")}
         </h1>
         <p className="mt-2 text-sm text-gray-600">
-          List your bulk items for sale to the community. All listings are
-          reviewed before publication.
+          {t("createListingSubtitle")}
         </p>
       </div>
 

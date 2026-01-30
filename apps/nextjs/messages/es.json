@@ -130,6 +130,7 @@
     "title": "Anuncio",
     "listings": "Anuncios",
     "createListing": "Crear anuncio",
+    "createListingSubtitle": "Publica tus artículos al por mayor para venderlos a la comunidad. Todos los anuncios se revisan antes de su publicación.",
     "editListing": "Editar anuncio",
     "deleteListing": "Eliminar anuncio",
     "submitForReview": "Enviar para revisión",

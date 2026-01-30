@@ -130,6 +130,7 @@
     "title": "Annonce",
     "listings": "Annonces",
     "createListing": "Créer une annonce",
+    "createListingSubtitle": "Publiez vos articles en vrac pour les vendre à la communauté. Toutes les annonces sont vérifiées avant publication.",
     "editListing": "Modifier l'annonce",
     "deleteListing": "Supprimer l'annonce",
     "submitForReview": "Soumettre pour révision",

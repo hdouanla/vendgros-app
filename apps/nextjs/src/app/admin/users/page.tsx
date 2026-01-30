@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 
 type UserStatus = "ALL" | "ACTIVE" | "SUSPENDED" | "BANNED";
@@ -12,12 +13,15 @@ type Notification = {
 } | null;
 
 export default function UserManagementPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<UserStatus>("ALL");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserEmail, setSelectedUserEmail] = useState<string>("");
+  const [selectedUserName, setSelectedUserName] = useState<string>("");
   const [actionReason, setActionReason] = useState("");
-  const [showActionModal, setShowActionModal] = useState<"suspend" | "ban" | "view" | "reactivate" | null>(null);
+  const [impersonationReason, setImpersonationReason] = useState("");
+  const [showActionModal, setShowActionModal] = useState<"suspend" | "ban" | "view" | "reactivate" | "impersonate" | null>(null);
   const [notification, setNotification] = useState<Notification>(null);
 
   const utils = api.useUtils();
@@ -81,6 +85,28 @@ export default function UserManagementPage() {
     },
   });
 
+  const startImpersonation = api.admin.startImpersonation.useMutation({
+    onSuccess: (data) => {
+      // Set the impersonation cookie
+      if (data.cookie) {
+        document.cookie = `${data.cookie.name}=${data.cookie.value};path=${data.cookie.options.path};max-age=${data.cookie.options.maxAge};samesite=${data.cookie.options.sameSite}${data.cookie.options.secure ? ";secure" : ""}`;
+      }
+      setShowActionModal(null);
+      setSelectedUserId(null);
+      setSelectedUserEmail("");
+      setSelectedUserName("");
+      setImpersonationReason("");
+      showNotification("success", `Now impersonating ${data.impersonatedUser.name || data.impersonatedUser.email}`);
+      // Invalidate session and redirect to home
+      void utils.auth.getSession.invalidate();
+      router.push("/");
+      router.refresh();
+    },
+    onError: (error) => {
+      showNotification("error", error.message || "Failed to start impersonation");
+    },
+  });
+
   const handleSuspend = async () => {
     if (!selectedUserId || actionReason.length < 10) return;
     await suspendUser.mutateAsync({ userId: selectedUserId, reason: actionReason });
@@ -96,18 +122,30 @@ export default function UserManagementPage() {
     await reactivateUser.mutateAsync({ userId: selectedUserId });
   };
 
-  const openActionModal = (userId: string, email: string, action: "suspend" | "ban" | "view" | "reactivate") => {
+  const handleImpersonate = async () => {
+    if (!selectedUserId) return;
+    await startImpersonation.mutateAsync({
+      userId: selectedUserId,
+      reason: impersonationReason || undefined,
+    });
+  };
+
+  const openActionModal = (userId: string, email: string, action: "suspend" | "ban" | "view" | "reactivate" | "impersonate", name?: string) => {
     setSelectedUserId(userId);
     setSelectedUserEmail(email);
+    setSelectedUserName(name || "");
     setShowActionModal(action);
     setActionReason("");
+    setImpersonationReason("");
   };
 
   const closeModal = () => {
     setShowActionModal(null);
     setSelectedUserId(null);
     setSelectedUserEmail("");
+    setSelectedUserName("");
     setActionReason("");
+    setImpersonationReason("");
   };
 
   return (
@@ -298,6 +336,12 @@ export default function UserManagementPage() {
                             {user.accountStatus === "ACTIVE" && (
                               <>
                                 <button
+                                  onClick={() => openActionModal(user.id, user.email, "impersonate", user.name)}
+                                  className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+                                >
+                                  Impersonate
+                                </button>
+                                <button
                                   onClick={() => openActionModal(user.id, user.email, "suspend")}
                                   className="text-yellow-600 hover:text-yellow-800 text-sm"
                                 >
@@ -442,6 +486,91 @@ export default function UserManagementPage() {
                 className="flex-1 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
               >
                 {reactivateUser.isPending ? "Reactivating..." : "Reactivate"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Impersonation Confirmation Modal */}
+      {showActionModal === "impersonate" && selectedUserId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center justify-center h-10 w-10 rounded-full bg-purple-100">
+                <svg
+                  className="h-6 w-6 text-purple-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Impersonate User
+              </h2>
+            </div>
+
+            <p className="mb-4 text-sm text-gray-600">
+              You are about to impersonate this user. You will see the platform exactly as they see it.
+              This action is logged for security purposes.
+            </p>
+
+            <div className="mb-4 rounded-md bg-purple-50 p-4">
+              <p className="font-medium text-purple-900">{selectedUserName || "User"}</p>
+              <p className="text-sm text-purple-700">{selectedUserEmail}</p>
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="impersonation-reason" className="block text-sm font-medium text-gray-700 mb-1">
+                Reason (optional)
+              </label>
+              <textarea
+                id="impersonation-reason"
+                value={impersonationReason}
+                onChange={(e) => setImpersonationReason(e.target.value)}
+                rows={2}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                placeholder="e.g., Investigating support ticket #1234"
+              />
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
+              <div className="flex items-start gap-2">
+                <svg className="h-5 w-5 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <p className="text-sm text-yellow-800">
+                  You will be redirected to the homepage as this user. A purple banner will appear at the top with an "Exit Impersonation" button.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={closeModal}
+                className="flex-1 rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleImpersonate}
+                disabled={startImpersonation.isPending}
+                className="flex-1 rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+              >
+                {startImpersonation.isPending ? "Starting..." : "Start Impersonation"}
               </button>
             </div>
           </div>

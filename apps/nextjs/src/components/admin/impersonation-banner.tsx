@@ -32,7 +32,7 @@ export function ImpersonationBanner() {
   const impersonatedUser = session.user;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 text-white shadow-lg">
+    <div className="sticky top-0 z-50 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 text-white shadow-lg">
       <div className="mx-auto max-w-7xl px-4 py-3">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
           {/* Left side - Info */}

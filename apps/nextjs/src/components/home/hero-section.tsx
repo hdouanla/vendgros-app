@@ -74,9 +74,9 @@ export function HeroSection() {
             <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(250,241,229,0.97)_0%,rgba(250,241,229,0.7)_40%,transparent_100%)]" />
           </div>
 
-          {/* Content */}
-          <div className="relative flex h-full items-center">
-            <div className="mx-auto w-full max-w-content px-4 py-8 md:py-10 lg:py-12">
+          {/* Content - top-aligned on mobile to avoid overlap with dots */}
+          <div className="relative flex h-full items-start pt-8 md:items-center md:pt-0">
+            <div className="mx-auto w-full max-w-content px-4 pb-12 pt-0 md:py-10 md:pb-10 lg:py-12 lg:pb-12">
               <p className="mb-2 text-base font-semibold uppercase tracking-wider text-[#067a04] drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] md:text-lg">
                 {t(slide.subtitleKey)}
               </p>
@@ -97,7 +97,7 @@ export function HeroSection() {
         </div>
       ))}
 
-      {/* Dots - centered, above search box overlap */}
+      {/* Dots - on mobile well below top-aligned content, on md+ above search box */}
       <div
         className="absolute bottom-20 left-1/2 z-20 flex -translate-x-1/2 gap-2.5 md:bottom-16"
         role="tablist"
@@ -113,7 +113,7 @@ export function HeroSection() {
             onClick={() => setIndex(i)}
             className="h-3.5 w-3.5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#0DAE09] focus:ring-offset-2 md:h-4 md:w-4"
             style={{
-              backgroundColor: i === index ? "#0DAE09" : "rgba(0,0,0,0.3)",
+              backgroundColor: i === index ? "white" : "rgba(0,0,0,0.3)",
             }}
           />
         ))}

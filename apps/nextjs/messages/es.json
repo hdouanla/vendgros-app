@@ -139,6 +139,24 @@
     "published": "Publicado",
     "completed": "Completado",
     "cancelled": "Cancelado",
+    "statuses": {
+      "DRAFT": "Borrador",
+      "PENDING_REVIEW": "En revisión",
+      "PUBLISHED": "Publicado",
+      "RESERVED": "Reservado",
+      "COMPLETED": "Completado",
+      "EXPIRED": "Expirado"
+    },
+    "categories": {
+      "ELECTRONICS": "Electrónica",
+      "FASHION": "Moda",
+      "HOME_GARDEN": "Hogar y jardín",
+      "SPORTS_HOBBIES": "Deportes y pasatiempos",
+      "HEALTH_BEAUTY": "Salud y belleza",
+      "GROCERIES": "Comestibles",
+      "SERVICES": "Servicios",
+      "GENERAL": "General"
+    },
     "itemTitle": "Título del artículo",
     "description": "Descripción",
     "category": "Categoría",

@@ -491,7 +491,7 @@ export default function ListingDetailPage({
 
             <div className="mb-4 flex items-center gap-2">
               <span className="inline-block rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
-                {listing.category}
+                {tListing(`categories.${listing.category}`)}
               </span>
               <span
                 className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${
@@ -500,7 +500,7 @@ export default function ListingDetailPage({
                     : "bg-yellow-100 text-yellow-800"
                 }`}
               >
-                {listing.status}
+                {tListing(`statuses.${listing.status}`)}
               </span>
               {!listing.isActive && (
                 <span className="inline-block rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-800">

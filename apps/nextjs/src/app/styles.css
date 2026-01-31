@@ -177,3 +177,27 @@
   background-color: transparent;
   padding: 0;
 }
+
+/* Mapbox marker cursor fix */
+.custom-marker,
+.mapboxgl-marker {
+  cursor: pointer !important;
+}
+
+/* Mapbox popup close button */
+.mapboxgl-popup-close-button {
+  font-size: 24px !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 28px !important;
+  padding: 0 !important;
+  right: 4px !important;
+  top: 4px !important;
+  color: #6b7280 !important;
+  border-radius: 4px !important;
+}
+
+.mapboxgl-popup-close-button:hover {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}

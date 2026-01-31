@@ -139,6 +139,24 @@
     "published": "Published",
     "completed": "Completed",
     "cancelled": "Cancelled",
+    "statuses": {
+      "DRAFT": "Draft",
+      "PENDING_REVIEW": "In Review",
+      "PUBLISHED": "Published",
+      "RESERVED": "Reserved",
+      "COMPLETED": "Completed",
+      "EXPIRED": "Expired"
+    },
+    "categories": {
+      "ELECTRONICS": "Electronics",
+      "FASHION": "Fashion",
+      "HOME_GARDEN": "Home & Garden",
+      "SPORTS_HOBBIES": "Sports & Hobbies",
+      "HEALTH_BEAUTY": "Health & Beauty",
+      "GROCERIES": "Groceries",
+      "SERVICES": "Services",
+      "GENERAL": "General"
+    },
     "itemTitle": "Item Title",
     "description": "Description",
     "category": "Category",

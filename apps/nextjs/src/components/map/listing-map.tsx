@@ -120,21 +120,23 @@ export function ListingMap({
       el.style.border = "2px solid white";
       el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.3)";
       el.style.cursor = "pointer";
+      el.style.pointerEvents = "auto";
       el.style.display = "flex";
       el.style.alignItems = "center";
       el.style.justifyContent = "center";
       el.style.color = "white";
       el.style.fontSize = "16px";
       el.style.fontWeight = "bold";
+      el.style.transition = "box-shadow 0.15s ease";
       el.innerHTML = "📍";
 
-      // Hover effect
+      // Hover effect - use box-shadow instead of transform to avoid position shift
       el.addEventListener("mouseenter", () => {
-        el.style.transform = "scale(1.2)";
+        el.style.boxShadow = "0 4px 12px rgba(0,0,0,0.4)";
         el.style.zIndex = "1000";
       });
       el.addEventListener("mouseleave", () => {
-        el.style.transform = "scale(1)";
+        el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.3)";
         el.style.zIndex = "1";
       });
 
@@ -180,18 +182,11 @@ export function ListingMap({
         closeOnClick: false,
       }).setHTML(popupContent);
 
-      // Create marker
+      // Create marker with popup - clicking marker toggles popup
       const marker = new mapboxgl.Marker(el)
         .setLngLat([listing.longitude, listing.latitude])
         .setPopup(popup)
         .addTo(map.current!);
-
-      // Handle marker click
-      el.addEventListener("click", () => {
-        if (onMarkerClick) {
-          onMarkerClick(listing.id);
-        }
-      });
 
       markers.current.push(marker);
     });

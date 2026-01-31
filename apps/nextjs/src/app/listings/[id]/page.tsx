@@ -8,6 +8,7 @@ import Link from "next/link";
 import { ImageLightbox } from "~/components/ui/image-lightbox";
 import { LikeButton } from "~/components/listings/like-button";
 import { FavoriteButton } from "~/components/listings/favorite-button";
+import { ShareButtons } from "~/components/listings/share-buttons";
 import { ListingCard } from "~/components/listings/listing-card";
 import { useLastVisited } from "~/hooks/use-last-visited";
 import { getStorageUrl } from "~/lib/storage";
@@ -476,7 +477,7 @@ export default function ListingDetailPage({
             </h1>
 
             {/* Engagement buttons */}
-            <div className="mb-4 flex items-center gap-3">
+            <div className="mb-4 flex flex-wrap items-center gap-3">
               <LikeButton
                 listingId={listing.id}
                 initialLikesCount={listing.likesCount ?? 0}
@@ -486,6 +487,10 @@ export default function ListingDetailPage({
               <FavoriteButton
                 listingId={listing.id}
                 variant="button"
+              />
+              <ShareButtons
+                title={listing.title}
+                url={typeof window !== "undefined" ? window.location.href : `https://vendgros.ca/listings/${listing.id}`}
               />
             </div>
 

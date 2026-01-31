@@ -715,7 +715,7 @@ export function ListingForm({
         {/* Weight */}
         <div>
           <label htmlFor="weightKg" className="block text-sm font-medium">
-            {tListing("weight")} (kg)
+            {tListing("weight")} (kg), {tListing("ifApplicable")}
           </label>
           <input
             type="number"
@@ -733,7 +733,7 @@ export function ListingForm({
         {/* Dimensions */}
         <div>
           <label className="block text-sm font-medium mb-2">
-            {tListing("dimensions")} (cm)
+            {tListing("dimensions")} (cm), {tListing("ifApplicable")}
           </label>
           <div className="grid grid-cols-3 gap-3">
             <div>

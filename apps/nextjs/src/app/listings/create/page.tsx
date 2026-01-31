@@ -51,14 +51,14 @@ export default async function CreateListingPage() {
 
       <div className="mt-8 rounded-lg bg-blue-50 p-4">
         <h3 className="text-sm font-medium text-blue-900">
-          How it works:
+          {t("howItWorks")}
         </h3>
         <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-blue-800">
-          <li>Create your listing with detailed information and photos</li>
-          <li>Submit for review - our team will verify within 24 hours</li>
-          <li>Once approved, buyers can reserve with a 5% deposit</li>
-          <li>Complete the sale in person at your pickup location</li>
-          <li>Receive 95% balance payment at pickup</li>
+          <li>{t("howItWorksStep1")}</li>
+          <li>{t("howItWorksStep2")}</li>
+          <li>{t("howItWorksStep3")}</li>
+          <li>{t("howItWorksStep4")}</li>
+          <li>{t("howItWorksStep5")}</li>
         </ul>
       </div>
     </div>

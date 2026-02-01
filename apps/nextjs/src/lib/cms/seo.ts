@@ -20,7 +20,7 @@
  * @see metadata.ts - Generates Next.js Metadata from SEO config
  */
 
-import type { CMSLocale, CMSSlug } from "./config";
+import type { CMSLocale, CMSSlug } from "./constants";
 
 /**
  * SEO metadata for a single page (description & keywords only)

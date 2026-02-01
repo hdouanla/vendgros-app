@@ -18,7 +18,8 @@
 import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 
-import { CMS_SLUGS } from "~/lib/cms";
+// Import directly from constants to avoid triggering env validation
+import { CMS_SLUGS } from "~/lib/cms/constants";
 
 // Secret token for authorization (set in environment variables)
 const CMS_REVALIDATE_SECRET = process.env.CMS_REVALIDATE_SECRET;

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import type { CMSPage } from "~/lib/cms";
 
+import { StaticSidebar } from "~/components/layout/static-sidebar";
 import { CMSContent } from "./cms-content";
 
 interface CMSPageLayoutProps {
@@ -29,27 +30,32 @@ export function CMSPageLayout({ page, relatedLinks }: CMSPageLayoutProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
-      <div className="mx-auto max-w-4xl px-4">
-        <div className="rounded-lg bg-white p-8 shadow-md">
-          <h1 className="mb-8 text-3xl font-bold text-gray-900">{page.title}</h1>
+      <div className="mx-auto max-w-6xl px-4">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_280px]">
+          <div className="min-w-0">
+            <div className="rounded-lg bg-white p-8 shadow-md">
+              <h1 className="mb-8 text-3xl font-bold text-gray-900">{page.title}</h1>
 
-          <CMSContent content={page.content} />
+              <CMSContent content={page.content} />
 
-          {/* Footer links section */}
-          <div className="mt-8 flex flex-wrap gap-4 border-t pt-6">
-            <Link href="/" className="text-green-600 hover:underline">
-              &larr; Back to Home
-            </Link>
-
-            {relatedLinks?.map((link) => (
-              <span key={link.href} className="flex items-center gap-4">
-                <span className="text-gray-300">|</span>
-                <Link href={link.href} className="text-green-600 hover:underline">
-                  {link.label}
+              {/* Footer links section */}
+              <div className="mt-8 flex flex-wrap gap-4 border-t pt-6">
+                <Link href="/" className="text-green-600 hover:underline">
+                  &larr; Back to Home
                 </Link>
-              </span>
-            ))}
+
+                {relatedLinks?.map((link) => (
+                  <span key={link.href} className="flex items-center gap-4">
+                    <span className="text-gray-300">|</span>
+                    <Link href={link.href} className="text-green-600 hover:underline">
+                      {link.label}
+                    </Link>
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
+          <StaticSidebar />
         </div>
       </div>
     </div>

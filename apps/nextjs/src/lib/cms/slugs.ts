@@ -22,7 +22,7 @@
  * @see seo.ts - SEO metadata per page/locale
  */
 
-import type { CMSLocale, CMSSlug } from "./config";
+import type { CMSLocale, CMSSlug } from "./constants";
 
 /**
  * Mapping of route slugs to translated WordPress page slugs

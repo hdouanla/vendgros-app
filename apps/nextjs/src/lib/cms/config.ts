@@ -9,6 +9,7 @@
  * - App provides: SEO metadata (description, keywords) via seo.ts
  * - Slugs are translated per locale via slugs.ts
  *
+ * @see constants.ts - Static constants (no env dependency)
  * @see slugs.ts - WordPress slug translations per language
  * @see seo.ts - SEO metadata configuration
  * @see client.ts - WordPress REST API client
@@ -16,30 +17,25 @@
 
 import { env } from "~/env";
 
-// Valid page slugs for CMS content (route slugs)
-export const CMS_SLUGS = [
-  "privacy-policy",
-  "terms-of-service",
-  "about",
-  "careers",
-  "help",
-  "safety",
-  "fees",
-  "contact",
-  "cookies",
-  "how-it-works",
-] as const;
+import {
+  CMS_LOCALES,
+  CMS_SLUGS,
+  DEFAULT_CMS_LOCALE,
+  isValidLocale,
+  isValidSlug,
+} from "./constants";
 
-export type CMSSlug = (typeof CMS_SLUGS)[number];
+// Re-export constants for backward compatibility
+export {
+  CMS_LOCALES,
+  CMS_SLUGS,
+  DEFAULT_CMS_LOCALE,
+  isValidLocale,
+  isValidSlug,
+};
+export type { CMSLocale, CMSSlug } from "./constants";
 
-// Supported locales for CMS content
-export const CMS_LOCALES = ["en", "fr", "es"] as const;
-export type CMSLocale = (typeof CMS_LOCALES)[number];
-
-// Default locale when none is specified
-export const DEFAULT_CMS_LOCALE: CMSLocale = "en";
-
-// CMS configuration object
+// CMS configuration object (requires env)
 export const cmsConfig = {
   /** Base URL for WordPress CMS */
   baseUrl: env.NEXT_PUBLIC_CMS_URL,
@@ -71,18 +67,4 @@ export function buildApiUrl(endpoint: string): string {
   const path = cmsConfig.apiPath.replace(/\/$/, "");
   const clean = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
   return `${base}${path}${clean}`;
-}
-
-/**
- * Check if a slug is valid
- */
-export function isValidSlug(slug: string): slug is CMSSlug {
-  return CMS_SLUGS.includes(slug as CMSSlug);
-}
-
-/**
- * Check if a locale is valid
- */
-export function isValidLocale(locale: string): locale is CMSLocale {
-  return CMS_LOCALES.includes(locale as CMSLocale);
 }

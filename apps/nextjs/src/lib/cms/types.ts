@@ -16,7 +16,7 @@
  * @see seo.ts - SEO metadata source
  */
 
-import type { CMSLocale, CMSSlug } from "./config";
+import type { CMSLocale, CMSSlug } from "./constants";
 
 // =============================================================================
 // WordPress REST API Types

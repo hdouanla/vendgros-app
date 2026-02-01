@@ -21,13 +21,9 @@
  * @see slugs.ts - Slug translations per locale
  */
 
-import type { CMSLocale, CMSSlug } from "./config";
-import {
-  buildApiUrl,
-  cmsConfig,
-  isValidLocale,
-  isValidSlug,
-} from "./config";
+import type { CMSLocale, CMSSlug } from "./constants";
+import { isValidLocale, isValidSlug } from "./constants";
+import { buildApiUrl, cmsConfig } from "./config";
 import { getPageSeo } from "./seo";
 import { getTranslatedSlug } from "./slugs";
 import type {

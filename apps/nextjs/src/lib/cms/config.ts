@@ -1,6 +1,17 @@
 /**
  * CMS Configuration
- * Centralizes all CMS-related settings and constants
+ *
+ * Centralizes all CMS-related settings and constants for the WordPress
+ * headless CMS integration.
+ *
+ * Architecture:
+ * - WordPress provides: Page title + HTML content
+ * - App provides: SEO metadata (description, keywords) via seo.ts
+ * - Slugs are translated per locale via slugs.ts
+ *
+ * @see slugs.ts - WordPress slug translations per language
+ * @see seo.ts - SEO metadata configuration
+ * @see client.ts - WordPress REST API client
  */
 
 import { env } from "~/env";
@@ -16,6 +27,7 @@ export const CMS_SLUGS = [
   "fees",
   "contact",
   "cookies",
+  "how-it-works",
 ] as const;
 
 export type CMSSlug = (typeof CMS_SLUGS)[number];

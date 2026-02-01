@@ -27,6 +27,10 @@ The Vendgros API is built with tRPC, providing end-to-end type safety between cl
 7. [Admin API](#admin-api)
 8. [User API](#user-api)
 9. [Error Handling](#error-handling)
+10. [Internal/Operations APIs](#internaloperations-apis)
+    - [Cache Revalidation](#post-apirevalidate)
+    - [Cancel Expired Reservations](#get-apicroncancelexpiredreservations)
+    - [Health Check](#get-apihealth)
 
 ---
 
@@ -1174,6 +1178,217 @@ function useListingSearch(postalCode: string) {
 
 ---
 
+## Internal/Operations APIs
+
+These REST API endpoints are used for platform operations, cron jobs, and cache management. They are separate from the tRPC API and use standard HTTP methods.
+
+### POST /api/revalidate
+
+On-demand cache revalidation for CMS pages. Use this to immediately refresh cached content when WordPress content changes.
+
+**Authentication:** Requires `CMS_REVALIDATE_SECRET` environment variable.
+
+**Methods:** POST, GET
+
+**POST Request Body:**
+```typescript
+{
+  secret: string;       // Must match CMS_REVALIDATE_SECRET env var
+  slug?: string;        // Single page slug to revalidate (e.g., "fees", "privacy-policy")
+  all?: boolean;        // Set to true to revalidate all CMS pages
+}
+```
+
+**GET Query Parameters:**
+```
+?secret=YOUR_SECRET&slug=fees        // Single page
+?secret=YOUR_SECRET&all=true         // All pages
+```
+
+**Success Response:**
+```typescript
+{
+  success: true;
+  revalidated: string[];    // Array of revalidated paths (e.g., ["/fees"])
+  timestamp: string;        // ISO timestamp
+}
+```
+
+**Error Responses:**
+```typescript
+// 401 - Invalid secret
+{ error: "Invalid secret" }
+
+// 400 - Invalid slug
+{ error: "Invalid slug: xxx", validSlugs: ["fees", "privacy-policy", ...] }
+
+// 400 - Missing parameters
+{ error: "Provide either 'slug' or 'all: true'" }
+
+// 500 - Server not configured
+{ error: "CMS_REVALIDATE_SECRET not configured" }
+```
+
+**Valid Slugs:**
+- `privacy-policy`
+- `terms-of-service`
+- `about`
+- `careers`
+- `help`
+- `safety`
+- `fees`
+- `contact`
+- `cookies`
+- `how-it-works`
+
+**Example Usage:**
+
+```bash
+# Revalidate single page
+curl -X POST https://vendgros.ca/api/revalidate \
+  -H "Content-Type: application/json" \
+  -d '{"secret": "YOUR_SECRET", "slug": "fees"}'
+
+# Revalidate all CMS pages
+curl -X POST https://vendgros.ca/api/revalidate \
+  -H "Content-Type: application/json" \
+  -d '{"secret": "YOUR_SECRET", "all": true}'
+
+# Quick test via GET
+curl "https://vendgros.ca/api/revalidate?secret=YOUR_SECRET&all=true"
+```
+
+**Use Cases:**
+- WordPress content has been updated
+- Cached page shows stale or error content
+- After fixing CMS configuration issues
+- Manual cache clear during development
+
+**Environment Variable:**
+```bash
+CMS_REVALIDATE_SECRET=your-secure-random-string
+```
+
+---
+
+### GET /api/cron/cancel-expired-reservations
+
+Cron job endpoint that cancels expired pending reservations. Designed for Vercel Cron but can be triggered manually.
+
+**Authentication:** Requires `CRON_SECRET` environment variable via Bearer token.
+
+**Methods:** GET, POST
+
+**Authorization Header:**
+```
+Authorization: Bearer {CRON_SECRET}
+```
+
+**Request:** No body required.
+
+**Success Response:**
+```typescript
+{
+  success: true;
+  cancelled: number;        // Number of reservations cancelled
+  failed: number;           // Number of failures (if any)
+  message: string;          // Human-readable summary
+  details: Array<{
+    id: string;             // Reservation ID
+    success: boolean;
+    reason?: "payment_timeout" | "pickup_expired";
+    error?: any;
+  }>;
+}
+```
+
+**Error Responses:**
+```typescript
+// 401 - Invalid or missing authorization
+{ error: "Invalid authorization" }
+{ error: "Missing authorization header" }
+
+// 500 - Server not configured
+{ error: "CRON_SECRET not configured" }
+
+// 500 - Processing error
+{ success: false, error: "Error message" }
+```
+
+**Cancellation Rules:**
+1. **Payment Timeout:** Reservations in `PENDING` status older than `NEXT_PUBLIC_RESERVATION_PAYMENT_TIMEOUT_MINUTES` (default: 10 minutes)
+2. **Pickup Expired:** Reservations in `PENDING` status past their `expiresAt` timestamp
+
+**Behavior:**
+- Deletes qualifying `PENDING` reservations from the database
+- Does not affect `CONFIRMED`, `COMPLETED`, `NO_SHOW`, or `CANCELLED` reservations
+- Logs each cancellation with reason for debugging
+
+**Example Usage:**
+
+```bash
+# Manual trigger
+curl -X GET https://vendgros.ca/api/cron/cancel-expired-reservations \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+
+# POST also supported
+curl -X POST https://vendgros.ca/api/cron/cancel-expired-reservations \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+```
+
+**Vercel Cron Configuration (`vercel.json`):**
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron/cancel-expired-reservations",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}
+```
+
+**Environment Variables:**
+```bash
+CRON_SECRET=your-secure-cron-secret
+NEXT_PUBLIC_RESERVATION_PAYMENT_TIMEOUT_MINUTES=10
+```
+
+---
+
+### GET /api/health
+
+Health check endpoint for monitoring and load balancers. Verifies database connectivity.
+
+**Authentication:** None required.
+
+**Success Response (200):**
+```typescript
+{
+  status: "healthy";
+  timestamp: string;        // ISO timestamp
+  database: "connected";
+  version: string;          // App version
+}
+```
+
+**Unhealthy Response (503):**
+```typescript
+{
+  status: "unhealthy";
+  timestamp: string;
+  database: "disconnected";
+  error: string;            // Error message
+}
+```
+
+**Example Usage:**
+```bash
+curl https://vendgros.ca/api/health
+```
+
+---
+
 **API Version:** 1.0.0
-**Last Updated:** 2026-01-15
+**Last Updated:** 2026-02-01
 **Support:** dev@vendgros.com

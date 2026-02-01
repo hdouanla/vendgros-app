@@ -112,89 +112,74 @@ export function ListingCard({
           </div>
         )}
 
-        {/* Content - all at bottom */}
+        {/* Content - all at bottom, cleaned for mobile readability */}
         <div
-          className={`absolute inset-x-0 bottom-0 ${size === "large" ? "p-5" : "p-3"}`}
+          className={`absolute inset-x-0 bottom-0 ${size === "large" ? "p-4 sm:p-5" : "p-3 sm:p-4"}`}
         >
-          {/* Title */}
+          {/* Title - clamped so long titles don't overflow */}
           <h3
-            className={`font-bold text-white ${size === "large" ? "mb-2 text-xl" : "mb-1 text-sm"}`}
+            className={`font-bold text-white line-clamp-2 ${
+              size === "large"
+                ? "mb-3 text-base sm:text-lg md:text-xl"
+                : "mb-2 text-sm sm:text-base"
+            }`}
           >
             {listing.title}
           </h3>
 
-          {/* Description left, Price badge right */}
+          {/* Price and availability - clear and readable */}
           <div
-            className={`flex items-center justify-between gap-3 ${size === "large" ? "mb-3" : "mb-2"}`}
+            className={`mb-3 flex flex-wrap items-center justify-between gap-2 ${
+              size === "large" ? "gap-3" : ""
+            }`}
           >
-            <p
-              className={`line-clamp-2 text-white/70 ${
-                size === "large" ? "text-sm" : "text-xs"
-              }`}
-            >
-              {listing.description ?? t("home.featuredSubtitle")}
-            </p>
             <span
-              className={`shrink-0 font-semibold text-white ${
-                size === "large" ? "text-base" : "text-xs"
+              className={`font-semibold text-white ${
+                size === "large"
+                  ? "text-base sm:text-lg"
+                  : "text-sm sm:text-base"
               }`}
             >
               ${(listing.pricePerPiece * 1.05).toFixed(2)}
-              <span className="ml-1 text-white/80">
+              <span className="ml-1 font-normal text-white/90">
                 {t("listing.perPiece")}
               </span>
             </span>
+            <span
+              className={`text-white/90 ${
+                size === "large" ? "text-sm sm:text-base" : "text-xs sm:text-sm"
+              }`}
+            >
+              {t("home.available", { count: listing.quantityAvailable })}
+            </span>
           </div>
 
-          {/* Rating + Likes + Availability */}
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-1 text-white/80">
-              <div className="flex items-center gap-2">
-                <span className="text-yellow-400">★</span>
-                <span
-                  className={`font-medium text-white ${size === "large" ? "text-sm" : "text-xs"}`}
-                >
-                  {ratingAverage !== null
-                    ? Number(ratingAverage).toFixed(1)
-                    : "—"}
-                </span>
-                <span
-                  className={`text-white/70 ${size === "large" ? "text-sm" : "text-xs"}`}
-                >
-                  · {ratingCount} {t("listing.reviews")}
-                </span>
-                <span
-                  className={`flex items-center gap-1 text-white/70 ${size === "large" ? "text-sm" : "text-xs"}`}
-                >
-                  ·
-                  <svg
-                    className="h-3.5 w-3.5"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                  {listing.likesCount ?? 0}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`text-white/70 ${size === "large" ? "text-sm" : "text-xs"}`}
-                >
-                  {t("home.available", { count: listing.quantityAvailable })}
-                </span>
-                {listing.publishedAt && (
-                  <span
-                    className={`text-white/70 ${size === "large" ? "text-sm" : "text-xs"}`}
-                  >
-                    · {new Date(listing.publishedAt).toLocaleDateString()}
-                  </span>
-                )}
-              </div>
+          {/* Single row: optional rating on large, CTA */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex items-center gap-2 text-white/80">
+              <span className="text-yellow-400" aria-hidden>★</span>
+              <span
+                className={`shrink-0 font-medium text-white ${
+                  size === "large" ? "text-sm" : "text-xs sm:text-sm"
+                }`}
+              >
+                {ratingAverage !== null
+                  ? Number(ratingAverage).toFixed(1)
+                  : "—"}
+              </span>
+              <span
+                className={`hidden truncate text-white/70 sm:inline ${
+                  size === "large" ? "text-sm" : "text-xs"
+                }`}
+              >
+                {ratingCount} {t("listing.reviews")}
+              </span>
             </div>
-            <button className="rounded-md bg-[#0DAE09] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#0B9507]">
+            <span
+              className="shrink-0 rounded-md bg-[#0DAE09] px-3 py-2 text-sm font-medium text-white hover:bg-[#0B9507] sm:px-4"
+            >
               {t("home.shopNow")}
-            </button>
+            </span>
           </div>
         </div>
       </Link>

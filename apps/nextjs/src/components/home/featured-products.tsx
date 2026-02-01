@@ -48,8 +48,8 @@ export function FeaturedProducts({ listings }: FeaturedProductsProps) {
           <p className="mt-1 text-gray-600">{t("featuredSubtitle")}</p>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2 lg:gap-4">
-          {/* Main large card - left side (50%) */}
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 lg:gap-4">
+          {/* Main large card - full width on mobile, left on lg */}
           {mainItem && (
             <ListingCard
               listing={mainItem as ListingData}
@@ -58,8 +58,8 @@ export function FeaturedProducts({ listings }: FeaturedProductsProps) {
             />
           )}
 
-          {/* Side grid - 2x2 on right (50%) */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Side grid - 2 cols on all screens for smaller cards */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {sideItems.map((listing) => (
               <ListingCard
                 key={listing.id}

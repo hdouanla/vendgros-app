@@ -124,7 +124,8 @@
     "termsOfService": "Terms of Service",
     "privacyPolicy": "Privacy Policy",
     "cookiePolicy": "Cookie Policy",
-    "copyright": "VendGros Marketplace Inc. All rights reserved."
+    "copyright": "VendGros Marketplace Inc. All rights reserved.",
+    "scanOrClickToFollow": "Scan or click to follow"
   },
   "listing": {
     "title": "Listing",

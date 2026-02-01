@@ -617,6 +617,7 @@
     "featuredSubtitle": "Popular items picked just for you",
     "freshArrivals": "Fresh Arrivals",
     "seeAll": "See All",
+    "noFeaturedListings": "No featured listings yet.",
     "perPiece": "/piece",
     "perSet": "/set",
     "available": "{count} available",

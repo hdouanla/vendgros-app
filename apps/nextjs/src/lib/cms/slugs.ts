@@ -1,9 +1,25 @@
 /**
  * CMS Slug Translations
- * Maps route slugs to WordPress page slugs for each language
  *
- * The URL stays the same (e.g., /privacy-policy) but the WordPress
- * page slug changes based on the user's selected language.
+ * Maps Next.js route slugs to WordPress page slugs for each language.
+ * This enables multilanguage support without WordPress plugins (WPML, Polylang).
+ *
+ * How it works:
+ * - URL stays the same for all languages (e.g., /privacy-policy)
+ * - WordPress page slug changes per locale (e.g., "politique-de-confidentialite" for FR)
+ * - Each language has separate WordPress pages with translated slugs
+ *
+ * CONSTRAINT: WordPress slugs must be UNIQUE within each language.
+ * The module validates this at load time and throws an error if duplicates exist.
+ *
+ * To add a new page:
+ * 1. Add route slug to config.ts → CMS_SLUGS
+ * 2. Add translations here (unique slug per language)
+ * 3. Add SEO config in seo.ts
+ * 4. Create WordPress pages with matching slugs
+ *
+ * @see config.ts - Valid route slugs
+ * @see seo.ts - SEO metadata per page/locale
  */
 
 import type { CMSLocale, CMSSlug } from "./config";
@@ -12,6 +28,8 @@ import type { CMSLocale, CMSSlug } from "./config";
  * Mapping of route slugs to translated WordPress page slugs
  * Key: route slug (used in Next.js routes)
  * Value: object with WordPress page slug for each language
+ *
+ * CONSTRAINT: All WordPress slugs must be unique per language
  */
 export const slugTranslations: Record<CMSSlug, Record<CMSLocale, string>> = {
   "privacy-policy": {
@@ -50,16 +68,49 @@ export const slugTranslations: Record<CMSSlug, Record<CMSLocale, string>> = {
     es: "tarifas",
   },
   contact: {
-    en: "contact",
-    fr: "contact",
-    es: "contacto",
+    en: "contact-us",
+    fr: "nous-contacter",
+    es: "contactenos",
   },
   cookies: {
-    en: "cookies",
-    fr: "cookies",
-    es: "cookies",
+    en: "cookie-policy",
+    fr: "politique-cookies",
+    es: "politica-cookies",
+  },
+  "how-it-works": {
+    en: "how-it-works",
+    fr: "comment-ca-fonctionne",
+    es: "como-funciona",
   },
 };
+
+/**
+ * Validate that all WordPress slugs are unique per language
+ * Throws an error if duplicates are found
+ */
+function validateUniqueSlags(): void {
+  const locales: CMSLocale[] = ["en", "fr", "es"];
+
+  for (const locale of locales) {
+    const slugs = new Map<string, string>();
+
+    for (const [routeSlug, translations] of Object.entries(slugTranslations)) {
+      const wpSlug = translations[locale];
+
+      if (slugs.has(wpSlug)) {
+        throw new Error(
+          `Duplicate WordPress slug "${wpSlug}" for locale "${locale}". ` +
+            `Routes "${slugs.get(wpSlug)}" and "${routeSlug}" cannot share the same slug.`
+        );
+      }
+
+      slugs.set(wpSlug, routeSlug);
+    }
+  }
+}
+
+// Validate on module load (will throw at build time if duplicates exist)
+validateUniqueSlags();
 
 /**
  * Get the WordPress page slug for a given route slug and locale

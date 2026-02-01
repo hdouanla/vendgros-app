@@ -1,6 +1,19 @@
 /**
  * CMS Type Definitions
- * TypeScript interfaces for WordPress API responses and internal types
+ *
+ * TypeScript interfaces for WordPress REST API responses and internal types.
+ *
+ * Architecture:
+ * - WP* types: Raw WordPress REST API response structures
+ * - CMS* types: Processed/transformed types used in the app
+ *
+ * Data flow:
+ * 1. WordPress REST API returns WPPage
+ * 2. client.ts transforms to CMSPage (title from WP, SEO from seo.ts)
+ * 3. Pages use CMSPage for rendering and metadata
+ *
+ * @see client.ts - Transformation logic
+ * @see seo.ts - SEO metadata source
  */
 
 import type { CMSLocale, CMSSlug } from "./config";
@@ -47,33 +60,8 @@ export interface WPFeaturedMedia {
 }
 
 /**
- * Yoast SEO meta from WordPress
- */
-export interface WPYoastMeta {
-  yoast_head?: string;
-  yoast_head_json?: {
-    title?: string;
-    description?: string;
-    canonical?: string;
-    og_title?: string;
-    og_description?: string;
-    og_url?: string;
-    og_site_name?: string;
-    og_image?: {
-      url: string;
-      width: number;
-      height: number;
-      type: string;
-    }[];
-    twitter_card?: string;
-    twitter_title?: string;
-    twitter_description?: string;
-    twitter_image?: string;
-  };
-}
-
-/**
  * Raw WordPress page response from REST API
+ * SEO metadata is managed app-side (see seo.ts), not from WordPress plugins
  */
 export interface WPPage {
   id: number;
@@ -90,19 +78,10 @@ export interface WPPage {
   excerpt: WPRendered;
   featured_media: number;
   template: string;
-  // Extended fields from plugins
+  // Featured media embedding
   _embedded?: {
     "wp:featuredmedia"?: WPFeaturedMedia[];
   };
-  // Yoast SEO fields
-  yoast_head?: string;
-  yoast_head_json?: WPYoastMeta["yoast_head_json"];
-  // WPML/Polylang translation info
-  lang?: string;
-  translations?: Record<string, number>;
-  // Rank Math SEO fields (alternative to Yoast)
-  rank_math_title?: string;
-  rank_math_description?: string;
 }
 
 // =============================================================================
@@ -110,21 +89,23 @@ export interface WPPage {
 // =============================================================================
 
 /**
- * SEO metadata extracted from WordPress
+ * SEO metadata (managed app-side in seo.ts)
  */
 export interface CMSSeoMeta {
+  // Core SEO
   title: string;
   description: string;
-  canonical?: string;
+  keywords?: string[];
+  // Open Graph
+  ogTitle?: string;
+  ogDescription?: string;
   ogImage?: {
     url: string;
     width: number;
     height: number;
-    type?: string;
   };
-  ogTitle?: string;
-  ogDescription?: string;
-  twitterCard?: string;
+  // Twitter Cards
+  twitterCard?: "summary" | "summary_large_image";
   twitterTitle?: string;
   twitterDescription?: string;
   twitterImage?: string;

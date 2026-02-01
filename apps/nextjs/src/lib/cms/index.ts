@@ -18,17 +18,18 @@
 // Client
 export { cmsClient, WordPressClient } from "./client";
 
-// Configuration
+// Constants (no env dependency - safe to import anywhere)
 export {
-  buildApiUrl,
   CMS_LOCALES,
   CMS_SLUGS,
-  cmsConfig,
   DEFAULT_CMS_LOCALE,
   isValidLocale,
   isValidSlug,
-} from "./config";
-export type { CMSLocale, CMSSlug } from "./config";
+} from "./constants";
+export type { CMSLocale, CMSSlug } from "./constants";
+
+// Configuration (requires env)
+export { buildApiUrl, cmsConfig } from "./config";
 
 // Slug translations
 export { getTranslatedSlug, slugTranslations } from "./slugs";

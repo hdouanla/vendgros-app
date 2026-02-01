@@ -17,6 +17,8 @@ export const env = createEnv({
    */
   server: {
     POSTGRES_URL: z.string().min(1),
+    // Secret for on-demand CMS cache revalidation API
+    CMS_REVALIDATE_SECRET: z.string().min(1).optional(),
   },
 
   /**

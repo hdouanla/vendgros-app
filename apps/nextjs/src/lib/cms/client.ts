@@ -1,6 +1,24 @@
 /**
  * WordPress REST API Client
- * Fetches and transforms content from WordPress CMS
+ *
+ * Fetches and transforms page content from WordPress headless CMS.
+ *
+ * Data sources:
+ * - Title: WordPress page title
+ * - Content: WordPress page content (HTML)
+ * - SEO (description, keywords): App-side config (seo.ts)
+ * - WordPress slug: Translated per locale (slugs.ts)
+ *
+ * Flow:
+ * 1. Route slug (e.g., "about") → WordPress slug (e.g., "a-propos" for FR)
+ * 2. Fetch from WordPress REST API
+ * 3. Combine WP title/content with app-side SEO
+ * 4. Return CMSPage object
+ *
+ * No WordPress SEO plugins required - all SEO is managed in seo.ts
+ *
+ * @see seo.ts - SEO metadata configuration
+ * @see slugs.ts - Slug translations per locale
  */
 
 import type { CMSLocale, CMSSlug } from "./config";
@@ -10,6 +28,7 @@ import {
   isValidLocale,
   isValidSlug,
 } from "./config";
+import { getPageSeo } from "./seo";
 import { getTranslatedSlug } from "./slugs";
 import type {
   CMSError,
@@ -27,45 +46,30 @@ function stripHtml(html: string): string {
 }
 
 /**
- * Extract SEO metadata from WordPress page
+ * Build SEO metadata
+ * Title comes from WordPress, description & keywords from app-side config
  */
-function extractSeoMeta(wpPage: WPPage, fallbackTitle: string): CMSSeoMeta {
-  // Try Yoast SEO first
-  if (wpPage.yoast_head_json) {
-    const yoast = wpPage.yoast_head_json;
-    return {
-      title: yoast.title ?? fallbackTitle,
-      description: yoast.description ?? stripHtml(wpPage.excerpt.rendered),
-      canonical: yoast.canonical,
-      ogTitle: yoast.og_title,
-      ogDescription: yoast.og_description,
-      ogImage: yoast.og_image?.[0]
-        ? {
-            url: yoast.og_image[0].url,
-            width: yoast.og_image[0].width,
-            height: yoast.og_image[0].height,
-            type: yoast.og_image[0].type,
-          }
-        : undefined,
-      twitterCard: yoast.twitter_card,
-      twitterTitle: yoast.twitter_title,
-      twitterDescription: yoast.twitter_description,
-      twitterImage: yoast.twitter_image,
-    };
-  }
+function buildSeoMeta(
+  wpTitle: string,
+  routeSlug: CMSSlug,
+  locale: CMSLocale
+): CMSSeoMeta {
+  const seoConfig = getPageSeo(routeSlug, locale);
+  const title = `${wpTitle} - VendGros`;
 
-  // Try Rank Math SEO
-  if (wpPage.rank_math_title || wpPage.rank_math_description) {
-    return {
-      title: wpPage.rank_math_title ?? fallbackTitle,
-      description: wpPage.rank_math_description ?? stripHtml(wpPage.excerpt.rendered),
-    };
-  }
-
-  // Fallback to basic page data
   return {
-    title: `${fallbackTitle} - VendGros`,
-    description: stripHtml(wpPage.excerpt.rendered) || `${fallbackTitle} page for VendGros marketplace.`,
+    title,
+    description: seoConfig.description,
+    keywords: seoConfig.keywords,
+    ogTitle: title,
+    ogDescription: seoConfig.description,
+    ogImage: seoConfig.ogImage
+      ? { url: seoConfig.ogImage, width: 1200, height: 630 }
+      : undefined,
+    twitterCard: "summary_large_image",
+    twitterTitle: title,
+    twitterDescription: seoConfig.description,
+    twitterImage: seoConfig.ogImage,
   };
 }
 
@@ -78,12 +82,12 @@ function transformWPPage(wpPage: WPPage, locale: CMSLocale, routeSlug: CMSSlug):
 
   return {
     id: wpPage.id,
-    slug: routeSlug, // Use the route slug, not the WP slug
+    slug: routeSlug,
     title,
     content: wpPage.content.rendered,
     excerpt: stripHtml(wpPage.excerpt.rendered),
     lastModified: wpPage.modified_gmt,
-    seo: extractSeoMeta(wpPage, title),
+    seo: buildSeoMeta(title, routeSlug, locale), // Title from WP, rest from app config
     locale,
     featuredImage: featuredMedia
       ? {

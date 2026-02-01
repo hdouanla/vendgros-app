@@ -94,9 +94,9 @@ export function Footer() {
               <Image
                 src="/images/qr-code-vend-gros-canada-inc-quebec-platforms.png"
                 alt=""
-                width={100}
-                height={100}
-                className="h-auto w-auto"
+                width={130}
+                height={130}
+                className="h-[130px] w-[130px]"
               />
             </a>
           </div>

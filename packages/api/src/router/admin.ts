@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { and, desc, eq, gte, inArray, or, sql } from "@acme/db";
+import { and, desc, eq, gte, inArray, lte, or, sql } from "@acme/db";
 
 import { listing, reservation, user, impersonationLog } from "@acme/db/schema";
 
@@ -872,5 +872,263 @@ export const adminRouter = createTRPCRouter({
         total,
         hasMore: input.offset + input.limit < total,
       };
+    }),
+
+  // ============================================================================
+  // RESERVATIONS MANAGEMENT ENDPOINTS
+  // ============================================================================
+
+  // Get all reservations with filters
+  getAllReservations: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().default(20),
+        offset: z.number().default(0),
+        status: z
+          .enum(["ALL", "PENDING", "CONFIRMED", "COMPLETED", "NO_SHOW", "CANCELLED"])
+          .default("ALL"),
+        sellerId: z.string().optional(),
+        buyerId: z.string().optional(),
+        search: z.string().optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      await requireAdmin(ctx);
+
+      let whereConditions = [];
+
+      // Filter by status
+      if (input.status !== "ALL") {
+        whereConditions.push(eq(reservation.status, input.status));
+      }
+
+      // Filter by seller (via listing)
+      if (input.sellerId) {
+        const sellerListings = await ctx.db.query.listing.findMany({
+          where: (listings, { eq }) => eq(listings.sellerId, input.sellerId!),
+          columns: { id: true },
+        });
+        const listingIds = sellerListings.map((l) => l.id);
+        if (listingIds.length > 0) {
+          whereConditions.push(inArray(reservation.listingId, listingIds));
+        } else {
+          // No listings for this seller means no reservations
+          return { reservations: [], total: 0, hasMore: false };
+        }
+      }
+
+      // Filter by buyer
+      if (input.buyerId) {
+        whereConditions.push(eq(reservation.buyerId, input.buyerId));
+      }
+
+      // Search by verification code, reservation ID, or listing title
+      if (input.search) {
+        const searchTerm = input.search.trim();
+        // First check if it matches a verification code or reservation ID
+        const directMatch = await ctx.db.query.reservation.findFirst({
+          where: (reservations, { or, eq }) =>
+            or(
+              eq(reservations.verificationCode, searchTerm.toUpperCase()),
+              eq(reservations.id, searchTerm),
+            ),
+        });
+
+        if (directMatch) {
+          whereConditions.push(eq(reservation.id, directMatch.id));
+        } else {
+          // Search by listing title
+          const matchingListings = await ctx.db.query.listing.findMany({
+            where: (listings) =>
+              sql`${listings.title} ILIKE ${"%" + searchTerm + "%"}`,
+            columns: { id: true },
+          });
+          if (matchingListings.length > 0) {
+            whereConditions.push(
+              inArray(
+                reservation.listingId,
+                matchingListings.map((l) => l.id),
+              ),
+            );
+          } else {
+            // No matching listings means no results
+            return { reservations: [], total: 0, hasMore: false };
+          }
+        }
+      }
+
+      // Filter by date range
+      if (input.dateFrom) {
+        whereConditions.push(gte(reservation.createdAt, new Date(input.dateFrom)));
+      }
+      if (input.dateTo) {
+        const toDate = new Date(input.dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        whereConditions.push(sql`${reservation.createdAt} <= ${toDate}`);
+      }
+
+      const reservations = await ctx.db.query.reservation.findMany({
+        where: whereConditions.length > 0 ? and(...whereConditions) : undefined,
+        with: {
+          listing: {
+            columns: {
+              id: true,
+              title: true,
+              sellerId: true,
+            },
+            with: {
+              seller: {
+                columns: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+          buyer: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: (reservations, { desc }) => [desc(reservations.createdAt)],
+        limit: input.limit,
+        offset: input.offset,
+      });
+
+      // Get total count
+      const totalResult =
+        whereConditions.length > 0
+          ? await ctx.db
+              .select({ count: sql<number>`count(*)` })
+              .from(reservation)
+              .where(and(...whereConditions))
+          : await ctx.db.select({ count: sql<number>`count(*)` }).from(reservation);
+      const total = Number(totalResult[0]?.count ?? 0);
+
+      return {
+        reservations,
+        total,
+        hasMore: input.offset + input.limit < total,
+      };
+    }),
+
+  // Get full reservation details for admin view
+  getReservationDetails: protectedProcedure
+    .input(z.object({ reservationId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      await requireAdmin(ctx);
+
+      const reservationData = await ctx.db.query.reservation.findFirst({
+        where: (reservations, { eq }) => eq(reservations.id, input.reservationId),
+        with: {
+          listing: {
+            with: {
+              seller: {
+                columns: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  phone: true,
+                  accountStatus: true,
+                  verificationBadge: true,
+                  sellerRatingAverage: true,
+                  sellerRatingCount: true,
+                  createdAt: true,
+                },
+              },
+            },
+          },
+          buyer: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              accountStatus: true,
+              verificationBadge: true,
+              buyerRatingAverage: true,
+              buyerRatingCount: true,
+              createdAt: true,
+            },
+          },
+          ratings: {
+            with: {
+              rater: {
+                columns: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+              rated: {
+                columns: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+          conversation: {
+            with: {
+              messages: {
+                orderBy: (messages, { desc }) => [desc(messages.createdAt)],
+                limit: 10,
+                with: {
+                  sender: {
+                    columns: {
+                      id: true,
+                      name: true,
+                      email: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!reservationData) {
+        throw new Error("Reservation not found");
+      }
+
+      return reservationData;
+    }),
+
+  // Search users for autocomplete
+  searchUsers: protectedProcedure
+    .input(
+      z.object({
+        search: z.string().min(2),
+        limit: z.number().default(10),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      await requireAdmin(ctx);
+
+      const searchTerm = input.search.trim();
+
+      const users = await ctx.db.query.user.findMany({
+        where: (users) =>
+          or(
+            sql`${users.email} ILIKE ${"%" + searchTerm + "%"}`,
+            sql`${users.name} ILIKE ${"%" + searchTerm + "%"}`,
+          ),
+        columns: {
+          id: true,
+          name: true,
+          email: true,
+        },
+        limit: input.limit,
+      });
+
+      return users;
     }),
 });

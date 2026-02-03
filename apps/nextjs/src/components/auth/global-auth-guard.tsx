@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { authClient } from "@acme/auth/client";
+import { api } from "~/trpc/react";
 
 // Public pages that don't require authentication or verification
 const publicPages = [
@@ -17,6 +18,7 @@ const authPages = [
   "/auth/signin",
   "/auth/signup",
   "/auth/verify-email",
+  "/auth/verify-phone",
 ];
 
 // Private pages that require verification
@@ -30,11 +32,27 @@ const privatePages = [
   "/reservations",
 ];
 
+// Pages that require phone verification
+const phoneVerificationRequiredPages = [
+  "/listings/create",
+];
+
 export function GlobalAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isChecking, setIsChecking] = useState(true);
   const [shouldRender, setShouldRender] = useState(false);
+
+  // Check if current page requires phone verification
+  const requiresPhoneVerification = phoneVerificationRequiredPages.some(
+    (page) => pathname.startsWith(page)
+  );
+
+  // Only fetch phone status if needed
+  const { data: phoneStatus, isLoading: phoneStatusLoading } =
+    api.phoneVerification.getStatus.useQuery(undefined, {
+      enabled: requiresPhoneVerification,
+    });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -53,6 +71,7 @@ export function GlobalAuthGuard({ children }: { children: React.ReactNode }) {
       // User is logged in - check emailVerified since accountStatus isn't in the session user type
       const isVerified = result.data.user.emailVerified;
       const isOnVerifyPage = pathname === "/auth/verify-email";
+      const isOnPhoneVerifyPage = pathname === "/auth/verify-phone";
       const isOnAuthPage = pathname === "/auth/signin" || pathname === "/auth/signup";
 
       // Check if on a private page
@@ -90,13 +109,48 @@ export function GlobalAuthGuard({ children }: { children: React.ReactNode }) {
           setShouldRender(false); // Don't render during redirect
           return;
         }
+
+        // Check phone verification for pages that require it
+        if (requiresPhoneVerification && !phoneStatusLoading) {
+          if (!phoneStatus?.phoneVerified) {
+            // Redirect to phone verification
+            if (!phoneStatus?.phone) {
+              router.push(
+                "/profile/edit?redirect=" +
+                  encodeURIComponent("/auth/verify-phone?redirect=" + pathname)
+              );
+            } else {
+              router.push(
+                "/auth/verify-phone?redirect=" + encodeURIComponent(pathname)
+              );
+            }
+            setIsChecking(false);
+            setShouldRender(false);
+            return;
+          }
+        }
+
+        // If on phone verify page and already verified, redirect to intended destination or home
+        if (isOnPhoneVerifyPage && phoneStatus?.phoneVerified) {
+          const params = new URLSearchParams(window.location.search);
+          router.push(params.get("redirect") ?? "/");
+          setIsChecking(false);
+          setShouldRender(false);
+          return;
+        }
+
         setIsChecking(false);
         setShouldRender(true);
       }
     };
 
+    // Wait for phone status to load if needed
+    if (requiresPhoneVerification && phoneStatusLoading) {
+      return;
+    }
+
     checkAuth();
-  }, [router, pathname]);
+  }, [router, pathname, requiresPhoneVerification, phoneStatus, phoneStatusLoading]);
 
   if (isChecking || !shouldRender) {
     return (

@@ -291,6 +291,10 @@ export const messagingRouter = createTRPCRouter({
         })
         .returning();
 
+      if (!newMessage) {
+        throw new Error("Failed to create message");
+      }
+
       // Update conversation last message
       await ctx.db
         .update(conversation)

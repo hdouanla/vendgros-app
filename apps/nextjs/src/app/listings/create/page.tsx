@@ -5,8 +5,6 @@ import { getSession } from "~/auth/server";
 import { db } from "@acme/db/client";
 import { ListingForm } from "~/components/listings/listing-form";
 
-export const dynamic = "force-dynamic";
-
 export default async function CreateListingPage() {
   const t = await getTranslations("listing");
   const session = await getSession();

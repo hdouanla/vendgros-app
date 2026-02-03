@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import Ably from "ably";
+import { AblyProvider, useChannel } from "ably/react";
 import { api } from "~/trpc/react";
 import { getStorageUrl } from "~/lib/storage";
+
+const CONVERSATION_CHANNEL_PREFIX = "conversation:";
+const ABLY_MESSAGE_EVENT = "message";
 
 export default function ChatPage() {
   const t = useTranslations();
@@ -17,15 +22,14 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const utils = api.useUtils();
-
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
-
   const { data: messages, isLoading: messagesLoading } =
     api.messaging.getMessages.useQuery({
       conversationId,
       limit: 100,
     }, {
-      enabled: !!session?.user,
+      enabled: !!session?.user && !!conversationId,
+      refetchInterval: 60_000,
     });
 
   const { data: conversations } = api.messaging.getConversations.useQuery(
@@ -50,10 +54,58 @@ export default function ChatPage() {
   }
 
   const sendMessage = api.messaging.sendMessage.useMutation({
-    onSuccess: () => {
-      void utils.messaging.getMessages.invalidate({ conversationId });
-      void utils.messaging.getConversations.invalidate();
+    onMutate: async (variables) => {
+      // Cancel outgoing refetches to avoid overwriting optimistic update
+      await utils.messaging.getMessages.cancel({ conversationId: variables.conversationId });
+
+      // Snapshot previous messages
+      const previousMessages = utils.messaging.getMessages.getData({
+        conversationId: variables.conversationId,
+      });
+
+      // Optimistically add the new message
+      const optimisticMessage = {
+        id: `optimistic-${Date.now()}`,
+        conversationId: variables.conversationId,
+        senderId: session?.user.id ?? "",
+        content: variables.content,
+        attachments: variables.attachments ?? [],
+        createdAt: new Date(),
+        isEncrypted: false,
+        sender: {
+          id: session?.user.id ?? "",
+          email: session?.user.email ?? "",
+        },
+      };
+
+      utils.messaging.getMessages.setData(
+        { conversationId: variables.conversationId },
+        (old) => {
+          if (!old) return [optimisticMessage];
+          return [...old, optimisticMessage];
+        },
+      );
+
+      // Clear input immediately for instant feedback
       setMessageText("");
+
+      return { previousMessages };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousMessages) {
+        utils.messaging.getMessages.setData(
+          { conversationId: variables.conversationId },
+          context.previousMessages,
+        );
+      }
+      // Restore message text on error
+      setMessageText(variables.content);
+    },
+    onSettled: (data, error, variables) => {
+      // Refetch to sync with server (Ably should handle this, but this ensures consistency)
+      void utils.messaging.getMessages.invalidate({ conversationId: variables.conversationId });
+      void utils.messaging.getConversations.invalidate();
     },
   });
 
@@ -71,14 +123,7 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Poll for new messages (simple real-time)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      void utils.messaging.getMessages.invalidate({ conversationId });
-    }, 5000); // Poll every 5 seconds
-
-    return () => clearInterval(interval);
-  }, [conversationId, utils]);
+  // Real-time via Ably when conversation is loaded; no polling interval (refetchInterval used as fallback)
 
   const handleSendMessage = async () => {
     if (!messageText.trim()) return;
@@ -96,6 +141,28 @@ export default function ChatPage() {
     }
   };
 
+  const ablyClient = useMemo(() => {
+    if (!conversationId) return null;
+    return new Ably.Realtime({
+      authCallback: async (_, callback) => {
+        try {
+          const token = await utils.messaging.getAblyToken.fetch({
+            conversationId,
+          });
+          callback(null, token);
+        } catch (e) {
+          callback(e instanceof Error ? e : new Error(String(e)), null);
+        }
+      },
+    });
+  }, [conversationId, utils]);
+
+  useEffect(() => {
+    return () => {
+      ablyClient?.close();
+    };
+  }, [ablyClient]);
+
   if (messagesLoading) {
     return (
       <div className="py-12 text-center">
@@ -104,8 +171,14 @@ export default function ChatPage() {
     );
   }
 
-  return (
+  const content = (
     <div className="mx-auto flex h-[calc(100vh-80px)] max-w-4xl flex-col px-4 py-4">
+      {ablyClient && (
+        <AblyMessageSubscriber
+          conversationId={conversationId}
+          onMessage={() => void utils.messaging.getMessages.invalidate({ conversationId })}
+        />
+      )}
       {/* Header */}
       <div className="mb-4 flex items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
         <button
@@ -224,4 +297,23 @@ export default function ChatPage() {
       </p>
     </div>
   );
+
+  if (ablyClient) {
+    return <AblyProvider client={ablyClient}>{content}</AblyProvider>;
+  }
+  return content;
+}
+
+function AblyMessageSubscriber({
+  conversationId,
+  onMessage,
+}: {
+  conversationId: string;
+  onMessage: () => void;
+}) {
+  const channelName = `${CONVERSATION_CHANNEL_PREFIX}${conversationId}`;
+  useChannel(channelName, ABLY_MESSAGE_EVENT, () => {
+    void onMessage();
+  });
+  return null;
 }

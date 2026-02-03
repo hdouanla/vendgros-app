@@ -13,6 +13,9 @@ const config = {
   /** Required for next-intl to work with Turbopack */
   turbopack: {},
 
+  /** Do not bundle these on the server (Node-only deps like keyv break when bundled) */
+  serverExternalPackages: ["ably"],
+
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
     "@acme/api",

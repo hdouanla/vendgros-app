@@ -1,11 +1,16 @@
 "use client";
 
-import { use, useEffect, useRef, useState } from "react";
+import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import Ably from "ably";
+import { AblyProvider, ChannelProvider, useChannel } from "ably/react";
 import { api } from "~/trpc/react";
 import { getStorageUrl } from "~/lib/storage";
+
+const CONVERSATION_CHANNEL_PREFIX = "conversation:";
+const ABLY_MESSAGE_EVENT = "message";
 
 export default function ChatDetailPage({
   params,
@@ -25,6 +30,7 @@ export default function ChatDetailPage({
     api.chat.getOrCreateByReservation.useMutation();
 
   // Get messages for the conversation
+  const utils = api.useUtils();
   const {
     data: messages,
     isLoading: messagesLoading,
@@ -33,22 +39,70 @@ export default function ChatDetailPage({
     { conversationId: chat?.id ?? "" },
     {
       enabled: !!chat?.id,
-      refetchInterval: 5000, // Poll every 5 seconds
+      refetchInterval: 60_000, // Fallback poll when Ably is used for real-time
     },
   );
 
   // Mark as read mutation
   const { mutate: markAsRead } = api.chat.markAsRead.useMutation();
 
-  // Send message mutation
+  // Send message mutation with optimistic updates
   const { mutate: sendMessage, isPending: sendingMessage } = api.chat.sendMessage.useMutation({
-    onSuccess: () => {
+    onMutate: async (variables) => {
+      // Cancel outgoing refetches to avoid overwriting optimistic update
+      await utils.chat.getMessages.cancel({ conversationId: variables.conversationId });
+
+      // Snapshot previous messages
+      const previousMessages = utils.chat.getMessages.getData({
+        conversationId: variables.conversationId,
+      });
+
+      // Optimistically add the new message
+      const optimisticMessage = {
+        id: `optimistic-${Date.now()}`,
+        conversationId: variables.conversationId,
+        senderId: session?.user.id ?? "",
+        content: variables.content,
+        attachments: variables.attachments ?? [],
+        createdAt: new Date(),
+        isEncrypted: false,
+        sender: {
+          id: session?.user.id ?? "",
+          name: session?.user.name ?? "",
+          email: session?.user.email ?? "",
+        },
+      };
+
+      utils.chat.getMessages.setData(
+        { conversationId: variables.conversationId },
+        (old) => {
+          if (!old) return [optimisticMessage];
+          return [...old, optimisticMessage];
+        },
+      );
+
+      // Clear input immediately for instant feedback
       setMessageText("");
-      void refetchMessages();
-      // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
       }
+
+      return { previousMessages };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousMessages) {
+        utils.chat.getMessages.setData(
+          { conversationId: variables.conversationId },
+          context.previousMessages,
+        );
+      }
+      // Restore message text on error
+      setMessageText(variables.content);
+    },
+    onSettled: (data, error, variables) => {
+      // Refetch to sync with server (Ably should handle this, but this ensures consistency)
+      void utils.chat.getMessages.invalidate({ conversationId: variables.conversationId });
     },
   });
 
@@ -70,6 +124,29 @@ export default function ChatDetailPage({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Ably client: create only when we have a conversation (hooks must run unconditionally)
+  const ablyClient = useMemo(() => {
+    if (!chat?.id) return null;
+    return new Ably.Realtime({
+      authCallback: async (_, callback) => {
+        try {
+          const token = await utils.chat.getAblyToken.fetch({
+            conversationId: chat.id,
+          });
+          callback(null, token);
+        } catch (e) {
+          callback(e instanceof Error ? e : new Error(String(e)), null);
+        }
+      },
+    });
+  }, [chat?.id, utils]);
+
+  useEffect(() => {
+    return () => {
+      ablyClient?.close();
+    };
+  }, [ablyClient]);
 
   // Handle sending message
   const handleSendMessage = () => {
@@ -131,8 +208,15 @@ export default function ChatDetailPage({
   const isBuyer = chat.buyerId === session.user.id;
   const otherUser = isBuyer ? chat.seller : chat.buyer;
 
+  const channelName = `${CONVERSATION_CHANNEL_PREFIX}${chat.id}`;
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col">
+    <AblyProvider client={ablyClient!}>
+      <ChannelProvider channelName={channelName}>
+        <AblyMessageSubscriber
+          conversationId={chat.id}
+          onMessage={refetchMessages}
+        />
+        <div className="flex h-[calc(100vh-4rem)] flex-col">
       {/* Header */}
       <div className="border-b bg-white px-4 py-3 shadow-sm">
         <div className="mx-auto max-w-4xl">
@@ -361,7 +445,23 @@ export default function ChatDetailPage({
         </div>
       </div>
     </div>
+      </ChannelProvider>
+    </AblyProvider>
   );
+}
+
+function AblyMessageSubscriber({
+  conversationId,
+  onMessage,
+}: {
+  conversationId: string;
+  onMessage: () => void;
+}) {
+  const channelName = `${CONVERSATION_CHANNEL_PREFIX}${conversationId}`;
+  useChannel(channelName, ABLY_MESSAGE_EVENT, () => {
+    void onMessage();
+  });
+  return null;
 }
 
 function formatMessageTime(date: Date): string {

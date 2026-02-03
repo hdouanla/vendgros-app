@@ -1,18 +1,11 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { unstable_noStore as noStore } from "next/cache";
 
 import { getSession } from "~/auth/server";
 import { db } from "@acme/db/client";
 import { ListingForm } from "~/components/listings/listing-form";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 export default async function CreateListingPage() {
-  // Prevent any caching of this page
-  noStore();
-
   const t = await getTranslations("listing");
   const session = await getSession();
 

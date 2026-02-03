@@ -3,6 +3,7 @@ import { and, desc, eq, gt, or, sql } from "@acme/db";
 
 import { conversation, listing, message, reservation, user } from "@acme/db/schema";
 
+import { createConversationTokenRequest, publishNewMessage } from "../lib/ably";
 import { sendMessageNotification } from "../lib/notifications";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
@@ -346,6 +347,32 @@ export const chatRouter = createTRPCRouter({
     }),
 
   /**
+   * Get Ably token request for real-time subscription to this conversation.
+   * Only allowed for participants. Requires ABLY_API_KEY to be set.
+   */
+  getAblyToken: protectedProcedure
+    .input(
+      z.object({
+        conversationId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const conv = await ctx.db.query.conversation.findFirst({
+        where: (conversations, { eq }) => eq(conversations.id, input.conversationId),
+      });
+
+      if (!conv) {
+        throw new Error("Conversation not found");
+      }
+
+      if (conv.buyerId !== ctx.session.user.id && conv.sellerId !== ctx.session.user.id) {
+        throw new Error("Not authorized");
+      }
+
+      return createConversationTokenRequest(input.conversationId, ctx.session.user.id);
+    }),
+
+  /**
    * Send a message (validates access + reservation status)
    */
   sendMessage: protectedProcedure
@@ -397,6 +424,10 @@ export const chatRouter = createTRPCRouter({
         })
         .returning();
 
+      if (!newMessage) {
+        throw new Error("Failed to create message");
+      }
+
       // Update conversation last message
       await ctx.db
         .update(conversation)
@@ -417,6 +448,15 @@ export const chatRouter = createTRPCRouter({
         listingTitle: conv.listing.title,
         messagePreview: input.content.substring(0, 50),
       }).catch((err) => console.error("Failed to send message notification:", err));
+
+      await publishNewMessage(input.conversationId, {
+        messageId: newMessage.id,
+        conversationId: input.conversationId,
+        senderId: ctx.session.user.id,
+        content: newMessage.content,
+        createdAt: newMessage.createdAt.toISOString(),
+        attachments: newMessage.attachments ?? undefined,
+      });
 
       return newMessage;
     }),

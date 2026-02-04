@@ -21,7 +21,8 @@
     "sort": "Ordenar",
     "select": "Seleccionar...",
     "viewDetails": "Ver detalles",
-    "loadMore": "Cargar más"
+    "loadMore": "Cargar más",
+    "optional": "Opcional"
   },
   "auth": {
     "signIn": "Iniciar sesión",
@@ -254,7 +255,29 @@
     "verifiedSellerBenefits": "Beneficios de vendedor verificado",
     "verifiedBenefit1": "Tu número de teléfono está verificado y es confiable",
     "verifiedBenefit2": "Los compradores pueden contactarte directamente para preguntas",
-    "verifiedBenefit3": "Genera confianza y aumenta las reservas"
+    "verifiedBenefit3": "Genera confianza y aumenta las reservas",
+    "detailsLocked": "Detalles del anuncio bloqueados",
+    "detailsLockedDescription": "Este anuncio tiene reservas. Solo puedes editar las instrucciones de recogida. Para cambiar otros detalles, crea una copia de este anuncio.",
+    "copyListing": "Copiar anuncio",
+    "detailsReadOnly": "Detalles del anuncio (solo lectura)",
+    "pickupInstructionsEditable": "Instrucciones de recogida (editable)",
+    "pickupInstructionsPlaceholder": "ej: Toque el timbre, recogida por la puerta lateral",
+    "viewAsBuyer": "Ver como comprador",
+    "updatePickupInstructions": "Actualizar instrucciones de recogida",
+    "titlePlaceholder": "ej: Manzanas orgánicas frescas - 50 unidades",
+    "minimumPieces": "Mínimo {min} piezas",
+    "minPerBuyerHelp": "Piezas mínimas que los compradores deben reservar",
+    "maxPerBuyerHelp": "Máximo de piezas por comprador",
+    "pickupAddressPlaceholder": "123 Calle Principal, Toronto, ON",
+    "postalCodePlaceholder": "M5H 2N2",
+    "verifyButton": "Verificar",
+    "verifyingButton": "Verificando...",
+    "coordinatesVerified": "Coordenadas verificadas: {latitude}, {longitude}",
+    "postalCodeHelp": "Ingrese un código postal canadiense válido (ej: M5H 2N2) y haga clic en Verificar para confirmar la ubicación",
+    "geocoding": "Geocodificando...",
+    "photosCount": "Fotos ({count}/{max})",
+    "maxPhotosAllowed": "Máximo {max} fotos permitidas",
+    "imageUploadHelp": "Sube fotos de tus artículos. Las imágenes grandes se comprimirán automáticamente. La primera foto se usará como foto de portada. Arrastra y suelta las fotos para reordenarlas."
   },
   "search": {
     "searchNearbyListings": "Buscar anuncios cercanos",
@@ -580,7 +603,17 @@
     "quantityBelowReserved": "No se puede reducir la cantidad por debajo de {count} piezas. Tiene {count} piezas en reservas pendientes o confirmadas.",
     "minQuantityRequired": "La cantidad mínima es de {min} piezas",
     "minExceedsTotal": "El mínimo por comprador no puede superar la cantidad total",
-    "maxExceedsTotal": "El máximo por comprador no puede superar la cantidad total"
+    "maxExceedsTotal": "El máximo por comprador no puede superar la cantidad total",
+    "postalCodeRequired": "El código postal es obligatorio",
+    "verifyPostalCode": "Por favor verifique su código postal para obtener las coordenadas",
+    "geocodeFailed": "No se pudo geocodificar la dirección. Por favor verifique el código postal.",
+    "enterPostalCode": "Por favor ingrese un código postal",
+    "postalCodeNotFound": "Código postal no encontrado. Por favor verifique que sea un código postal canadiense válido.",
+    "postalCodeLookupFailed": "Error al buscar el código postal. Por favor intente de nuevo.",
+    "cannotExceedTotal": "No puede exceder la cantidad total",
+    "invalidFileType": "Tipo de archivo inválido: {type}",
+    "fileTooLarge": "Archivo demasiado grande: {name} (máx 5MB)",
+    "uploadFailed": "Error al subir"
   },
   "success": {
     "listingCreated": "Anuncio creado exitosamente",

@@ -197,15 +197,15 @@ export function ListingForm({
     const maxPerBuyer = formData.maxPerBuyer ? parseInt(formData.maxPerBuyer) : null;
 
     if (minPerBuyer && maxPerBuyer && minPerBuyer >= maxPerBuyer) {
-      newErrors.minPerBuyer = "Minimum must be less than maximum";
+      newErrors.minPerBuyer = tErrors("minGreaterThanMax");
     }
 
     if (minPerBuyer && !isNaN(quantity) && minPerBuyer > quantity) {
-      newErrors.minPerBuyer = "Cannot exceed total quantity";
+      newErrors.minPerBuyer = tErrors("cannotExceedTotal");
     }
 
     if (maxPerBuyer && !isNaN(quantity) && maxPerBuyer > quantity) {
-      newErrors.maxPerBuyer = "Cannot exceed total quantity";
+      newErrors.maxPerBuyer = tErrors("cannotExceedTotal");
     }
 
     if (!formData.pickupAddress) {
@@ -213,13 +213,13 @@ export function ListingForm({
     }
 
     if (!formData.postalCode) {
-      newErrors.postalCode = "Postal code is required";
+      newErrors.postalCode = tErrors("postalCodeRequired");
     } else if (!/^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/i.test(formData.postalCode)) {
-      newErrors.postalCode = "Invalid Canadian postal code format (e.g., M5H 2N2)";
+      newErrors.postalCode = tErrors("invalidPostalCode");
     }
 
     if (!coordinates) {
-      newErrors.postalCode = "Please verify your postal code to get coordinates";
+      newErrors.postalCode = tErrors("verifyPostalCode");
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -228,7 +228,7 @@ export function ListingForm({
     }
 
     if (!coordinates) {
-      setErrors({ submit: "Unable to geocode address. Please verify postal code." });
+      setErrors({ submit: tErrors("geocodeFailed") });
       return;
     }
 
@@ -323,7 +323,7 @@ export function ListingForm({
 
   const handlePostalCodeLookup = async () => {
     if (!formData.postalCode) {
-      setErrors((prev) => ({ ...prev, postalCode: "Please enter a postal code" }));
+      setErrors((prev) => ({ ...prev, postalCode: tErrors("enterPostalCode") }));
       return;
     }
 
@@ -362,7 +362,7 @@ export function ListingForm({
       } else {
         setErrors((prev) => ({
           ...prev,
-          postalCode: "Postal code not found. Please verify it's a valid Canadian postal code.",
+          postalCode: tErrors("postalCodeNotFound"),
         }));
         setCoordinates(null);
       }
@@ -370,7 +370,7 @@ export function ListingForm({
       console.error("Postal code lookup failed:", error);
       setErrors((prev) => ({
         ...prev,
-        postalCode: "Failed to lookup postal code. Please try again.",
+        postalCode: tErrors("postalCodeLookupFailed"),
       }));
       setCoordinates(null);
     } finally {
@@ -405,11 +405,10 @@ export function ListingForm({
             <span className="text-xl">🔒</span>
             <div className="flex-1">
               <h3 className="text-sm font-semibold text-yellow-900">
-                Listing Details Locked
+                {tListing("detailsLocked")}
               </h3>
               <p className="mt-1 text-sm text-yellow-800">
-                This listing has reservations. You can only edit pickup instructions.
-                To change other details, create a copy of this listing.
+                {tListing("detailsLockedDescription")}
               </p>
             </div>
             {onDuplicate && (
@@ -418,7 +417,7 @@ export function ListingForm({
                 onClick={onDuplicate}
                 className="rounded-md bg-yellow-600 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-700"
               >
-                📋 Copy Listing
+                📋 {tListing("copyListing")}
               </button>
             )}
           </div>
@@ -426,42 +425,42 @@ export function ListingForm({
 
         {/* Read-only Listing Details */}
         <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-6">
-          <h3 className="font-semibold text-gray-900">Listing Details (Read-only)</h3>
+          <h3 className="font-semibold text-gray-900">{tListing("detailsReadOnly")}</h3>
 
           <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
             <div>
-              <span className="font-medium text-gray-600">Title:</span>
+              <span className="font-medium text-gray-600">{tListing("itemTitle")}:</span>
               <p className="text-gray-900">{initialData?.title}</p>
             </div>
             <div>
-              <span className="font-medium text-gray-600">Category:</span>
+              <span className="font-medium text-gray-600">{tListing("category")}:</span>
               <p className="text-gray-900">
                 {initialData?.category && tSearch(categoryTranslationKeys[initialData.category as CategoryId])}
               </p>
             </div>
             <div>
-              <span className="font-medium text-gray-600">Price:</span>
-              <p className="text-gray-900">${initialData?.pricePerPiece} CAD / piece</p>
+              <span className="font-medium text-gray-600">{tListing("pricePerPiece")}:</span>
+              <p className="text-gray-900">${initialData?.pricePerPiece} CAD {tListing("perPiece")}</p>
             </div>
             <div>
-              <span className="font-medium text-gray-600">Quantity:</span>
-              <p className="text-gray-900">{initialData?.quantityTotal} {(initialData?.quantityTotal ?? 0) > 1 ? "pieces" : "piece"}</p>
+              <span className="font-medium text-gray-600">{tListing("quantity")}:</span>
+              <p className="text-gray-900">{initialData?.quantityTotal} {(initialData?.quantityTotal ?? 0) > 1 ? tListing("pieces") : tListing("piece")}</p>
             </div>
             <div className="md:col-span-2">
-              <span className="font-medium text-gray-600">Description:</span>
+              <span className="font-medium text-gray-600">{tListing("description")}:</span>
               <p className="text-gray-900 whitespace-pre-wrap">{initialData?.description}</p>
             </div>
             <div>
-              <span className="font-medium text-gray-600">Pickup Address:</span>
+              <span className="font-medium text-gray-600">{tListing("pickupAddress")}:</span>
               <p className="text-gray-900">{initialData?.pickupAddress}</p>
             </div>
             <div>
-              <span className="font-medium text-gray-600">Postal Code:</span>
+              <span className="font-medium text-gray-600">{tListing("postalCode")}:</span>
               <p className="text-gray-900">{initialData?.postalCode}</p>
             </div>
             {initialData?.photos && initialData.photos.length > 0 && (
               <div className="md:col-span-2">
-                <span className="font-medium text-gray-600">Photos:</span>
+                <span className="font-medium text-gray-600">{tListing("photos")}:</span>
                 <div className="mt-2 flex gap-2 flex-wrap">
                   {initialData.photos.slice(0, 4).map((photo: string, idx: number) => (
                     <img
@@ -484,7 +483,7 @@ export function ListingForm({
 
         {/* Editable Pickup Instructions */}
         <form onSubmit={handlePickupInstructionsUpdate} className="space-y-4 rounded-lg border border-green-200 bg-green-50 p-6">
-          <h3 className="font-semibold text-gray-900">Pickup Instructions (Editable)</h3>
+          <h3 className="font-semibold text-gray-900">{tListing("pickupInstructionsEditable")}</h3>
 
           {/* Pickup Instructions */}
           <div>
@@ -498,7 +497,7 @@ export function ListingForm({
               onChange={handleChange}
               rows={3}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-              placeholder="e.g., Ring doorbell, pickup from side door"
+              placeholder={tListing("pickupInstructionsPlaceholder")}
             />
           </div>
 
@@ -517,7 +516,7 @@ export function ListingForm({
                 onClick={onViewAsBuyer}
                 className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
-                👁️ View as Buyer
+                👁️ {tListing("viewAsBuyer")}
               </button>
             )}
             <button
@@ -526,10 +525,10 @@ export function ListingForm({
               className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
             >
               {isGeocoding
-                ? "Geocoding..."
+                ? tListing("geocoding")
                 : updateListing.isPending
-                  ? "Saving..."
-                  : "Update Pickup Instructions"}
+                  ? tCommon("loading")
+                  : tListing("updatePickupInstructions")}
             </button>
           </div>
         </form>
@@ -551,7 +550,7 @@ export function ListingForm({
           value={formData.title}
           onChange={handleChange}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-          placeholder="e.g., Fresh Organic Apples - 50 units"
+          placeholder={tListing("titlePlaceholder")}
         />
         {errors.title && (
           <p className="mt-1 text-sm text-red-600">{errors.title}</p>
@@ -583,6 +582,17 @@ export function ListingForm({
           photos={formData.photos}
           onChange={(photos) => setFormData((prev) => ({ ...prev, photos }))}
           maxPhotos={10}
+          translations={{
+            photosCount: tListing("photosCount", { count: formData.photos.length, max: 10 }),
+            coverPhoto: tListing("coverPhoto"),
+            uploading: tCommon("uploading"),
+            addPhotos: tListing("addPhotos"),
+            imageUploadHelp: tListing("imageUploadHelp"),
+            maxPhotosAllowed: tListing("maxPhotosAllowed", { max: 10 }),
+            invalidFileType: (type: string) => tErrors("invalidFileType", { type }),
+            fileTooLarge: (name: string) => tErrors("fileTooLarge", { name }),
+            uploadFailed: tErrors("uploadFailed"),
+          }}
         />
         {errors.photos && (
           <p className="mt-1 text-sm text-red-600">{errors.photos}</p>
@@ -653,7 +663,7 @@ export function ListingForm({
             min={MIN_LISTING_QUANTITY}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
           />
-          <p className="mt-1 text-xs text-gray-500">Minimum {MIN_LISTING_QUANTITY} pieces</p>
+          <p className="mt-1 text-xs text-gray-500">{tListing("minimumPieces", { min: MIN_LISTING_QUANTITY })}</p>
           {errors.quantityTotal && (
             <p className="mt-1 text-sm text-red-600">{errors.quantityTotal}</p>
           )}
@@ -681,7 +691,7 @@ export function ListingForm({
             min="1"
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
           />
-          <p className="mt-1 text-xs text-gray-500">Minimum pieces buyers must reserve</p>
+          <p className="mt-1 text-xs text-gray-500">{tListing("minPerBuyerHelp")}</p>
           {errors.minPerBuyer && (
             <p className="mt-1 text-sm text-red-600">{errors.minPerBuyer}</p>
           )}
@@ -699,9 +709,9 @@ export function ListingForm({
             onChange={handleChange}
             min="1"
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-            placeholder="Optional"
+            placeholder={tCommon("optional")}
           />
-          <p className="mt-1 text-xs text-gray-500">Maximum pieces per buyer</p>
+          <p className="mt-1 text-xs text-gray-500">{tListing("maxPerBuyerHelp")}</p>
           {errors.maxPerBuyer && (
             <p className="mt-1 text-sm text-red-600">{errors.maxPerBuyer}</p>
           )}
@@ -834,7 +844,7 @@ export function ListingForm({
             value={formData.pickupAddress}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-            placeholder="123 Main St, Toronto, ON"
+            placeholder={tListing("pickupAddressPlaceholder")}
           />
           {errors.pickupAddress && (
             <p className="mt-1 text-sm text-red-600">{errors.pickupAddress}</p>
@@ -843,26 +853,26 @@ export function ListingForm({
 
         <div>
           <label htmlFor="postalCode" className="block text-sm font-medium">
-            Postal Code *
+            {tListing("postalCode")} *
           </label>
-          <div className="mt-1 flex gap-2">
+          <div className="mt-1 flex">
             <input
               type="text"
               id="postalCode"
               name="postalCode"
               value={formData.postalCode}
               onChange={handleChange}
-              className="block flex-1 rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-              placeholder="M5H 2N2"
+              className="block flex-1 rounded-l-md border border-r-0 border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500 focus:z-10"
+              placeholder={tListing("postalCodePlaceholder")}
               maxLength={7}
             />
             <button
               type="button"
               onClick={handlePostalCodeLookup}
               disabled={isGeocoding || !formData.postalCode}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-r-md border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 hover:border-blue-700 disabled:opacity-50"
             >
-              {isGeocoding ? "Verifying..." : "Verify"}
+              {isGeocoding ? tListing("verifyingButton") : tListing("verifyButton")}
             </button>
           </div>
           {errors.postalCode && (
@@ -870,11 +880,11 @@ export function ListingForm({
           )}
           {coordinates && (
             <p className="mt-1 text-sm text-green-600">
-              ✓ Coordinates verified: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
+              ✓ {tListing("coordinatesVerified", { latitude: coordinates.latitude.toFixed(4), longitude: coordinates.longitude.toFixed(4) })}
             </p>
           )}
           <p className="mt-1 text-xs text-gray-500">
-            Enter a valid Canadian postal code (e.g., M5H 2N2) and click Verify to confirm location
+            {tListing("postalCodeHelp")}
           </p>
         </div>
       </div>
@@ -894,7 +904,7 @@ export function ListingForm({
           onChange={handleChange}
           rows={3}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-          placeholder="e.g., Ring doorbell, pickup from side door"
+          placeholder={tListing("pickupInstructionsPlaceholder")}
         />
       </div>
 
@@ -919,7 +929,7 @@ export function ListingForm({
           className="rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 disabled:opacity-50"
         >
           {isGeocoding
-            ? "Geocoding..."
+            ? tListing("geocoding")
             : createListing.isPending ||
                 updateListing.isPending ||
                 submitForReview.isPending
@@ -939,7 +949,7 @@ export function ListingForm({
           className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
         >
           {isGeocoding
-            ? "Geocoding..."
+            ? tListing("geocoding")
             : createListing.isPending ||
                 updateListing.isPending ||
                 submitForReview.isPending

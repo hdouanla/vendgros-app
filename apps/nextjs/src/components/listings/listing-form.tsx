@@ -855,14 +855,14 @@ export function ListingForm({
           <label htmlFor="postalCode" className="block text-sm font-medium">
             {tListing("postalCode")} *
           </label>
-          <div className="mt-1 flex gap-2">
+          <div className="mt-1 flex">
             <input
               type="text"
               id="postalCode"
               name="postalCode"
               value={formData.postalCode}
               onChange={handleChange}
-              className="block flex-1 rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+              className="block flex-1 rounded-l-md border border-r-0 border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500 focus:z-10"
               placeholder={tListing("postalCodePlaceholder")}
               maxLength={7}
             />
@@ -870,7 +870,7 @@ export function ListingForm({
               type="button"
               onClick={handlePostalCodeLookup}
               disabled={isGeocoding || !formData.postalCode}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-r-md border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 hover:border-blue-700 disabled:opacity-50"
             >
               {isGeocoding ? tListing("verifyingButton") : tListing("verifyButton")}
             </button>

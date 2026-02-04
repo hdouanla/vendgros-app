@@ -3,10 +3,23 @@
 import { useState, useRef } from "react";
 import { getStorageUrl } from "~/lib/storage";
 
+interface ImageUploadTranslations {
+  photosCount: string;
+  coverPhoto: string;
+  uploading: string;
+  addPhotos: string;
+  imageUploadHelp: string;
+  maxPhotosAllowed: string;
+  invalidFileType: (type: string) => string;
+  fileTooLarge: (name: string) => string;
+  uploadFailed: string;
+}
+
 interface ImageUploadProps {
   photos: string[];
   onChange: (photos: string[]) => void;
   maxPhotos?: number;
+  translations: ImageUploadTranslations;
 }
 
 // Compress image to target size (2MB by default)
@@ -84,7 +97,7 @@ async function compressImage(
   });
 }
 
-export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadProps) {
+export function ImageUpload({ photos, onChange, maxPhotos = 10, translations }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -97,7 +110,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
 
     // Check if adding these files would exceed max
     if (photos.length + files.length > maxPhotos) {
-      setError(`Maximum ${maxPhotos} photos allowed`);
+      setError(translations.maxPhotosAllowed);
       return;
     }
 
@@ -108,7 +121,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
       const uploadPromises = Array.from(files).map(async (file) => {
         // Validate file type
         if (!file.type.match(/^image\/(jpeg|jpg|png|webp)$/)) {
-          throw new Error(`Invalid file type: ${file.type}`);
+          throw new Error(translations.invalidFileType(file.type));
         }
 
         // Compress image if needed (target 2MB max)
@@ -121,7 +134,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
 
         // Final validation - should not happen after compression
         if (processedFile.size > 5 * 1024 * 1024) {
-          throw new Error(`File too large: ${file.name} (max 5MB)`);
+          throw new Error(translations.fileTooLarge(file.name));
         }
 
         // Upload file via API route (server-side upload)
@@ -145,7 +158,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
       const uploadedUrls = await Promise.all(uploadPromises);
       onChange([...photos, ...uploadedUrls]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      setError(err instanceof Error ? err.message : translations.uploadFailed);
       console.error("Upload error:", err);
     } finally {
       setUploading(false);
@@ -207,7 +220,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium mb-2">
-          Photos ({photos.length}/{maxPhotos})
+          {translations.photosCount}
         </label>
 
         {/* Photo Grid */}
@@ -272,7 +285,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
                 </div>
                 {index === 0 && (
                   <div className="absolute bottom-2 left-2 rounded bg-green-600 px-2 py-1 text-xs text-white">
-                    Cover Photo
+                    {translations.coverPhoto}
                   </div>
                 )}
               </div>
@@ -319,7 +332,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Uploading...
+                  {translations.uploading}...
                 </>
               ) : (
                 <>
@@ -336,7 +349,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
                       d="M12 4v16m8-8H4"
                     />
                   </svg>
-                  Add Photos
+                  {translations.addPhotos}
                 </>
               )}
             </button>
@@ -350,7 +363,7 @@ export function ImageUpload({ photos, onChange, maxPhotos = 10 }: ImageUploadPro
 
         {/* Help Text */}
         <p className="mt-2 text-xs text-gray-500">
-          Upload photos of your items. Large images will be automatically compressed. The first photo will be used as the cover photo. Drag and drop photos to reorder them.
+          {translations.imageUploadHelp}
         </p>
       </div>
     </div>

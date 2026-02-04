@@ -21,7 +21,8 @@
     "sort": "Sort",
     "select": "Select...",
     "viewDetails": "View Details",
-    "loadMore": "Load More"
+    "loadMore": "Load More",
+    "optional": "Optional"
   },
   "auth": {
     "signIn": "Sign In",
@@ -254,7 +255,29 @@
     "verifiedSellerBenefits": "Verified seller benefits",
     "verifiedBenefit1": "Your phone number is verified and trusted",
     "verifiedBenefit2": "Buyers can contact you directly for questions",
-    "verifiedBenefit3": "Builds trust and increases reservations"
+    "verifiedBenefit3": "Builds trust and increases reservations",
+    "detailsLocked": "Listing Details Locked",
+    "detailsLockedDescription": "This listing has reservations. You can only edit pickup instructions. To change other details, create a copy of this listing.",
+    "copyListing": "Copy Listing",
+    "detailsReadOnly": "Listing Details (Read-only)",
+    "pickupInstructionsEditable": "Pickup Instructions (Editable)",
+    "pickupInstructionsPlaceholder": "e.g., Ring doorbell, pickup from side door",
+    "viewAsBuyer": "View as Buyer",
+    "updatePickupInstructions": "Update Pickup Instructions",
+    "titlePlaceholder": "e.g., Fresh Organic Apples - 50 units",
+    "minimumPieces": "Minimum {min} pieces",
+    "minPerBuyerHelp": "Minimum pieces buyers must reserve",
+    "maxPerBuyerHelp": "Maximum pieces per buyer",
+    "pickupAddressPlaceholder": "123 Main St, Toronto, ON",
+    "postalCodePlaceholder": "M5H 2N2",
+    "verifyButton": "Verify",
+    "verifyingButton": "Verifying...",
+    "coordinatesVerified": "Coordinates verified: {latitude}, {longitude}",
+    "postalCodeHelp": "Enter a valid Canadian postal code (e.g., M5H 2N2) and click Verify to confirm location",
+    "geocoding": "Geocoding...",
+    "photosCount": "Photos ({count}/{max})",
+    "maxPhotosAllowed": "Maximum {max} photos allowed",
+    "imageUploadHelp": "Upload photos of your items. Large images will be automatically compressed. The first photo will be used as the cover photo. Drag and drop photos to reorder them."
   },
   "search": {
     "searchNearbyListings": "Search Nearby Listings",
@@ -581,7 +604,17 @@
     "quantityBelowReserved": "Cannot reduce quantity below {count} pieces. You have {count} pieces in pending or confirmed reservations.",
     "minQuantityRequired": "Minimum quantity is {min} pieces",
     "minExceedsTotal": "Minimum per buyer cannot exceed total quantity",
-    "maxExceedsTotal": "Maximum per buyer cannot exceed total quantity"
+    "maxExceedsTotal": "Maximum per buyer cannot exceed total quantity",
+    "postalCodeRequired": "Postal code is required",
+    "verifyPostalCode": "Please verify your postal code to get coordinates",
+    "geocodeFailed": "Unable to geocode address. Please verify postal code.",
+    "enterPostalCode": "Please enter a postal code",
+    "postalCodeNotFound": "Postal code not found. Please verify it's a valid Canadian postal code.",
+    "postalCodeLookupFailed": "Failed to lookup postal code. Please try again.",
+    "cannotExceedTotal": "Cannot exceed total quantity",
+    "invalidFileType": "Invalid file type: {type}",
+    "fileTooLarge": "File too large: {name} (max 5MB)",
+    "uploadFailed": "Upload failed"
   },
   "success": {
     "listingCreated": "Listing created successfully",

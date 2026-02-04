@@ -6,6 +6,9 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { api } from "~/trpc/react";
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
 export default function EditProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -17,7 +20,7 @@ export default function EditProfilePage() {
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
   const { data: currentUser, isLoading: userLoading } = api.user.getCurrentUser.useQuery(
     undefined,
-    { enabled: !!session?.user }
+    { enabled: !!session?.user, staleTime: 0 }
   );
 
   const [name, setName] = useState("");
@@ -157,8 +160,8 @@ export default function EditProfilePage() {
         </p>
       </div>
 
-      {/* Phone Verification Alert */}
-      {currentUser && !currentUser.phoneVerified && (
+      {/* Phone Verification Alert - show if no phone OR phone not verified */}
+      {currentUser && (!currentUser.phone || !currentUser.phoneVerified) && (
         <div className="mb-8 rounded-xl border-2 border-amber-400 bg-amber-50 p-6 shadow-md">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0 rounded-full bg-amber-100 p-3">

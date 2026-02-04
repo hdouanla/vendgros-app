@@ -253,44 +253,64 @@ export const chatRouter = createTRPCRouter({
       orderBy: (conversations, { desc }) => [desc(conversations.lastMessageAt)],
     });
 
-    // Calculate unread count for each conversation
-    const conversationsWithUnread = await Promise.all(
-      conversations.map(async (conv) => {
-        const isBuyer = conv.buyerId === userId;
-        const lastReadAt = isBuyer ? conv.buyerLastReadAt : conv.sellerLastReadAt;
-        const otherPartyId = isBuyer ? conv.sellerId : conv.buyerId;
+    // Get unread counts for all conversations in a single query
+    const conversationIds = conversations.map((c) => c.id);
 
-        let unreadCount = 0;
-        if (lastReadAt) {
-          const unreadMessages = await ctx.db.query.message.findMany({
-            where: (messages, { and, eq, gt }) =>
-              and(
-                eq(messages.conversationId, conv.id),
-                gt(messages.createdAt, lastReadAt),
-                eq(messages.senderId, otherPartyId),
-              ),
-          });
-          unreadCount = unreadMessages.length;
-        } else if (conv.lastMessageAt) {
-          // Never read, count all messages from other party
-          const allMessages = await ctx.db.query.message.findMany({
-            where: (messages, { and, eq }) =>
-              and(
-                eq(messages.conversationId, conv.id),
-                eq(messages.senderId, otherPartyId),
-              ),
-          });
-          unreadCount = allMessages.length;
-        }
+    // Build unread counts map efficiently
+    const unreadCountsMap = new Map<string, number>();
 
-        return {
-          ...conv,
-          unreadCount,
-          otherUser: isBuyer ? conv.seller : conv.buyer,
-          isBuyer,
-        };
-      }),
-    );
+    if (conversationIds.length > 0) {
+      // Get unread counts using a single aggregated query
+      const unreadCounts = await ctx.db
+        .select({
+          conversationId: message.conversationId,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(message)
+        .innerJoin(conversation, eq(message.conversationId, conversation.id))
+        .where(
+          and(
+            sql`${message.conversationId} IN (${sql.join(conversationIds.map(id => sql`${id}`), sql`, `)})`,
+            // Message is from the other party (not the current user)
+            sql`${message.senderId} != ${userId}`,
+            // Message is newer than the user's last read time
+            or(
+              // User is buyer and message is after buyerLastReadAt
+              and(
+                eq(conversation.buyerId, userId),
+                or(
+                  sql`${conversation.buyerLastReadAt} IS NULL`,
+                  gt(message.createdAt, conversation.buyerLastReadAt)
+                )
+              ),
+              // User is seller and message is after sellerLastReadAt
+              and(
+                eq(conversation.sellerId, userId),
+                or(
+                  sql`${conversation.sellerLastReadAt} IS NULL`,
+                  gt(message.createdAt, conversation.sellerLastReadAt)
+                )
+              )
+            )
+          )
+        )
+        .groupBy(message.conversationId);
+
+      for (const row of unreadCounts) {
+        unreadCountsMap.set(row.conversationId, row.count);
+      }
+    }
+
+    // Map conversations with unread counts
+    const conversationsWithUnread = conversations.map((conv) => {
+      const isBuyer = conv.buyerId === userId;
+      return {
+        ...conv,
+        unreadCount: unreadCountsMap.get(conv.id) ?? 0,
+        otherUser: isBuyer ? conv.seller : conv.buyer,
+        isBuyer,
+      };
+    });
 
     return conversationsWithUnread;
   }),
@@ -500,55 +520,43 @@ export const chatRouter = createTRPCRouter({
   getTotalUnreadCount: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
 
-    // Get all conversations where user is buyer or seller and has reservation
-    const conversations = await ctx.db.query.conversation.findMany({
-      where: (conversations, { and, or, eq, isNotNull }) =>
+    // Get total unread count in a single query
+    const result = await ctx.db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(message)
+      .innerJoin(conversation, eq(message.conversationId, conversation.id))
+      .where(
         and(
-          or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)),
-          isNotNull(conversations.reservationId),
-        ),
-      columns: {
-        id: true,
-        buyerId: true,
-        sellerId: true,
-        buyerLastReadAt: true,
-        sellerLastReadAt: true,
-      },
-    });
-
-    let totalUnread = 0;
-
-    for (const conv of conversations) {
-      const isBuyer = conv.buyerId === userId;
-      const lastReadAt = isBuyer ? conv.buyerLastReadAt : conv.sellerLastReadAt;
-      const otherPartyId = isBuyer ? conv.sellerId : conv.buyerId;
-
-      if (lastReadAt) {
-        const unreadMessages = await ctx.db.query.message.findMany({
-          where: (messages, { and, eq, gt }) =>
+          // Conversation belongs to user and has reservation
+          or(eq(conversation.buyerId, userId), eq(conversation.sellerId, userId)),
+          sql`${conversation.reservationId} IS NOT NULL`,
+          // Message is from the other party (not the current user)
+          sql`${message.senderId} != ${userId}`,
+          // Message is newer than the user's last read time
+          or(
+            // User is buyer and message is after buyerLastReadAt
             and(
-              eq(messages.conversationId, conv.id),
-              gt(messages.createdAt, lastReadAt),
-              eq(messages.senderId, otherPartyId),
+              eq(conversation.buyerId, userId),
+              or(
+                sql`${conversation.buyerLastReadAt} IS NULL`,
+                gt(message.createdAt, conversation.buyerLastReadAt)
+              )
             ),
-          columns: { id: true },
-        });
-        totalUnread += unreadMessages.length;
-      } else {
-        // Never read, count all messages from other party
-        const allMessages = await ctx.db.query.message.findMany({
-          where: (messages, { and, eq }) =>
+            // User is seller and message is after sellerLastReadAt
             and(
-              eq(messages.conversationId, conv.id),
-              eq(messages.senderId, otherPartyId),
-            ),
-          columns: { id: true },
-        });
-        totalUnread += allMessages.length;
-      }
-    }
+              eq(conversation.sellerId, userId),
+              or(
+                sql`${conversation.sellerLastReadAt} IS NULL`,
+                gt(message.createdAt, conversation.sellerLastReadAt)
+              )
+            )
+          )
+        )
+      );
 
-    return totalUnread;
+    return result[0]?.count ?? 0;
   }),
 
   /**

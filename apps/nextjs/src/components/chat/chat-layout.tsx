@@ -7,7 +7,7 @@ import Ably from "ably";
 import { AblyProvider, ChannelProvider, useChannel } from "ably/react";
 import { api } from "~/trpc/react";
 import { getStorageUrl } from "~/lib/storage";
-import { Paperclip, Send, Smile, ChevronLeft, ChevronRight } from "lucide-react";
+import { Paperclip, Send, Smile, ChevronLeft, ChevronRight, MessageSquare, Info, ArrowLeft } from "lucide-react";
 
 const CONVERSATION_CHANNEL_PREFIX = "conversation:";
 const ABLY_MESSAGE_EVENT = "message";
@@ -17,16 +17,20 @@ interface ChatLayoutProps {
   initialChatId?: string;
 }
 
+type MobileView = 'chats' | 'conversation' | 'details';
+
 export function ChatLayout({ reservationId, initialChatId }: ChatLayoutProps) {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(initialChatId ?? null);
   const [messageText, setMessageText] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<Array<{ url: string; name: string; type: string; size: number }>>([]);
   const [lightboxImageIndex, setLightboxImageIndex] = useState<number | null>(null);
+  const [mobileView, setMobileView] = useState<MobileView>('conversation');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const markedAsReadRef = useRef<string | null>(null);
 
-  const { data: session } = api.auth.getSession.useQuery();
+  const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
   const utils = api.useUtils();
 
   // Get all chats for the left sidebar
@@ -36,7 +40,7 @@ export function ChatLayout({ reservationId, initialChatId }: ChatLayoutProps) {
   });
 
   // Get or create the selected chat
-  const { mutate: getOrCreateChat, data: chat } = api.chat.getOrCreateByReservation.useMutation();
+  const { mutate: getOrCreateChat, data: chat, isPending: chatLoading } = api.chat.getOrCreateByReservation.useMutation();
 
   // Get messages for selected conversation
   const {
@@ -100,12 +104,12 @@ export function ChatLayout({ reservationId, initialChatId }: ChatLayoutProps) {
     },
   });
 
-  // Initialize chat when reservationId changes
+  // Initialize chat when reservationId changes and session is ready
   useEffect(() => {
-    if (reservationId && session?.user && !chat) {
+    if (reservationId && session?.user && !chat && !chatLoading) {
       getOrCreateChat({ reservationId });
     }
-  }, [reservationId, session?.user, chat, getOrCreateChat]);
+  }, [reservationId, session?.user, chat, chatLoading, getOrCreateChat]);
 
   // Set selected chat when chat is loaded
   useEffect(() => {
@@ -114,9 +118,10 @@ export function ChatLayout({ reservationId, initialChatId }: ChatLayoutProps) {
     }
   }, [chat?.id, selectedChatId]);
 
-  // Mark as read when chat is selected
+  // Mark as read when chat is selected (only once per chat)
   useEffect(() => {
-    if (selectedChatId) {
+    if (selectedChatId && markedAsReadRef.current !== selectedChatId) {
+      markedAsReadRef.current = selectedChatId;
       markAsRead({ conversationId: selectedChatId });
     }
   }, [selectedChatId, markAsRead]);
@@ -257,17 +262,67 @@ export function ChatLayout({ reservationId, initialChatId }: ChatLayoutProps) {
     }
   };
 
+  // Show loading state while session or chat is loading
+  if (sessionLoading || (chatLoading && !selectedChatId) || (!selectedChatId && !chat && session?.user)) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-green-600"></div>
+          <p className="mt-4 text-gray-600">Loading chat...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!session?.user) {
     return null;
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-gray-50">
+    <div className="mx-auto max-w-7xl px-4 py-4 md:py-8">
+      <div className="flex h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-lg border bg-gray-50 shadow-sm md:flex-row md:h-[calc(100vh-10rem)]">
+        {/* Mobile Header */}
+      <div className="flex items-center justify-between border-b bg-white px-4 py-3 md:hidden">
+        <button
+          onClick={() => setMobileView('chats')}
+          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${
+            mobileView === 'chats' ? 'bg-gray-100 text-gray-900' : 'text-gray-600'
+          }`}
+        >
+          <MessageSquare className="h-4 w-4" />
+          Chats
+        </button>
+        <h2 className="text-sm font-semibold text-gray-900">
+          {otherUser?.name || 'Chat'}
+        </h2>
+        <button
+          onClick={() => setMobileView('details')}
+          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${
+            mobileView === 'details' ? 'bg-gray-100 text-gray-900' : 'text-gray-600'
+          }`}
+        >
+          <Info className="h-4 w-4" />
+          Details
+        </button>
+      </div>
+
       {/* Left Column - Chats List */}
-      <div className="w-80 border-r bg-white">
+      <div className={`${mobileView === 'chats' ? 'flex' : 'hidden'} md:flex w-full md:w-80 border-r bg-white flex-col`}>
         <div className="flex h-full flex-col">
-          <div className="flex h-20 items-center border-b px-6">
+          {/* Desktop header */}
+          <div className="hidden md:flex h-20 items-center border-b px-6">
             <h2 className="text-lg font-semibold text-gray-900">Chats</h2>
+          </div>
+          {/* Mobile header with back button */}
+          <div className="flex md:hidden items-center gap-3 border-b px-4 py-3">
+            <button
+              onClick={() => setMobileView('conversation')}
+              className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+            <h2 className="font-semibold text-gray-900">All Chats</h2>
           </div>
           <div className="flex-1 overflow-y-auto">
             {!chats || chats.length === 0 ? (
@@ -285,7 +340,10 @@ export function ChatLayout({ reservationId, initialChatId }: ChatLayoutProps) {
                   return (
                     <button
                       key={chatItem.id}
-                      onClick={() => setSelectedChatId(chatItem.id)}
+                      onClick={() => {
+                        setSelectedChatId(chatItem.id);
+                        setMobileView('conversation');
+                      }}
                       className={`w-full px-4 py-3 text-left hover:bg-gray-50 ${
                         isSelected ? "bg-gray-100" : ""
                       }`}
@@ -349,9 +407,9 @@ export function ChatLayout({ reservationId, initialChatId }: ChatLayoutProps) {
               conversationId={selectedChatId}
               onMessage={refetchMessages}
             />
-            <div className="flex flex-1 flex-col bg-white">
+            <div className={`${mobileView === 'conversation' ? 'flex' : 'hidden'} md:flex flex-1 flex-col bg-white`}>
               {/* Header */}
-              <div className="flex h-20 items-center border-b px-6">
+              <div className="hidden md:flex h-20 items-center border-b px-6">
                 <div className="flex w-full items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gray-200">
@@ -541,92 +599,193 @@ export function ChatLayout({ reservationId, initialChatId }: ChatLayoutProps) {
           </ChannelProvider>
         </AblyProvider>
       ) : (
-        <div className="flex flex-1 items-center justify-center bg-white">
+        <div className={`${mobileView === 'conversation' ? 'flex' : 'hidden'} md:flex flex-1 items-center justify-center bg-white`}>
           <p className="text-gray-500">Select a conversation to start chatting</p>
         </div>
       )}
 
       {/* Right Column - Profile Panel */}
       {selectedChat && otherUser && (
-        <div className="w-80 border-l bg-white">
+        <div className={`${mobileView === 'details' ? 'flex' : 'hidden'} md:flex w-full md:w-80 border-l bg-white flex-col`}>
           <div className="flex h-full flex-col">
-            <div className="flex h-20 items-center border-b px-6">
-              <h3 className="text-lg font-semibold text-gray-900">Profile</h3>
+            {/* Desktop header */}
+            <div className="hidden md:flex h-20 items-center border-b px-6">
+              <h3 className="text-lg font-semibold text-gray-900">Details</h3>
+            </div>
+            {/* Mobile header with back button */}
+            <div className="flex md:hidden items-center gap-3 border-b px-4 py-3">
+              <button
+                onClick={() => setMobileView('conversation')}
+                className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </button>
+              <h3 className="font-semibold text-gray-900">Details</h3>
             </div>
             <div className="flex-1 overflow-y-auto px-6 py-6">
-              <div className="text-center">
-                <div className="mx-auto mb-4 h-20 w-20 overflow-hidden rounded-full bg-gray-200">
-                  {selectedChat.listing?.photos?.[0] ? (
-                    <Image
-                      src={getStorageUrl(selectedChat.listing.photos[0]!)}
-                      alt={otherUser?.name || ""}
-                      width={80}
-                      height={80}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
+              {/* Listing Info */}
+              {selectedChat.listing && (
+                <div className="mb-6">
+                  <h5 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Listing
+                  </h5>
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <div className="flex gap-3">
+                      <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                        {selectedChat.listing.photos?.[0] ? (
+                          <Image
+                            src={getStorageUrl(selectedChat.listing.photos[0]!)}
+                            alt={selectedChat.listing.title}
+                            width={64}
+                            height={64}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-gray-400">
+                            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 truncate">
+                          {selectedChat.listing.title}
+                        </p>
+                        <div className="mt-2 flex flex-col gap-3">
+                          <Link
+                            href={`/listings/${selectedChat.listing.id}`}
+                            className="block py-1 text-sm text-green-600 font-medium hover:text-green-700 hover:underline"
+                          >
+                            View listing →
+                          </Link>
+                          {selectedChat.reservation && (
+                            <Link
+                              href={`/reservations/${selectedChat.reservation.id}`}
+                              className="block py-1 text-sm text-blue-600 font-medium hover:text-blue-700 hover:underline"
+                            >
+                              View reservation →
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Reservation Info */}
+              {selectedChat.reservation && (
+                <div className="mb-6">
+                  <h5 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Reservation
+                  </h5>
+                  <div className="rounded-lg border border-gray-200 p-3 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Status</span>
+                      <span className={`font-medium ${
+                        selectedChat.reservation.status === "CONFIRMED"
+                          ? "text-green-600"
+                          : selectedChat.reservation.status === "COMPLETED"
+                          ? "text-blue-600"
+                          : "text-gray-900"
+                      }`}>
+                        {selectedChat.reservation.status}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Quantity</span>
+                      <span className="font-medium text-gray-900">
+                        {selectedChat.reservation.quantityReserved}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Total</span>
+                      <span className="font-medium text-gray-900">
+                        ${Number(selectedChat.reservation.totalPrice).toFixed(2)}
+                      </span>
+                    </div>
+                    {selectedChat.reservation.verificationCode && (
+                      <div className="flex justify-between text-sm pt-2 border-t">
+                        <span className="text-gray-500">Verification Code</span>
+                        <span className="font-mono font-bold text-gray-900">
+                          {selectedChat.reservation.verificationCode}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Contact Info */}
+              <div className="mb-6">
+                <h5 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  {isBuyer ? "Seller" : "Buyer"}
+                </h5>
+                <div className="text-center">
+                  <div className="mx-auto mb-3 h-16 w-16 overflow-hidden rounded-full bg-gray-200">
                     <div className="flex h-full w-full items-center justify-center text-gray-400">
-                      <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     </div>
+                  </div>
+                  <h4 className="font-semibold text-gray-900">
+                    {otherUser.name || "Unknown User"}
+                  </h4>
+                  {otherUser.email && (
+                    <p className="mt-1 text-sm text-gray-500">{otherUser.email}</p>
                   )}
                 </div>
-                <h4 className="text-lg font-semibold text-gray-900">
-                  {otherUser.name || otherUser.email || "Unknown User"}
-                </h4>
-                <p className="mt-1 text-sm text-gray-500">Last seen recently</p>
-                {otherUser.email && (
-                  <p className="mt-4 text-sm text-gray-600">
-                    <span className="font-medium">Email:</span> {otherUser.email}
-                  </p>
-                )}
-                <div className="mt-6">
-                  <h5 className="mb-3 text-sm font-semibold text-gray-900">
-                    Media, Links and Docs
-                  </h5>
-                  <div className="grid grid-cols-3 gap-2">
-                    {messages
-                      ?.filter((m) => m.attachments && m.attachments.length > 0)
-                      .slice(0, 6)
-                      .map((m, idx) => {
-                        const attachmentUrl = m.attachments?.[0];
-                        if (!attachmentUrl) return null;
-                        const isImage = attachmentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-                        
-                        if (isImage) {
-                          return (
-                            <button
-                              key={idx}
-                              onClick={() => handleImageClick(attachmentUrl)}
-                              className="aspect-square overflow-hidden rounded-lg bg-gray-100 hover:opacity-90 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                            >
-                              <Image
-                                src={attachmentUrl}
-                                alt="Attachment"
-                                width={100}
-                                height={100}
-                                className="h-full w-full object-cover"
-                              />
-                            </button>
-                          );
-                        }
-                        
+              </div>
+
+              {/* Media */}
+              <div>
+                <h5 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Shared Media
+                </h5>
+                <div className="grid grid-cols-3 gap-2">
+                  {messages
+                    ?.filter((m) => m.attachments && m.attachments.length > 0)
+                    .slice(0, 6)
+                    .map((m, idx) => {
+                      const attachmentUrl = m.attachments?.[0];
+                      if (!attachmentUrl) return null;
+                      const isImage = attachmentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+
+                      if (isImage) {
                         return (
-                          <a
+                          <button
                             key={idx}
-                            href={attachmentUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="aspect-square overflow-hidden rounded-lg bg-gray-100 hover:opacity-90 transition-opacity flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                            onClick={() => handleImageClick(attachmentUrl)}
+                            className="aspect-square overflow-hidden rounded-lg bg-gray-100 hover:opacity-90 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                           >
-                            <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                          </a>
+                            <Image
+                              src={attachmentUrl}
+                              alt="Attachment"
+                              width={100}
+                              height={100}
+                              className="h-full w-full object-cover"
+                            />
+                          </button>
                         );
-                      })}
-                  </div>
+                      }
+
+                      return (
+                        <a
+                          key={idx}
+                          href={attachmentUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="aspect-square overflow-hidden rounded-lg bg-gray-100 hover:opacity-90 transition-opacity flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                        >
+                          <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                          </svg>
+                        </a>
+                      );
+                    })}
                 </div>
               </div>
             </div>
@@ -634,15 +793,16 @@ export function ChatLayout({ reservationId, initialChatId }: ChatLayoutProps) {
         </div>
       )}
 
-      {/* Image Lightbox Gallery */}
-      {lightboxImageIndex !== null && allImages.length > 0 && (
-        <ImageLightbox
-          images={allImages}
-          currentIndex={lightboxImageIndex}
-          onClose={() => setLightboxImageIndex(null)}
-          onNavigate={(newIndex) => setLightboxImageIndex(newIndex)}
-        />
-      )}
+        {/* Image Lightbox Gallery */}
+        {lightboxImageIndex !== null && allImages.length > 0 && (
+          <ImageLightbox
+            images={allImages}
+            currentIndex={lightboxImageIndex}
+            onClose={() => setLightboxImageIndex(null)}
+            onNavigate={(newIndex) => setLightboxImageIndex(newIndex)}
+          />
+        )}
+      </div>
     </div>
   );
 }

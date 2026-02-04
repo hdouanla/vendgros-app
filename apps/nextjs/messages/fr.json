@@ -187,7 +187,7 @@
     "reviews": "avis",
     "noListings": "Aucune annonce trouvée",
     "searchNearby": "Rechercher à proximité",
-    "searchByPostalCode": "Rechercher par code postal",
+    "searchByPostalCode": "Code postal",
     "postalCode": "Code postal",
     "radius": "Rayon",
     "radiusKm": "{radius} km",
@@ -259,7 +259,7 @@
   "search": {
     "searchNearbyListings": "Rechercher des annonces à proximité",
     "findBulkDeals": "Trouvez des offres en vrac dans votre région",
-    "searchByPostalCode": "Rechercher par code postal",
+    "searchByPostalCode": "Code postal",
     "search": "Rechercher",
     "useMyLocation": "Utiliser ma position",
     "location": "Position",

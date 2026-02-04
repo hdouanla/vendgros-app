@@ -28,8 +28,8 @@ export default async function VerifyPhonePage({
     columns: { phone: true, phoneVerified: true },
   });
 
-  // Redirect to destination if already verified
-  if (user?.phoneVerified) {
+  // Redirect to destination if phone exists AND is verified
+  if (user?.phone && user?.phoneVerified) {
     redirect(params.redirect ?? "/");
   }
 

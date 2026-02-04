@@ -6,6 +6,9 @@ import { db } from "@acme/db/client";
 import { ListingForm } from "~/components/listings/listing-form";
 import { SellerInfoPreview } from "~/components/listings/seller-info-preview";
 
+// Force dynamic rendering to ensure auth checks always run
+export const dynamic = "force-dynamic";
+
 export default async function CreateListingPage() {
   const t = await getTranslations("listing");
   const session = await getSession();
@@ -34,8 +37,8 @@ export default async function CreateListingPage() {
     },
   });
 
-  // Redirect to phone verification if not verified
-  if (!currentUser?.phoneVerified) {
+  // Redirect to phone verification if phone missing or not verified
+  if (!currentUser?.phone || !currentUser?.phoneVerified) {
     // If no phone number, redirect to profile edit first
     if (!currentUser?.phone) {
       redirect("/profile/edit?redirect=" + encodeURIComponent("/auth/verify-phone?redirect=/listings/create"));
@@ -82,7 +85,6 @@ export default async function CreateListingPage() {
               name: currentUser.name,
               email: currentUser.email,
               phone: currentUser.phone ?? "",
-              phoneVerified: currentUser.phoneVerified,
               sellerRatingAverage: currentUser.sellerRatingAverage ?? 0,
               sellerRatingCount: currentUser.sellerRatingCount ?? 0,
               memberSince: currentUser.createdAt,

@@ -247,7 +247,14 @@
     "deliveryRadiusHint": "Distancia máxima (en km) que estás dispuesto a recorrer para entregar",
     "deliveryAvailable": "Entrega disponible",
     "deliveryWithinRadius": "Entrega disponible en un radio de {radius} km del lugar de recogida",
-    "deliveryAvailableGeneral": "Entrega disponible desde el lugar de recogida"
+    "deliveryAvailableGeneral": "Entrega disponible desde el lugar de recogida",
+    "sellerInfoPreview": "Vista previa de información del vendedor",
+    "sellerInfoPreviewDescription": "Esto es lo que los compradores verán cuando vean tus anuncios o hagan una reserva.",
+    "contactInfoShownToBuyers": "Información de contacto mostrada a compradores",
+    "verifiedSellerBenefits": "Beneficios de vendedor verificado",
+    "verifiedBenefit1": "Tu número de teléfono está verificado y es confiable",
+    "verifiedBenefit2": "Los compradores pueden contactarte directamente para preguntas",
+    "verifiedBenefit3": "Genera confianza y aumenta las reservas"
   },
   "search": {
     "searchNearbyListings": "Buscar anuncios cercanos",

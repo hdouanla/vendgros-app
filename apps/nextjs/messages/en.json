@@ -247,7 +247,14 @@
     "deliveryRadiusHint": "Maximum distance (in km) you're willing to deliver from your location",
     "deliveryAvailable": "Delivery Available",
     "deliveryWithinRadius": "Delivery available within {radius} km from the pickup location",
-    "deliveryAvailableGeneral": "Delivery available from the pickup location"
+    "deliveryAvailableGeneral": "Delivery available from the pickup location",
+    "sellerInfoPreview": "Seller Information Preview",
+    "sellerInfoPreviewDescription": "This is what buyers will see when they view your listings or make a reservation.",
+    "contactInfoShownToBuyers": "Contact info shown to buyers",
+    "verifiedSellerBenefits": "Verified seller benefits",
+    "verifiedBenefit1": "Your phone number is verified and trusted",
+    "verifiedBenefit2": "Buyers can contact you directly for questions",
+    "verifiedBenefit3": "Builds trust and increases reservations"
   },
   "search": {
     "searchNearbyListings": "Search Nearby Listings",

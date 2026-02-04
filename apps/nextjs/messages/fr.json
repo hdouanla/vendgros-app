@@ -247,7 +247,14 @@
     "deliveryRadiusHint": "Distance maximale (en km) que vous êtes prêt à parcourir pour livrer",
     "deliveryAvailable": "Livraison disponible",
     "deliveryWithinRadius": "Livraison disponible dans un rayon de {radius} km du lieu de ramassage",
-    "deliveryAvailableGeneral": "Livraison disponible à partir du lieu de ramassage"
+    "deliveryAvailableGeneral": "Livraison disponible à partir du lieu de ramassage",
+    "sellerInfoPreview": "Aperçu des informations vendeur",
+    "sellerInfoPreviewDescription": "Voici ce que les acheteurs verront lorsqu'ils consulteront vos annonces ou feront une réservation.",
+    "contactInfoShownToBuyers": "Coordonnées affichées aux acheteurs",
+    "verifiedSellerBenefits": "Avantages du vendeur vérifié",
+    "verifiedBenefit1": "Votre numéro de téléphone est vérifié et fiable",
+    "verifiedBenefit2": "Les acheteurs peuvent vous contacter directement pour des questions",
+    "verifiedBenefit3": "Renforce la confiance et augmente les réservations"
   },
   "search": {
     "searchNearbyListings": "Rechercher des annonces à proximité",

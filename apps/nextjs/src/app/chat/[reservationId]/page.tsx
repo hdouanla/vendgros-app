@@ -15,16 +15,7 @@ export default function ChatDetailPage({
 
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
 
-  // Get or create chat for this reservation to get the conversationId
-  const { mutate: getOrCreateChat, data: chat, isPending: chatPending } =
-    api.chat.getOrCreateByReservation.useMutation();
-
-  // Initialize chat when session is ready
-  if (session?.user && !chat && !chatPending) {
-    getOrCreateChat({ reservationId });
-  }
-
-  if (sessionLoading || chatPending) {
+  if (sessionLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p className="text-gray-600">Loading...</p>
@@ -37,18 +28,6 @@ export default function ChatDetailPage({
     return null;
   }
 
-  if (!chat) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600">Unable to load chat</p>
-          <p className="mt-2 text-sm text-gray-500">
-            Chat is only available for confirmed reservations
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return <ChatLayout reservationId={reservationId} initialChatId={chat.id} />;
+  // Let ChatLayout handle chat initialization - it already does this in useEffect
+  return <ChatLayout reservationId={reservationId} />;
 }

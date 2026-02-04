@@ -225,7 +225,7 @@ export function SearchFilters({
   const content = (
     <>
       {/* Primary Row: More Filters | Search Input + Button | Use My Location */}
-      <div className={`flex flex-col gap-3 lg:flex-row lg:items-center ${postalCodeError ? "pb-4" : ""}`}>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
         {/* More Filters Button */}
         <Button
           type="button"
@@ -247,7 +247,7 @@ export function SearchFilters({
         </Button>
 
         {/* Search Input with integrated Search Button */}
-        <div className="relative flex flex-1 items-center">
+        <div className="flex flex-1 flex-col">
           <div className="relative flex flex-1 items-center rounded-lg border border-gray-300 bg-white focus-within:border-[#0DAE09] focus-within:ring-1 focus-within:ring-[#0DAE09]">
             <svg
               className="ml-4 h-5 w-5 text-gray-400"
@@ -283,7 +283,7 @@ export function SearchFilters({
             </Button>
           </div>
           {postalCodeError && (
-            <p className="absolute -bottom-5 left-0 text-xs text-red-600">
+            <p className="mt-1 text-xs text-red-600">
               {postalCodeError}
             </p>
           )}

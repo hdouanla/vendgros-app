@@ -134,16 +134,10 @@ const publicRateLimitMiddleware = t.middleware(publicRateLimit);
 const standardRateLimitMiddleware = t.middleware(standardRateLimit);
 
 /**
- * Middleware for timing procedure execution and adding an artificial delay in development.
+ * Middleware for timing procedure execution.
  */
 const timingMiddleware = t.middleware(async ({ next, path }) => {
   const start = Date.now();
-
-  if (t._config.isDev) {
-    // artificial delay in dev 100-500ms
-    const waitMs = Math.floor(Math.random() * 400) + 100;
-    await new Promise((resolve) => setTimeout(resolve, waitMs));
-  }
 
   const result = await next();
 

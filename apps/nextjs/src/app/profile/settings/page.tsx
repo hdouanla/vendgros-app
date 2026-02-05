@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import { signOut } from "@acme/auth/client";
@@ -7,6 +8,8 @@ import { signOut } from "@acme/auth/client";
 export default function SettingsPage() {
   const router = useRouter();
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteEmailInput, setDeleteEmailInput] = useState("");
   const utils = api.useUtils();
 
   if (sessionLoading) {
@@ -176,9 +179,8 @@ export default function SettingsPage() {
 
           <button
             onClick={() => {
-              if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-                alert("Account deletion is not yet implemented. Please contact support.");
-              }
+              setDeleteEmailInput("");
+              setShowDeleteModal(true);
             }}
             className="rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
           >
@@ -187,6 +189,119 @@ export default function SettingsPage() {
           <p className="mt-2 text-xs text-red-800">
             Permanently delete your account and all associated data. This action cannot be undone.
           </p>
+        </div>
+
+        {/* Delete Account Modal */}
+        <DeleteAccountModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          email={session.user.email ?? ""}
+          emailInput={deleteEmailInput}
+          onEmailInputChange={setDeleteEmailInput}
+        />
+      </div>
+    </div>
+  );
+}
+
+function DeleteAccountModal({
+  isOpen,
+  onClose,
+  email,
+  emailInput,
+  onEmailInputChange,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  email: string;
+  emailInput: string;
+  onEmailInputChange: (value: string) => void;
+}) {
+  const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const emailMatches = emailInput === email;
+
+  const deleteAccount = api.user.deleteAccount.useMutation({
+    onSuccess: async () => {
+      await signOut();
+      window.location.href = "/";
+    },
+  });
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen && !deleteAccount.isPending) onClose();
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isOpen, onClose, deleteAccount.isPending]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      inputRef.current?.focus();
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
+        onClick={() => {
+          if (!deleteAccount.isPending) onClose();
+        }}
+      />
+      <div className="relative z-10 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+        <h3 className="text-lg font-semibold text-gray-900">Delete Account</h3>
+        <p className="mt-2 text-sm text-gray-600">
+          This action is permanent and cannot be undone. All your data will be deleted.
+        </p>
+        <div className="mt-4">
+          <label
+            htmlFor="confirm-email"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Type <span className="font-semibold">{email}</span> to confirm
+          </label>
+          <input
+            ref={inputRef}
+            id="confirm-email"
+            type="email"
+            value={emailInput}
+            onChange={(e) => onEmailInputChange(e.target.value)}
+            placeholder={email}
+            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+          />
+        </div>
+        {deleteAccount.error && (
+          <p className="mt-2 text-sm text-red-600">
+            {deleteAccount.error.message}
+          </p>
+        )}
+        <div className="mt-6 flex gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={deleteAccount.isPending}
+            className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={!emailMatches || deleteAccount.isPending}
+            onClick={() => deleteAccount.mutate({ email: emailInput })}
+            className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {deleteAccount.isPending ? "Deleting..." : "Delete Account"}
+          </button>
         </div>
       </div>
     </div>

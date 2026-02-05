@@ -2,7 +2,7 @@ import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { emailOTP, oAuthProxy } from "better-auth/plugins";
+import { captcha, emailOTP, oAuthProxy } from "better-auth/plugins";
 
 import { db } from "@acme/db/client";
 import { user, session, account, verification } from "@acme/db/schema";
@@ -23,10 +23,14 @@ export function initAuth<TExtraPlugins extends BetterAuthPlugin[] = []>(options:
   // Resend API key for Email OTP
   resendApiKey?: string;
 
+  // Cloudflare Turnstile secret key for captcha verification
+  turnstileSecretKey?: string;
+
   extraPlugins?: TExtraPlugins;
 }) {
   // Only require email verification if Resend API key is configured
   const hasEmailConfig = !!options.resendApiKey;
+  const hasTurnstile = !!options.turnstileSecretKey;
 
   const config = {
     database: drizzleAdapter(db, {
@@ -67,6 +71,19 @@ export function initAuth<TExtraPlugins extends BetterAuthPlugin[] = []>(options:
               expiresIn: 600, // 10 minutes expiry
               sendVerificationOnSignUp: true,
               overrideDefaultEmailVerification: true, // Enable sendVerificationEmail method
+            }),
+          ]
+        : []),
+      ...(hasTurnstile
+        ? [
+            captcha({
+              provider: "cloudflare-turnstile",
+              secretKey: options.turnstileSecretKey!,
+              endpoints: [
+                "/sign-up/email",
+                "/sign-in/email",
+                "/email-otp/send-verification-otp",
+              ],
             }),
           ]
         : []),

@@ -18,6 +18,9 @@ export function authEnv() {
       // Optional: Resend for Email OTP
       RESEND_API_KEY: z.string().optional(),
 
+      // Optional: Cloudflare Turnstile for captcha verification
+      TURNSTILE_SECRET_KEY: z.string().optional(),
+
       NODE_ENV: z.enum(["development", "production"]).optional(),
     },
     runtimeEnv: process.env,

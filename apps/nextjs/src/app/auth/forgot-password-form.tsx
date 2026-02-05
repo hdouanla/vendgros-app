@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { authClient } from "@acme/auth/client";
+import { TurnstileWidget } from "~/components/ui/turnstile-widget";
+import { useTurnstile } from "~/hooks/use-turnstile";
 
 type Step = "email" | "reset";
 
@@ -18,6 +20,7 @@ export function ForgotPasswordForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { widgetRef, isReady, turnstileHeaders, onSuccess, onError, onExpire, reset: resetTurnstile } = useTurnstile();
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,15 +31,19 @@ export function ForgotPasswordForm() {
       const result = await authClient.emailOtp.sendVerificationOtp({
         email,
         type: "forget-password",
+        fetchOptions: { headers: turnstileHeaders },
       });
 
       if (result.error) {
+        resetTurnstile();
         setError(result.error.message || t("failedToSendCode"));
       } else {
+        resetTurnstile();
         setSuccess(t("codeSent"));
         setStep("reset");
       }
     } catch (err) {
+      resetTurnstile();
       setError(t("unexpectedError"));
       console.error("Send code error:", err);
     } finally {
@@ -93,14 +100,18 @@ export function ForgotPasswordForm() {
       const result = await authClient.emailOtp.sendVerificationOtp({
         email,
         type: "forget-password",
+        fetchOptions: { headers: turnstileHeaders },
       });
 
       if (result.error) {
+        resetTurnstile();
         setError(result.error.message || t("failedToSendCode"));
       } else {
+        resetTurnstile();
         setSuccess(t("codeSent"));
       }
     } catch (err) {
+      resetTurnstile();
       setError(t("unexpectedError"));
       console.error("Resend code error:", err);
     } finally {
@@ -156,9 +167,16 @@ export function ForgotPasswordForm() {
             />
           </div>
 
+          <TurnstileWidget
+            ref={widgetRef}
+            onSuccess={onSuccess}
+            onError={onError}
+            onExpire={onExpire}
+          />
+
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || !isReady}
             className="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
           >
             {isLoading ? t("sending") : t("sendResetCode")}

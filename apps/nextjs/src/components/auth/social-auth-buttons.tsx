@@ -77,8 +77,6 @@ export function SocialAuthButtons({ mode, callbackUrl, onError }: SocialAuthButt
             ? t("signInWithGoogle")
             : t("signUpWithGoogle")}
       </button>
-
-      {/* TODO: Configure Facebook OAuth app and re-enable this button
       <button
         type="button"
         disabled={loadingProvider !== null}
@@ -94,7 +92,6 @@ export function SocialAuthButtons({ mode, callbackUrl, onError }: SocialAuthButt
             ? t("signInWithFacebook")
             : t("signUpWithFacebook")}
       </button>
-      */}
     </div>
   );
 }

@@ -21,6 +21,14 @@ export function authEnv() {
       // Optional: Cloudflare Turnstile for captcha verification
       TURNSTILE_SECRET_KEY: z.string().optional(),
 
+      // Optional: Google OAuth for social sign-in
+      GOOGLE_CLIENT_ID: z.string().optional(),
+      GOOGLE_CLIENT_SECRET: z.string().optional(),
+
+      // Optional: Facebook OAuth for social sign-in
+      FACEBOOK_CLIENT_ID: z.string().optional(),
+      FACEBOOK_CLIENT_SECRET: z.string().optional(),
+
       NODE_ENV: z.enum(["development", "production"]).optional(),
     },
     runtimeEnv: process.env,

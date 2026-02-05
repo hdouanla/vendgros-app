@@ -8,6 +8,7 @@ import { signUp, signIn } from "@acme/auth/client";
 import { api } from "~/trpc/react";
 import { TurnstileWidget } from "~/components/ui/turnstile-widget";
 import { useTurnstile } from "~/hooks/use-turnstile";
+import { SocialAuthButtons } from "~/components/auth/social-auth-buttons";
 
 export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
   const router = useRouter();
@@ -228,6 +229,21 @@ export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
           {isLoading ? t("creatingAccount") : t("createAccount")}
         </button>
       </form>
+
+      {/* Social Auth Divider */}
+      <div className="relative mt-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-300" />
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="bg-white px-2 text-gray-500">{t("orContinueWith")}</span>
+        </div>
+      </div>
+
+      {/* Social Auth Buttons */}
+      <div className="mt-6">
+        <SocialAuthButtons mode="signup" callbackUrl={callbackUrl} onError={setError} />
+      </div>
     </div>
   );
 }

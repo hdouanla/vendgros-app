@@ -26,11 +26,34 @@ export function initAuth<TExtraPlugins extends BetterAuthPlugin[] = []>(options:
   // Cloudflare Turnstile secret key for captcha verification
   turnstileSecretKey?: string;
 
+  // Google OAuth credentials for social sign-in
+  googleClientId?: string;
+  googleClientSecret?: string;
+
+  // Facebook OAuth credentials for social sign-in
+  facebookClientId?: string;
+  facebookClientSecret?: string;
+
   extraPlugins?: TExtraPlugins;
 }) {
   // Only require email verification if Resend API key is configured
   const hasEmailConfig = !!options.resendApiKey;
   const hasTurnstile = !!options.turnstileSecretKey;
+
+  // Build social providers conditionally
+  const socialProviders: Record<string, { clientId: string; clientSecret: string }> = {};
+  if (options.googleClientId && options.googleClientSecret) {
+    socialProviders.google = {
+      clientId: options.googleClientId,
+      clientSecret: options.googleClientSecret,
+    };
+  }
+  if (options.facebookClientId && options.facebookClientSecret) {
+    socialProviders.facebook = {
+      clientId: options.facebookClientId,
+      clientSecret: options.facebookClientSecret,
+    };
+  }
 
   const config = {
     database: drizzleAdapter(db, {
@@ -48,6 +71,7 @@ export function initAuth<TExtraPlugins extends BetterAuthPlugin[] = []>(options:
       enabled: true,
       requireEmailVerification: false, // Allow login, but check verification in app
     },
+    ...(Object.keys(socialProviders).length > 0 ? { socialProviders } : {}),
     plugins: [
       oAuthProxy({
         productionURL: options.productionUrl,

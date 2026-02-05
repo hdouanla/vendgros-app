@@ -4,6 +4,7 @@ import { eq, sql, and } from "@acme/db";
 import { user, listing, reservation } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { TRPCError } from "@trpc/server";
 
 export const userRouter = createTRPCRouter({
   /**
@@ -107,6 +108,33 @@ export const userRouter = createTRPCRouter({
         success: true,
         user: updatedUser,
       };
+    }),
+
+  /**
+   * Delete the current user's account
+   */
+  deleteAccount: protectedProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const currentUser = await ctx.db.query.user.findFirst({
+        where: (users, { eq }) => eq(users.id, ctx.session.user.id),
+        columns: { email: true },
+      });
+
+      if (!currentUser || currentUser.email !== input.email) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Email does not match your account email.",
+        });
+      }
+
+      await ctx.db.delete(user).where(eq(user.id, ctx.session.user.id));
+
+      return { success: true };
     }),
 
   /**

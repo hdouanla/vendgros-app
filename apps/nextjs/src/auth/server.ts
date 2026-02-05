@@ -22,6 +22,7 @@ export const auth = initAuth({
     : "http://localhost:3000",
   secret: env.AUTH_SECRET,
   resendApiKey: env.RESEND_API_KEY,
+  turnstileSecretKey: env.TURNSTILE_SECRET_KEY,
   extraPlugins: [nextCookies()],
 });
 

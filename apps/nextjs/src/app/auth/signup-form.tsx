@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { signUp, signIn } from "@acme/auth/client";
 import { api } from "~/trpc/react";
+import { TurnstileWidget } from "~/components/ui/turnstile-widget";
+import { useTurnstile } from "~/hooks/use-turnstile";
 
 export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
   const router = useRouter();
@@ -21,6 +23,7 @@ export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { widgetRef, isReady, turnstileHeaders, onSuccess, onError, onExpire, reset: resetTurnstile } = useTurnstile();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -57,15 +60,18 @@ export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
         name: formData.name,
         email: formData.email,
         password: formData.password,
+        fetchOptions: { headers: turnstileHeaders },
       });
 
       if (result.error) {
+        resetTurnstile();
         setError(result.error.message || t("failedToCreateAccount"));
       } else {
         // Sign in the user and redirect to verification page
         await signIn.email({
           email: formData.email,
           password: formData.password,
+          fetchOptions: { headers: turnstileHeaders },
         });
 
         // Invalidate the session cache to update navbar immediately
@@ -75,6 +81,7 @@ export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
         router.refresh();
       }
     } catch (err) {
+      resetTurnstile();
       setError(t("unexpectedError"));
       console.error("Sign up error:", err);
     } finally {
@@ -206,9 +213,16 @@ export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
           </div>
         </div>
 
+        <TurnstileWidget
+          ref={widgetRef}
+          onSuccess={onSuccess}
+          onError={onError}
+          onExpire={onExpire}
+        />
+
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || !isReady}
           className="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
         >
           {isLoading ? t("creatingAccount") : t("createAccount")}

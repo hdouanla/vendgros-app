@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { signIn, authClient } from "@acme/auth/client";
 import { api } from "~/trpc/react";
+import { TurnstileWidget } from "~/components/ui/turnstile-widget";
+import { useTurnstile } from "~/hooks/use-turnstile";
 
 export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
   const router = useRouter();
@@ -15,6 +17,7 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { widgetRef, isReady, turnstileHeaders, onSuccess, onError, onExpire, reset: resetTurnstile } = useTurnstile();
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,9 +29,11 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
       const result = await signIn.email({
         email,
         password,
+        fetchOptions: { headers: turnstileHeaders },
       });
 
       if (result.error) {
+        resetTurnstile();
         setError(result.error.message || t("failedToSignIn"));
       } else {
         // Invalidate the session cache to update navbar immediately
@@ -45,6 +50,7 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
         }
       }
     } catch (err) {
+      resetTurnstile();
       setError(t("unexpectedError"));
       console.error("Sign in error:", err);
     } finally {
@@ -125,9 +131,16 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
           </Link>
         </div>
 
+        <TurnstileWidget
+          ref={widgetRef}
+          onSuccess={onSuccess}
+          onError={onError}
+          onExpire={onExpire}
+        />
+
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || !isReady}
           className="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
         >
           {isLoading ? t("signingIn") : t("signIn")}

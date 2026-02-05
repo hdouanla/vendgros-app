@@ -29,6 +29,7 @@ export const env = createEnv({
     NEXT_PUBLIC_RESERVATION_PAYMENT_TIMEOUT_MINUTES: z.coerce.number().default(10),
     NEXT_PUBLIC_CMS_URL: z.string().url().default("https://cms.vendgros.ca"),
     NEXT_PUBLIC_CMS_REVALIDATE_SECONDS: z.coerce.number().default(3600),
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
   },
   /**
    * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
@@ -38,6 +39,7 @@ export const env = createEnv({
     NEXT_PUBLIC_RESERVATION_PAYMENT_TIMEOUT_MINUTES: process.env.NEXT_PUBLIC_RESERVATION_PAYMENT_TIMEOUT_MINUTES,
     NEXT_PUBLIC_CMS_URL: process.env.NEXT_PUBLIC_CMS_URL,
     NEXT_PUBLIC_CMS_REVALIDATE_SECONDS: process.env.NEXT_PUBLIC_CMS_REVALIDATE_SECONDS,
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
   },
   skipValidation:
     !!process.env.CI || process.env.npm_lifecycle_event === "lint",

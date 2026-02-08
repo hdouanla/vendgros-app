@@ -59,7 +59,7 @@ export function ListingDetailClient({ id }: ListingDetailClientProps) {
     { enabled: !!session?.user }
   );
 
-  const { data: listing, isLoading } = api.listing.getById.useQuery({ id });
+  const { data: listing, isLoading, isError } = api.listing.getById.useQuery({ id });
 
   // Update quantity when listing loads - use minPerBuyer or quantityAvailable if lower
   useEffect(() => {
@@ -125,6 +125,13 @@ export function ListingDetailClient({ id }: ListingDetailClientProps) {
     }
   }, [id, listing, addVisited]); // Only track once when listing loads
 
+  // Redirect to home if listing not found
+  useEffect(() => {
+    if (!isLoading && (!listing || isError)) {
+      router.push("/");
+    }
+  }, [isLoading, listing, isError, router]);
+
   // Keyboard navigation is now handled by the ImageLightbox component
 
   const handleReserve = async () => {
@@ -173,7 +180,7 @@ export function ListingDetailClient({ id }: ListingDetailClientProps) {
   if (!listing) {
     return (
       <div className="py-12 text-center">
-        <p className="text-gray-600">{tErrors("notFound")}</p>
+        <p className="text-gray-600">{tCommon("loading")}</p>
       </div>
     );
   }

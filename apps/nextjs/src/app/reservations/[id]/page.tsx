@@ -51,7 +51,7 @@ export default function ReservationDetailPage({
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
 
   const { data: session, isLoading: sessionLoading } = api.auth.getSession.useQuery();
-  const { data: reservation, isLoading: reservationLoading, refetch: refetchReservation } = api.reservation.getById.useQuery({
+  const { data: reservation, isLoading: reservationLoading, isError, refetch: refetchReservation } = api.reservation.getById.useQuery({
     id,
   }, {
     enabled: !!session?.user,
@@ -112,6 +112,13 @@ export default function ReservationDetailPage({
     return () => clearTimeout(timer);
   }, [isPolling, paymentStatus, pollCount, id, router, refetchReservation]);
 
+  // Redirect to home if reservation not found
+  useEffect(() => {
+    if (!reservationLoading && (!reservation || isError)) {
+      router.push("/");
+    }
+  }, [reservationLoading, reservation, isError, router]);
+
   if (sessionLoading || reservationLoading) {
     return (
       <div className="py-12 text-center">
@@ -128,7 +135,7 @@ export default function ReservationDetailPage({
   if (!reservation) {
     return (
       <div className="py-12 text-center">
-        <p className="text-gray-600">{t("errors.notFound")}</p>
+        <p className="text-gray-600">{t("common.loading")}</p>
       </div>
     );
   }

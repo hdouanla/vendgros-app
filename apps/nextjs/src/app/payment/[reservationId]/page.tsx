@@ -54,7 +54,7 @@ export default function PaymentPage({
     },
   });
 
-  const { data: reservation, isLoading: reservationLoading } =
+  const { data: reservation, isLoading: reservationLoading, isError } =
     api.reservation.getById.useQuery({
       id: reservationId,
     });
@@ -90,6 +90,13 @@ export default function PaymentPage({
     }
   }, [paymentStatus, reservationId, router]);
 
+  // Redirect to home if reservation not found
+  useEffect(() => {
+    if (!reservationLoading && (!reservation || isError)) {
+      router.push("/");
+    }
+  }, [reservationLoading, reservation, isError, router]);
+
   if (reservationLoading) {
     return (
       <div className="py-12 text-center">
@@ -101,7 +108,7 @@ export default function PaymentPage({
   if (!reservation) {
     return (
       <div className="py-12 text-center">
-        <p className="text-gray-600">{t("errors.notFound")}</p>
+        <p className="text-gray-600">{t("common.loading")}</p>
       </div>
     );
   }

@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { and, desc, eq, sql } from "@acme/db";
+import { and, asc, desc, eq, sql } from "@acme/db";
 import { TRPCError } from "@trpc/server";
 
 import {
@@ -523,8 +523,8 @@ export const listingRouter = createTRPCRouter({
       } else if (input.sortBy === "date") {
         query = baseQuery.orderBy(desc(listing.createdAt)).limit(input.limit);
       } else {
-        // Distance sorting is default
-        query = baseQuery.limit(input.limit);
+        // Distance sorting is default - closest first
+        query = baseQuery.orderBy(asc(distanceCalc)).limit(input.limit);
       }
 
       const results = await query;
@@ -595,6 +595,7 @@ export const listingRouter = createTRPCRouter({
             input.category ? eq(listing.category, input.category) : undefined,
           ),
         )
+        .orderBy(asc(distanceCalc))
         .limit(input.limit);
 
       return results;

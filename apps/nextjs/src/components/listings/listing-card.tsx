@@ -3,9 +3,22 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import type { CategoryId } from "@acme/validators";
 import { getStorageUrl } from "~/lib/storage";
 import { LikeButton } from "./like-button";
 import { FavoriteButton } from "./favorite-button";
+
+// Map category IDs to search namespace translation keys
+const categoryTranslationKeys: Record<CategoryId, string> = {
+  ELECTRONICS: "electronics",
+  FASHION: "fashion",
+  HOME_GARDEN: "homeGarden",
+  SPORTS_HOBBIES: "sportsHobbies",
+  HEALTH_BEAUTY: "healthBeauty",
+  GROCERIES: "groceries",
+  SERVICES: "services",
+  GENERAL: "general",
+};
 
 export interface ListingData {
   id: string;
@@ -55,6 +68,7 @@ export function ListingCard({
   compact,
 }: ListingCardProps) {
   const t = useTranslations();
+  const tSearch = useTranslations("search");
 
   // Support legacy compact prop
   const variant = variantProp ?? (compact ? "compact" : "default");
@@ -366,7 +380,7 @@ export function ListingCard({
         <div className="mt-3 flex items-center justify-between">
           {listing.category && (
             <span className="inline-block rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
-              {listing.category}
+              {tSearch(categoryTranslationKeys[listing.category as CategoryId] ?? listing.category)}
             </span>
           )}
           {listing.publishedAt && (
